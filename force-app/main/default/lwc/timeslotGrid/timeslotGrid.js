@@ -1,8 +1,17 @@
-import { LightningElement, track } from 'lwc';
+import { LightningElement, track, wire } from 'lwc';
+import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { getRecord } from 'lightning/uiRecordApi';
+import USER_ID from '@salesforce/user/Id';
+import USER_EMAIL from '@salesforce/schema/User.Email';
+import USER_NAME from '@salesforce/schema/User.Name';
 import getTimeslotsForRange from '@salesforce/apex/TimeslotController.getTimeslotsForRange';
+import bookTimeSlot from '@salesforce/apex/TimeslotController.bookTimeSlot';
 
 export default class TimeslotGrid extends LightningElement {
     @track loading = true;
+    @track showBookingModal = false;
+    @track selectedSlot = null;
+    @track bookingInProgress = false;
 
     // Selected date default = today + 7 days
     selectedDate;
@@ -14,6 +23,21 @@ export default class TimeslotGrid extends LightningElement {
     timeslotsMap = {};
 
     @track timeRows = []; // list of time labels like '09:00'
+
+    // Current user info
+    currentUserId = USER_ID;
+    currentUserEmail = '';
+    currentUserName = '';
+
+    @wire(getRecord, { recordId: USER_ID, fields: [USER_EMAIL, USER_NAME] })
+    wiredUser({ error, data }) {
+        if (data) {
+            this.currentUserEmail = data.fields.Email.value;
+            this.currentUserName = data.fields.Name.value;
+        } else if (error) {
+            console.error('Error loading user:', error);
+        }
+    }
 
     connectedCallback() {
         const today = new Date();
@@ -82,9 +106,23 @@ export default class TimeslotGrid extends LightningElement {
         getTimeslotsForRange({ startDate: startIso, endDate: endIso })
             .then(result => {
                 // result is a list of wrapper records: { id, startTime, endTime, day, numberAvailable }
-                this.timeslotsMap = {};
-                // Build row times set
-                const timeSet = new Set();
+                // Format days to ISO strings for easier comparison
+                if (Array.isArray(result)) {
+                    result.forEach(timeRow => {
+                        if (timeRow.slots && Array.isArray(timeRow.slots)) {
+                            timeRow.slots.forEach(slot => {
+                                if (slot.day) {
+                                    // Convert day to ISO string format
+                                    if (typeof slot.day === 'string') {
+                                        slot.dayISO = slot.day;
+                                    } else {
+                                        slot.dayISO = this.toISODate(new Date(slot.day));
+                                    }
+                                }
+                            });
+                        }
+                    });
+                }
                 this.timeslotsMap = result;
                 /*result.forEach(item => {
                     if (!item.day) return;
@@ -174,12 +212,130 @@ export default class TimeslotGrid extends LightningElement {
     }
 
     handleSelect(event) {
-        const slotId = event.currentTarget.dataset.id;
-        if (!slotId) return;
-        // The caller can handle the slot selection — for now we simply dispatch an event
-        const detail = { slotId };
-        this.dispatchEvent(new CustomEvent('slotselected', { detail }));
-        // Optionally highlight selection or open modal — left to implement
+        const slotId = event.currentTarget.dataset.slotId;
+        const day = event.currentTarget.dataset.day;
+        const timeRow = event.currentTarget.dataset.timeRow;
+        const available = parseInt(event.currentTarget.dataset.available, 10);
+        
+        if (!slotId || !day || !timeRow) return;
+        
+        // Check if slot is available
+        if (!available || available <= 0) {
+            this.showToast('Error', 'This time slot is not available', 'error');
+            return;
+        }
+
+        // Convert day to ISO format for comparison
+        const dayIso = typeof day === 'string' ? day : this.toISODate(new Date(day));
+
+        // Find the slot in the timeslotsMap array structure
+        let slot = null;
+        if (Array.isArray(this.timeslotsMap)) {
+            for (const timeRowObj of this.timeslotsMap) {
+                if (timeRowObj.label === timeRow && timeRowObj.slots) {
+                    // Find slot matching the ID and day (day might be Date object or ISO string)
+                    slot = timeRowObj.slots.find(s => {
+                        if (s.id !== slotId) return false;
+                        // Compare day - handle both Date objects and ISO strings
+                        const slotDay = s.day ? (typeof s.day === 'string' ? s.day : this.toISODate(new Date(s.day))) : null;
+                        return slotDay === dayIso;
+                    });
+                    if (slot) break;
+                }
+            }
+        }
+
+        if (!slot || !slot.id || slot.numberAvailable <= 0) {
+            this.showToast('Error', 'This time slot is not available', 'error');
+            return;
+        }
+
+        // Set selected slot and show booking modal
+        this.selectedSlot = {
+            id: slot.id,
+            day: dayIso,
+            dayLabel: this.getDayLabel(dayIso),
+            time: this.formatSlotTime(slot),
+            agentName: slot.agentName || 'Not assigned',
+            numberAvailable: slot.numberAvailable
+        };
+        this.showBookingModal = true;
+    }
+
+    getDayLabel(dayIso) {
+        const day = this.weekDays.find(d => d.iso === dayIso);
+        return day ? day.label : dayIso;
+    }
+
+
+
+    formatSlotTime(slot) {
+        if (slot.startTime && slot.endTime) {
+            // Handle both Time and DateTime formats
+            let start, end;
+            if (typeof slot.startTime === 'string') {
+                start = new Date(slot.startTime);
+                end = new Date(slot.endTime);
+            } else {
+                // If it's already a Date object
+                start = slot.startTime;
+                end = slot.endTime;
+            }
+            const sh = String(start.getHours()).padStart(2, '0');
+            const sm = String(start.getMinutes()).padStart(2, '0');
+            const eh = String(end.getHours()).padStart(2, '0');
+            const em = String(end.getMinutes()).padStart(2, '0');
+            return `${sh}:${sm} - ${eh}:${em}`;
+        }
+        // Fallback to label if available
+        if (slot.label) {
+            return slot.label;
+        }
+        return 'N/A';
+    }
+
+    handleCloseModal() {
+        this.showBookingModal = false;
+        this.selectedSlot = null;
+    }
+
+    handleConfirmBooking() {
+        if (!this.selectedSlot || !this.currentUserId) {
+            this.showToast('Error', 'Unable to process booking. Please try again.', 'error');
+            return;
+        }
+
+        this.bookingInProgress = true;
+        bookTimeSlot({ 
+            timeSlotId: this.selectedSlot.id, 
+            customerId: this.currentUserId 
+        })
+        .then(result => {
+            if (result.success) {
+                this.showToast('Success', result.message, 'success');
+                this.handleCloseModal();
+                // Refresh the timeslots
+                this.fetchTimeslotsForWeek();
+            } else {
+                this.showToast('Error', result.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Booking error:', error);
+            this.showToast('Error', error.body?.message || 'An error occurred while booking the time slot', 'error');
+        })
+        .finally(() => {
+            this.bookingInProgress = false;
+        });
+    }
+
+    showToast(title, message, variant) {
+        const evt = new ShowToastEvent({
+            title: title,
+            message: message,
+            variant: variant,
+        });
+        this.dispatchEvent(evt);
     }
 
     get JSONMAP(){
