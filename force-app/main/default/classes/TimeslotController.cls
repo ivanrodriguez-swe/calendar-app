@@ -165,7 +165,7 @@ public with sharing class TimeslotController {
 
     // Book a time slot
     @AuraEnabled
-    public static BookingResult bookTimeSlot(Id timeSlotId, Id customerId) {
+    public static BookingResult bookTimeSlot(Id timeSlotId, Id customerId, Id appointmentRequestId) {
         try {
             // Query the time slot with agent information
             List<Time_Slot__c> slots = [
@@ -194,12 +194,35 @@ public with sharing class TimeslotController {
             // Get customer information
             User customer = [SELECT Id, Name, Email FROM User WHERE Id = :customerId LIMIT 1];
 
-            // Create Appointment Request first (main parent)
-            Appointment_Request__c appointmentRequest = new Appointment_Request__c(
-                Agent__c = slot.Agent__c,
-                Status__c = 'New'
-            );
-            insert appointmentRequest;
+            // Use existing Appointment Request if provided, otherwise create new one
+            Appointment_Request__c appointmentRequest;
+            if (appointmentRequestId != null) {
+                // Query existing appointment request
+                List<Appointment_Request__c> existingRequests = [
+                    SELECT Id, Agent__c, Status__c 
+                    FROM Appointment_Request__c 
+                    WHERE Id = :appointmentRequestId 
+                    LIMIT 1
+                ];
+                
+                if (existingRequests.isEmpty()) {
+                    throw new AuraHandledException('Appointment Request not found.');
+                }
+                
+                appointmentRequest = existingRequests[0];
+                
+                // Verify the agent matches
+                if (appointmentRequest.Agent__c != slot.Agent__c) {
+                    throw new AuraHandledException('The selected time slot is not available for this appointment request.');
+                }
+            } else {
+                // Create new Appointment Request
+                appointmentRequest = new Appointment_Request__c(
+                    Agent__c = slot.Agent__c,
+                    Status__c = 'New'
+                );
+                insert appointmentRequest;
+            }
 
             // Create appointment record as junction between Appointment Request and Time Slot
             Appointment__c appointment = new Appointment__c(

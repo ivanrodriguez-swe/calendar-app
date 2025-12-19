@@ -28,6 +28,9 @@ export default class TimeslotGrid extends LightningElement {
     currentUserId = USER_ID;
     currentUserEmail = '';
     currentUserName = '';
+    
+    // Appointment Request ID from URL
+    appointmentRequestId = null;
 
     @wire(getRecord, { recordId: USER_ID, fields: [USER_EMAIL, USER_NAME] })
     wiredUser({ error, data }) {
@@ -40,6 +43,14 @@ export default class TimeslotGrid extends LightningElement {
     }
 
     connectedCallback() {
+        // Get appointment request ID from URL query parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        this.appointmentRequestId = urlParams.get('requestId');
+        
+        if (this.appointmentRequestId) {
+            console.log('Appointment Request ID from URL:', this.appointmentRequestId);
+        }
+        
         const today = new Date();
         const defaultDate = new Date(today.getFullYear(), today.getMonth(), today.getDate() + 7);
         this.selectedDate = defaultDate;
@@ -308,7 +319,8 @@ export default class TimeslotGrid extends LightningElement {
         this.bookingInProgress = true;
         bookTimeSlot({ 
             timeSlotId: this.selectedSlot.id, 
-            customerId: this.currentUserId 
+            customerId: this.currentUserId,
+            appointmentRequestId: this.appointmentRequestId
         })
         .then(result => {
             if (result.success) {
