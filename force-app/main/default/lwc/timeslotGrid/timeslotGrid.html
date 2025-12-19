@@ -1,0 +1,53 @@
+<template>
+    <lightning-card title="Available Time Slots">
+        <div class="slds-p-around_medium">
+            <div class="controls slds-m-bottom_small">
+                <lightning-input type="date"
+                                 label="Select date"
+                                 value={selectedDateISO}
+                                 onchange={handleDateChange}>
+                </lightning-input>
+                <lightning-button variant="neutral" label="This Week" onclick={handleTodayWeek} class="slds-m-left_small"></lightning-button>
+            </div>
+
+            <template if:true={loading}>
+                <div>Loading...</div>
+            </template>
+
+            <template if:false={loading}>
+                <div class="grid-container">
+                    <div class="grid-header slds-grid">
+                        <div class="time-cell col slds-size_2-of-12 slds-p-around_x-small"></div>
+                        <template for:each={weekDays} for:item="dayObj">
+                            <div key={dayObj.iso} class="col slds-size_2-of-12 slds-p-around_x-small">
+                                <strong>{dayObj.label}</strong>
+                                <div class="slds-text-color_weak">{dayObj.iso}</div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div class="grid-body">
+                        <template for:each={timeslotsMap} for:item="timeRow">
+                            <div key={timeRow.label} class="grid-row slds-grid">
+                                <div class="time-cell col slds-size_2-of-12 slds-p-around_x-small">{timeRow.label}</div>
+                                <template for:each={timeRow.slots} for:item="dayObj">
+                                    <div key={dayObj.label} class="col slds-size_2-of-12 slds-p-around_x-small cell">
+                                        <template if:true={dayObj.id}>
+                                            <button class="slds-button slds-button_neutral slot-button"
+                                                    onclick={handleSelect}>
+                                                <div class="slot-time">{dayObj.label}</div>
+                                                <div class="slot-qty">{dayObj.numberAvailable} available</div>
+                                            </button>
+                                        </template>
+                                    </div>
+                                </template>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+
+    MAP: {JSONMAP}
+</template>

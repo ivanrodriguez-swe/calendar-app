@@ -1,0 +1,11 @@
+.grid-container {
+    display: block;
+}
+
+/*.grid-header { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.5rem; }
+
+.grid-row { display: grid; grid-template-columns: 80px repeat(5, 1fr); align-items: start; gap: 0.5rem; margin-bottom: 0.25rem; }*/
+.time-cell { font-weight: bold;}
+.col { border: 1px solid #ecebea; min-height: 48px; }
+.slot-button { width: 100%; text-align: left; background:#f4f6f9; border-radius:4px; padding:6px; }
+.slot-qty { font-size: 0.8rem; color: #666; }
