@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Time_Slot__c</fullName>
+    <label>Time Slot</label>
+    <trackTrending>false</trackTrending>
+    <type>MasterDetail</type>
+    <referenceTo>Time_Slot__c</referenceTo>
+    <relationshipLabel>Appointments</relationshipLabel>
+    <relationshipName>Appointments</relationshipName>
+    <reparentableMasterDetail>false</reparentableMasterDetail>
+    <trackHistory>false</trackHistory>
+    <writeRequiresMasterRead>false</writeRequiresMasterRead>
+</CustomField>
