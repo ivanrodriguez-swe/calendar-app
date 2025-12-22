@@ -1,0 +1,17 @@
+.range-row {
+    padding: 1rem;
+    border: 1px solid #dddbda;
+    border-radius: 0.25rem;
+    background-color: #fafaf9;
+}
+
+.availability-ranges {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.slds-align-middle {
+    display: flex;
+    align-items: center;
+}
+

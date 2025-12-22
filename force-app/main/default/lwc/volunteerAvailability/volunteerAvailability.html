@@ -1,0 +1,91 @@
+<template>
+    <lightning-card title="Set Your Availability" icon-name="utility:clock">
+        <div class="slds-p-around_medium">
+            <div class="slds-text-body_regular slds-m-bottom_medium">
+                <p>Add your available time ranges. The system will automatically create 15-minute time slots for each range.</p>
+                <p class="slds-text-color_weak slds-m-top_x-small"><strong>Note:</strong> Start times must be between 9:00 AM and 3:45 PM. End times must be between 9:15 AM and 4:00 PM.</p>
+            </div>
+
+            <template if:true={hasRanges}>
+                <div class="availability-ranges">
+                    <template for:each={availabilityRanges} for:item="range">
+                        <div key={range.id} class="slds-box slds-theme_shade slds-m-bottom_small range-row">
+                            <div class="slds-grid slds-grid_align-spread slds-gutters">
+                                <div class="slds-col slds-size_1-of-4">
+                                    <lightning-input
+                                        type="date"
+                                        label="Date"
+                                        value={range.date}
+                                        min={minDate}
+                                        data-range-id={range.id}
+                                        onchange={handleDateChange}
+                                        required>
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-4">
+                                    <lightning-input
+                                        type="time"
+                                        label="Start Time"
+                                        value={range.startTime}
+                                        min={range.minStartTime}
+                                        max="15:45"
+                                        data-range-id={range.id}
+                                        onchange={handleStartTimeChange}
+                                        required>
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-4">
+                                    <lightning-input
+                                        type="time"
+                                        label="End Time"
+                                        value={range.endTime}
+                                        min={range.minEndTime}
+                                        max="16:00"
+                                        data-range-id={range.id}
+                                        onchange={handleEndTimeChange}
+                                        required>
+                                    </lightning-input>
+                                </div>
+                                <div class="slds-col slds-size_1-of-12 slds-align-middle">
+                                    <lightning-button-icon
+                                        icon-name="utility:delete"
+                                        alternative-text="Remove"
+                                        title="Remove this range"
+                                        data-range-id={range.id}
+                                        onclick={removeTimeRange}
+                                        variant="border-filled"
+                                        class="slds-m-top_large">
+                                    </lightning-button-icon>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+
+            <div class="slds-m-top_medium slds-m-bottom_medium">
+                <lightning-button
+                    label="Add Another Time Range"
+                    icon-name="utility:add"
+                    variant="neutral"
+                    onclick={addTimeRange}
+                    disabled={submitting}>
+                </lightning-button>
+            </div>
+
+            <div class="slds-m-top_large">
+                <lightning-button
+                    label="Create Time Slots"
+                    variant="brand"
+                    onclick={handleSubmit}
+                    disabled={submitting}
+                    class="slds-m-right_small">
+                </lightning-button>
+                <template if:true={submitting}>
+                    <lightning-spinner alternative-text="Creating time slots..." size="small"></lightning-spinner>
+                </template>
+            </div>
+        </div>
+    </lightning-card>
+</template>
+
