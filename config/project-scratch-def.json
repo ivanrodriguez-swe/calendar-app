@@ -1,13 +1,70 @@
+
 {
-  "orgName": "Demo company",
+  "orgName": "rhs-calendar",
   "edition": "Developer",
-  "features": ["EnableSetPasswordInApi"],
+  "features": [
+    "Communities",
+    "EnableSetPasswordInApi",
+    "PersonAccounts",
+    "SurveyAdvancedFeatures",
+    "CoreCpq",
+    "ContactsToMultipleAccounts",
+    "Knowledge",
+    "OrderSaveLogicEnabled",
+    "OrderSaveBehaviorBoth",
+    "SalesforceFeedbackManagementStarter",
+    "GuidanceHubAllowed",
+    "DefaultWorkflowUser", 
+    "ExperienceBundle"
+  ],
   "settings": {
+    "emailTemplateSettings": {
+         "enableTemplateEnhancedFolderPref": true
+     },
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
     },
     "mobileSettings": {
       "enableS1EncryptedStoragePref2": false
+    },
+    "experienceBundleSettings": {
+      "enableExperienceBundleMetadata": true
+    },
+    "communitiesSettings": {
+      "enableNetworksEnabled": true
+    },
+    "revenueManagementSettings": {
+      "enableCoreCPQ": true
+    },
+    "nameSettings": {
+      "enableMiddleName": true
+    },
+    "knowledgeSettings": {
+      "enableKnowledge": true,
+      "enableLightningKnowledge": true
+    },
+    "emailAdministrationSettings": {
+      "enableEmailToSalesforce": true
+    },
+    "quoteSettings": {
+      "enableQuote": true
+    },
+    "caseSettings": {
+      "emailToCase": {
+        "enableEmailToCase": true
+      }
+    },
+    "chatterSettings": {
+      "enableChatter": true
+    },
+    "surveySettings": {
+      "enableSurvey": true
+    },
+    "pathAssistantSettings": {
+      "pathAssistantEnabled": true
+    },
+    "enhancedNotesSettings": {
+            "enableEnhancedNotes": true
     }
   }
 }
