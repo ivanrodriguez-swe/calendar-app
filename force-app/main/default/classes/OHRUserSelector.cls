@@ -9,7 +9,7 @@ public inherited sharing class OHRUserSelector {
      */
     public static List<User> getUsersByEmails(Set<String> emails) {
         return [
-            SELECT Id, Email 
+            SELECT Id, Email, IsActive 
             FROM User 
             WHERE Email IN :emails 
             AND IsActive = true
