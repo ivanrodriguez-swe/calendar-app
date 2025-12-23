@@ -10,10 +10,15 @@ public class TimeSlotFormatter {
         if (String.isBlank(timeStr)) return null;
         List<String> parts = timeStr.split(':');
         if (parts.size() < 1) return null;
-        Integer hour = Integer.valueOf(parts[0]);
-        Integer minute = parts.size() > 1 ? Integer.valueOf(parts[1]) : 0;
-        if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
-        return Time.newInstance(hour, minute, 0, 0);
+        
+        try {
+            Integer hour = Integer.valueOf(parts[0]);
+            Integer minute = parts.size() > 1 ? Integer.valueOf(parts[1]) : 0;
+            if (hour < 0 || hour > 23 || minute < 0 || minute > 59) return null;
+            return Time.newInstance(hour, minute, 0, 0);
+        } catch (TypeException e) {
+            return null;
+        }
     }
     
     /**
