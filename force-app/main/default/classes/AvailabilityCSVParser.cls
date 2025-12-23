@@ -25,13 +25,22 @@ public class AvailabilityCSVParser {
         List<String> lines = csvContent.split('\n');
         
         // Skip header row if present
+        // Header detection: look for header-like patterns (column names, not data values)
         Integer startIndex = 0;
         if (lines.size() > 0) {
             String firstLine = lines[0].trim().toLowerCase();
-            if (firstLine.contains('volunteer') || firstLine.contains('email') || 
-                firstLine.contains('day') || firstLine.contains('date') ||
-                firstLine.contains('start') || firstLine.contains('end') ||
-                firstLine.contains('time')) {
+            // More specific header detection: check for header patterns like "volunteer email", "day", "start time", etc.
+            // Avoid false positives from email addresses containing "volunteer"
+            Boolean looksLikeHeader = (firstLine.contains('volunteer email') || 
+                                      firstLine.contains('volunteer,') ||
+                                      firstLine.startsWith('email,') ||
+                                      firstLine.startsWith('day,') ||
+                                      firstLine.startsWith('date,') ||
+                                      firstLine.contains('start time') ||
+                                      firstLine.contains('end time') ||
+                                      (firstLine.contains('start,') && firstLine.contains('end,')) ||
+                                      (firstLine.contains('time') && !firstLine.contains('@'))); // "time" without "@" suggests header
+            if (looksLikeHeader) {
                 startIndex = 1;
             }
         }
