@@ -1,14 +1,5 @@
 /**
- * Service class for appointment request business logic
- * 
- * Responsibilities:
- * - Parse CSV content for appointment requests
- * - Create appointment request records
- * - Match volunteers by email or ID
- * - Send referral emails
- * - Get public site URL
- * 
- * Services can call other services, but controllers must remain independent.
+ * Service for appointment request business logic
  */
 public without sharing class AppointmentRequestService {
     
@@ -30,7 +21,6 @@ public without sharing class AppointmentRequestService {
                 return result;
             }
             
-            // Parse CSV
             List<Map<String, String>> requestDataList = parseCSV(csvContent);
             
             if (requestDataList.isEmpty()) {
@@ -38,17 +28,14 @@ public without sharing class AppointmentRequestService {
                 return result;
             }
             
-            // Get volunteer email to ID mapping
             Map<String, Id> volunteerEmailToIdMap = getVolunteerEmailToIdMap(requestDataList);
             
-            // Create Appointment Request records
             List<Appointment_Request__c> appointmentRequests = new List<Appointment_Request__c>();
             List<String> skippedRecords = new List<String>();
             
             for (Map<String, String> data : requestDataList) {
                 Appointment_Request__c request = new Appointment_Request__c();
                 
-                // Set Volunteer - match by email first
                 String volunteerEmail = data.get('volunteerEmail');
                 String volunteerId = data.get('volunteerId');
                 
@@ -57,8 +44,6 @@ public without sharing class AppointmentRequestService {
                     if (volunteerIdFromEmail != null) {
                         request.Volunteer__c = volunteerIdFromEmail;
                     } else {
-                        // Volunteer email not found in User records
-                        // Try to parse as User ID if it looks like an ID
                         if (volunteerEmail.startsWith('005') && (volunteerEmail.length() == 15 || volunteerEmail.length() == 18)) {
                             try {
                                 request.Volunteer__c = Id.valueOf(volunteerEmail);
@@ -98,14 +83,11 @@ public without sharing class AppointmentRequestService {
                     errorMsg += 'Issues: ' + String.join(skippedRecords, '; ');
                 }
                 result.put('message', errorMsg);
-                result.put('skippedRecords', skippedRecords); // Include skipped records in result
+                result.put('skippedRecords', skippedRecords);
                 return result;
             }
             
-            // Insert records
             insert appointmentRequests;
-            
-            // Send emails with public site URL to each referral email
             Integer emailsSent = sendReferralEmails(appointmentRequests);
             
             result.put('success', true);
@@ -138,26 +120,16 @@ public without sharing class AppointmentRequestService {
             return dataList;
         }
         
-        // Normalize line endings - replace \r\n with \n, then split
         String normalizedContent = csvContent.replace('\r\n', '\n').replace('\r', '\n');
         List<String> lines = normalizedContent.split('\n');
         
-        // Skip header row if present
-        // Header detection: check if first line looks like a header row (not a data row)
-        // A header row typically contains column names like "Volunteer Email", "First Name", etc.
-        // A data row would contain actual data like email addresses, names, etc.
         Integer startIndex = 0;
         if (lines.size() > 0) {
             String firstLine = lines[0].trim().toLowerCase();
-            // Check if first line looks like a header by checking for header patterns
-            // Headers typically have phrases like "volunteer email", "first name", "last name", "reference email"
-            // OR start with these as column headers (comma-separated)
-            // We need to be careful not to match data rows that happen to contain these words
             Boolean looksLikeHeader = (firstLine.contains('volunteer email') || 
                                       firstLine.contains('first name') || 
                                       firstLine.contains('last name') ||
                                       firstLine.contains('reference email')) ||
-                                     // Check if line starts with header-like patterns (but not email addresses)
                                      (firstLine.startsWith('volunteer') && !firstLine.contains('@')) ||
                                      (firstLine.startsWith('email') && !firstLine.contains('@')) ||
                                      (firstLine.startsWith('first') && !firstLine.contains(',')) ||
@@ -173,7 +145,6 @@ public without sharing class AppointmentRequestService {
                 continue;
             }
             
-            // Parse CSV line (handle quoted values)
             List<String> values = parseCSVLine(line);
             
             if (values.size() >= 4) {
@@ -183,7 +154,6 @@ public without sharing class AppointmentRequestService {
                 data.put('referenceLastName', values[2].trim());
                 data.put('referenceEmail', values[3].trim());
                 
-                // Validate required fields
                 if (String.isNotBlank(data.get('volunteerEmail')) && 
                     String.isNotBlank(data.get('referenceFirstName')) && 
                     String.isNotBlank(data.get('referenceLastName')) && 
@@ -237,11 +207,7 @@ public without sharing class AppointmentRequestService {
         
         for (Map<String, String> data : dataList) {
             String volunteerEmail = data.get('volunteerEmail');
-            // Add email if it's not blank - we'll validate it exists in the database
-            // Don't use strict email validation here as the email might be a User ID
             if (String.isNotBlank(volunteerEmail)) {
-                // Only add if it looks like an email (contains @) or if it's a valid User ID format
-                // User IDs start with '005' and are 15 or 18 characters
                 if (volunteerEmail.contains('@') || 
                     (volunteerEmail.startsWith('005') && (volunteerEmail.length() == 15 || volunteerEmail.length() == 18))) {
                     volunteerEmails.add(volunteerEmail.toLowerCase());
@@ -252,7 +218,6 @@ public without sharing class AppointmentRequestService {
         Map<String, Id> emailToIdMap = new Map<String, Id>();
         
         if (!volunteerEmails.isEmpty()) {
-            // Use selector to get users by email - this will only return emails that exist
             List<User> volunteers = OHRUserSelector.getUsersByEmails(volunteerEmails);
             
             for (User volunteer : volunteers) {
@@ -272,7 +237,6 @@ public without sharing class AppointmentRequestService {
         Integer emailsSent = 0;
         
         try {
-            // Get public site URL
             String publicSiteUrl = getPublicSiteUrl();
             
             if (String.isBlank(publicSiteUrl)) {
@@ -285,7 +249,7 @@ public without sharing class AppointmentRequestService {
             for (Appointment_Request__c request : appointmentRequests) {
                 if (String.isBlank(request.Reference_Email__c) || 
                     !BookingEmailService.isValidEmail(request.Reference_Email__c)) {
-                    continue; // Skip if no valid referral email
+                    continue;
                 }
                 
                 Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
@@ -295,7 +259,6 @@ public without sharing class AppointmentRequestService {
                 String firstName = request.Reference_First_Name__c;
                 String greeting = String.isNotBlank(firstName) ? 'Dear ' + firstName + ',' : 'Dear Referral,';
                 
-                // Build URL with appointment request ID as identifier
                 String calendarUrl = publicSiteUrl;
                 if (!calendarUrl.contains('?')) {
                     calendarUrl += '?requestId=' + request.Id;
@@ -335,7 +298,6 @@ public without sharing class AppointmentRequestService {
             }
         } catch (Exception e) {
             // Public site URL retrieval failed - return 0 emails sent
-            // In production, consider logging to a custom object or using Platform Events
         }
         
         return emailsSent;
@@ -347,23 +309,12 @@ public without sharing class AppointmentRequestService {
      */
     private static String getPublicSiteUrl() {
         try {
-            // Get the organization's My Domain
             Organization org = [SELECT InstanceName FROM Organization LIMIT 1];
             String myDomain = org.InstanceName.toLowerCase();
-            
-            // Build the Experience Cloud site URL
-            // Format: https://{mydomain}.lightning.force.com/{urlPathPrefix}
-            // For sandboxes: https://{mydomain}.sandbox.lightning.force.com/{urlPathPrefix}
-            // The urlPathPrefix is set in the Experience Bundle metadata as "ohrscheduler"
             String urlPathPrefix = 'ohrscheduler';
-            
-            // Determine if it's a sandbox
             String domain = myDomain.contains('--') ? 'sandbox.lightning.force.com' : 'lightning.force.com';
-            String siteUrl = 'https://' + myDomain + '.' + domain + '/' + urlPathPrefix;
-            
-            return siteUrl;
+            return 'https://' + myDomain + '.' + domain + '/' + urlPathPrefix;
         } catch (Exception e) {
-            // Fallback to default URL if site configuration retrieval fails
             return 'https://login.salesforce.com';
         }
     }

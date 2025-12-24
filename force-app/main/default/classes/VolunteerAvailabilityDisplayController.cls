@@ -1,23 +1,13 @@
 /**
  * Controller for volunteerAvailabilityDisplay LWC
- * 
- * IMPORTANT: Controllers should NEVER call other controllers - only services.
- * This controller calls VolunteerAvailabilityService, which can call other services if needed.
- * 
- * Responsibilities:
- * - Expose @AuraEnabled methods for the LWC
- * - Handle exception handling and validation
- * - Convert service data (Maps) to wrapper classes for LWC consumption
- * - NO business logic - all logic is in the service layer
+ * Delegates to VolunteerAvailabilityService for business logic
  */
 public without sharing class VolunteerAvailabilityDisplayController {
     
     /**
      * Get volunteer availability data for display table
-     * If startDate and endDate are null, returns all records from database
-     * 
-     * @param startDate Start date for filtering (null to get all records) - accepts String to avoid timezone conversion
-     * @param endDate End date for filtering (null to get all records) - accepts String to avoid timezone conversion
+     * @param startDate Start date filter (YYYY-MM-DD format, null for all records)
+     * @param endDate End date filter (YYYY-MM-DD format, null for all records)
      * @param offset Pagination offset
      * @param pageSize Number of records per page
      * @return VolunteerAvailabilityResult with paginated rows
@@ -25,28 +15,20 @@ public without sharing class VolunteerAvailabilityDisplayController {
     @AuraEnabled
     public static VolunteerAvailabilityResult getVolunteerAvailabilityData(String startDate, String endDate, Integer offset, Integer pageSize) {
         try {
-            // Date filters are optional - if both are null, get all records
-            
-            // CRITICAL FIX: Accept dates as Strings and parse them ourselves to avoid timezone conversion
-            // When JavaScript sends Date objects, Apex may convert them with timezone considerations.
-            // By accepting String dates in YYYY-MM-DD format and parsing them with Date.valueOf(),
-            // we ensure the date represents exactly what the user selected, without timezone shifts.
             Date normalizedStartDate = null;
             Date normalizedEndDate = null;
             
             if (String.isNotBlank(startDate)) {
                 try {
-                    // Parse the date string directly by extracting components to avoid ANY timezone conversion
-                    // Format: YYYY-MM-DD (e.g., "2025-12-22")
                     List<String> dateParts = startDate.split('-');
                     if (dateParts.size() != 3) {
                         throw new AuraHandledException('Invalid start date format: ' + startDate + '. Expected YYYY-MM-DD format.');
                     }
-                    Integer year = Integer.valueOf(dateParts[0]);
-                    Integer month = Integer.valueOf(dateParts[1]);
-                    Integer day = Integer.valueOf(dateParts[2]);
-                    // Create date directly from components - no timezone conversion possible
-                    normalizedStartDate = Date.newInstance(year, month, day);
+                    normalizedStartDate = Date.newInstance(
+                        Integer.valueOf(dateParts[0]), 
+                        Integer.valueOf(dateParts[1]), 
+                        Integer.valueOf(dateParts[2])
+                    );
                 } catch (Exception e) {
                     throw new AuraHandledException('Invalid start date format: ' + startDate + '. Expected YYYY-MM-DD format. Error: ' + e.getMessage());
                 }
@@ -54,33 +36,26 @@ public without sharing class VolunteerAvailabilityDisplayController {
             
             if (String.isNotBlank(endDate)) {
                 try {
-                    // Parse the date string directly by extracting components to avoid ANY timezone conversion
-                    // Format: YYYY-MM-DD (e.g., "2025-12-22")
                     List<String> dateParts = endDate.split('-');
                     if (dateParts.size() != 3) {
                         throw new AuraHandledException('Invalid end date format: ' + endDate + '. Expected YYYY-MM-DD format.');
                     }
-                    Integer year = Integer.valueOf(dateParts[0]);
-                    Integer month = Integer.valueOf(dateParts[1]);
-                    Integer day = Integer.valueOf(dateParts[2]);
-                    // Create date directly from components - no timezone conversion possible
-                    normalizedEndDate = Date.newInstance(year, month, day);
+                    normalizedEndDate = Date.newInstance(
+                        Integer.valueOf(dateParts[0]), 
+                        Integer.valueOf(dateParts[1]), 
+                        Integer.valueOf(dateParts[2])
+                    );
                 } catch (Exception e) {
                     throw new AuraHandledException('Invalid end date format: ' + endDate + '. Expected YYYY-MM-DD format. Error: ' + e.getMessage());
                 }
             }
             
-            // Default pagination values
             Integer offsetValue = offset != null ? offset : 0;
             Integer pageSizeValue = (pageSize != null && pageSize > 0) ? pageSize : 50;
             
-            // Service handles all logic and returns pre-organized data with pagination
-            // Service can call other services if needed
-            // Pass normalized dates to service
             Map<String, Object> serviceResult = 
                 VolunteerAvailabilityService.getVolunteerAvailabilityData(normalizedStartDate, normalizedEndDate, offsetValue, pageSizeValue);
             
-            // Controller just converts to wrapper classes (simple data transformation)
             List<Map<String, Object>> serviceRows = (List<Map<String, Object>>) serviceResult.get('rows');
             List<VolunteerAvailabilityRow> rows = convertToVolunteerAvailabilityRows(serviceRows);
             
@@ -97,8 +72,6 @@ public without sharing class VolunteerAvailabilityDisplayController {
     
     /**
      * Get volunteer information for display
-     * Delegates to VolunteerAvailabilityService, which calls VolunteerDisplayService if needed
-     * 
      * @param volunteerId Volunteer (User) ID
      * @return VolunteerInfoResult with volunteer information
      */
@@ -108,7 +81,6 @@ public without sharing class VolunteerAvailabilityDisplayController {
             throw new AuraHandledException('volunteerId is required.');
         }
         
-        // Service handles all logic - can call other services
         Map<String, Object> serviceResult = VolunteerAvailabilityService.getVolunteerInfo(volunteerId);
         
         if (serviceResult == null || !(Boolean) serviceResult.get('success')) {
@@ -118,7 +90,6 @@ public without sharing class VolunteerAvailabilityDisplayController {
             return result;
         }
         
-        // Controller converts to wrapper class (simple data transformation)
         Map<String, Object> serviceVolunteer = (Map<String, Object>) serviceResult.get('volunteer');
         VolunteerInfo volunteerInfo = new VolunteerInfo();
         volunteerInfo.id = (Id) serviceVolunteer.get('id');
@@ -136,16 +107,12 @@ public without sharing class VolunteerAvailabilityDisplayController {
     
     /**
      * Get all volunteers for selection/filtering
-     * Delegates to VolunteerAvailabilityService, which calls VolunteerDisplayService if needed
-     * 
      * @return VolunteerListResult with list of volunteers
      */
     @AuraEnabled(cacheable=true)
     public static VolunteerListResult getAllVolunteersForDisplay() {
-        // Service handles all logic - can call other services
         Map<String, Object> serviceResult = VolunteerAvailabilityService.getAllVolunteersForDisplay();
         
-        // Controller converts to wrapper classes (simple data transformation)
         List<Map<String, Object>> serviceVolunteers = (List<Map<String, Object>>) serviceResult.get('volunteers');
         List<VolunteerInfo> volunteers = new List<VolunteerInfo>();
         
@@ -166,12 +133,6 @@ public without sharing class VolunteerAvailabilityDisplayController {
         return result;
     }
     
-    // Private conversion methods - simple data transformation, no business logic
-    
-    /**
-     * Convert service's organized data structure to VolunteerAvailabilityRow list
-     * Service provides pre-organized data, controller just converts format
-     */
     private static List<VolunteerAvailabilityRow> convertToVolunteerAvailabilityRows(List<Map<String, Object>> serviceData) {
         List<VolunteerAvailabilityRow> rows = new List<VolunteerAvailabilityRow>();
         
@@ -190,7 +151,7 @@ public without sharing class VolunteerAvailabilityDisplayController {
                 tsd.startTime = (Time) slotData.get('startTime');
                 tsd.endTime = (Time) slotData.get('endTime');
                 tsd.status = (String) slotData.get('status');
-                tsd.timeLabel = (String) slotData.get('timeLabel'); // Service formats this
+                tsd.timeLabel = (String) slotData.get('timeLabel');
                 row.timeSlots.add(tsd);
             }
             
@@ -200,22 +161,20 @@ public without sharing class VolunteerAvailabilityDisplayController {
         return rows;
     }
 
-    // Wrapper Classes for LWC communication (DTOs with @AuraEnabled)
-    
     public class VolunteerAvailabilityRow {
         @AuraEnabled public Id volunteerId;
         @AuraEnabled public String volunteerName;
         @AuraEnabled public String volunteerEmail;
         @AuraEnabled public Date slotDate;
-        @AuraEnabled public List<TimeSlotData> timeSlots; // All time slots for this volunteer-date
+        @AuraEnabled public List<TimeSlotData> timeSlots;
     }
     
     public class TimeSlotData {
         @AuraEnabled public Id id;
         @AuraEnabled public Time startTime;
         @AuraEnabled public Time endTime;
-        @AuraEnabled public String status; // 'Available' or 'Booked'
-        @AuraEnabled public String timeLabel; // Formatted time range (e.g., "9:00 AM - 9:15 AM")
+        @AuraEnabled public String status;
+        @AuraEnabled public String timeLabel;
     }
     
     public class VolunteerAvailabilityResult {
@@ -224,7 +183,6 @@ public without sharing class VolunteerAvailabilityDisplayController {
         @AuraEnabled public Boolean hasMore;
     }
     
-    // Wrapper classes for volunteer information
     public class VolunteerInfoResult {
         @AuraEnabled public Boolean success;
         @AuraEnabled public String message;

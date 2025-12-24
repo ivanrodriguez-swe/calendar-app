@@ -1,24 +1,15 @@
-// Service class for volunteer availability business logic
-// Uses 'with sharing' for security
-// Works with raw data (SObjects, primitives) - no wrapper classes
-// 
-// NOTE: Services CAN call other services if needed for business logic.
-// This is different from controllers, which must remain independent.
 public with sharing class VolunteerAvailabilityService {
     
     /**
      * Get available time slots for a date range
-     * Returns organized data structure ready for presentation layer
      */
     public static List<Map<String, Object>> getTimeslotsForRange(Date startDate, Date endDate) {
         List<Time_Slot__c> slots = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate);
         List<Date> dates = DateRangeHelper.getDatesBetween(startDate, endDate, true);
         List<String> timeRangeLabels = getTimeSlotStructureLabels();
         
-        // Build lookup map: "date-timeRange" -> Time_Slot__c
         Map<String, Time_Slot__c> slotMap = buildSlotMap(slots);
         
-        // Organize by time range
         List<Map<String, Object>> result = new List<Map<String, Object>>();
         for (String label : timeRangeLabels) {
             Map<String, Object> timeRangeData = new Map<String, Object>();
@@ -119,11 +110,8 @@ public with sharing class VolunteerAvailabilityService {
      * @return Map containing 'rows' (List of data), 'totalCount' (Integer), and 'hasMore' (Boolean)
      */
     public static Map<String, Object> getVolunteerAvailabilityData(Date startDate, Date endDate, Integer offset, Integer pageSize) {
-        // Use existing selector - no logic here, just query
-        // Selector handles null dates (returns all records if both are null)
         List<Time_Slot__c> slots = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
         
-        // Group by volunteer-date combination (flattened structure)
         Map<String, Map<String, Object>> volunteerDateMap = new Map<String, Map<String, Object>>();
         
         for (Time_Slot__c slot : slots) {
@@ -140,13 +128,8 @@ public with sharing class VolunteerAvailabilityService {
             }
             
             Map<String, Object> rowData = volunteerDateMap.get(key);
-            List<Map<String, Object>> timeSlots = 
-                (List<Map<String, Object>>) rowData.get('timeSlots');
+            List<Map<String, Object>> timeSlots = (List<Map<String, Object>>) rowData.get('timeSlots');
             
-            // TIMEZONE-SAFE: Format times server-side in Apex to avoid timezone conversion issues
-            // Time values in Salesforce are time-of-day only (no timezone), so formatting here
-            // ensures consistent display regardless of user's timezone. The formatted string
-            // (e.g., "9:00 AM - 9:15 AM") is sent to the LWC and displayed directly.
             String timeLabel = TimeSlotFormatter.formatTime(slot.Start_Time__c) + 
                               ' - ' + 
                               TimeSlotFormatter.formatTime(slot.End_Time__c);
@@ -156,15 +139,13 @@ public with sharing class VolunteerAvailabilityService {
             slotData.put('startTime', slot.Start_Time__c);
             slotData.put('endTime', slot.End_Time__c);
             slotData.put('status', slot.Status__c);
-            slotData.put('timeLabel', timeLabel); // Pre-formatted string (timezone-safe)
+            slotData.put('timeLabel', timeLabel);
             timeSlots.add(slotData);
         }
         
-        // Sort by volunteer name, then by date
         List<Map<String, Object>> allRows = new List<Map<String, Object>>(volunteerDateMap.values());
         allRows.sort(new VolunteerDateComparator());
         
-        // Apply pagination
         Integer totalCount = allRows.size();
         Integer startIndex = offset != null ? offset : 0;
         Integer endIndex = (pageSize != null && pageSize > 0) ? 
@@ -207,7 +188,6 @@ public with sharing class VolunteerAvailabilityService {
             if (date2 == null) {
                 return 1; // null dates come first
             }
-            // Compare dates: return negative if date1 < date2, positive if date1 > date2, 0 if equal
             if (date1 < date2) {
                 return -1;
             } else if (date1 > date2) {
@@ -218,7 +198,6 @@ public with sharing class VolunteerAvailabilityService {
         }
     }
     
-    // Private helper methods
     
     private static Map<String, Time_Slot__c> buildSlotMap(List<Time_Slot__c> slots) {
         Map<String, Time_Slot__c> slotMap = new Map<String, Time_Slot__c>();
@@ -297,13 +276,11 @@ public with sharing class VolunteerAvailabilityService {
         Map<String, String> customerInfo = new Map<String, String>();
         
         if (appointmentRequest.Reference_Email__c != null) {
-            // From appointment request
             String firstName = appointmentRequest.Reference_First_Name__c != null ? appointmentRequest.Reference_First_Name__c : '';
             String lastName = appointmentRequest.Reference_Last_Name__c != null ? appointmentRequest.Reference_Last_Name__c : '';
             customerInfo.put('name', (firstName + ' ' + lastName).trim());
             customerInfo.put('email', appointmentRequest.Reference_Email__c);
         } else {
-            // From customer user
             List<User> users = OHRUserSelector.getUserById(customerId);
             if (users.isEmpty()) {
                 throw new AuraHandledException('Customer not found.');
@@ -385,18 +362,15 @@ public with sharing class VolunteerAvailabilityService {
             if (String.isBlank(dateValue)) {
                 return null;
             }
-            // CRITICAL FIX: Parse the date string directly by extracting components to avoid ANY timezone conversion
-            // Format: YYYY-MM-DD (e.g., "2025-12-22")
-            // Split the string and create date directly from components - no timezone conversion possible
             List<String> dateParts = dateValue.split('-');
             if (dateParts.size() != 3) {
                 return null;
             }
-            Integer year = Integer.valueOf(dateParts[0]);
-            Integer month = Integer.valueOf(dateParts[1]);
-            Integer day = Integer.valueOf(dateParts[2]);
-            // Create date directly from components - no timezone conversion possible
-            Date result = Date.newInstance(year, month, day);
+            Date result = Date.newInstance(
+                Integer.valueOf(dateParts[0]), 
+                Integer.valueOf(dateParts[1]), 
+                Integer.valueOf(dateParts[2])
+            );
             return result;
         } catch (Exception e) {
             return null;
@@ -426,9 +400,6 @@ public with sharing class VolunteerAvailabilityService {
         List<Time_Slot__c> slots = new List<Time_Slot__c>();
         Integer slotMinutes = 15;
         
-        // CRITICAL: Normalize the date one more time before using it to ensure no timezone issues
-        // Even though times are 9 AM - 4 PM (safe range), we want to be absolutely certain
-        // the date is stored exactly as intended
         Date normalizedDate = Date.newInstance(slotDate.year(), slotDate.month(), slotDate.day());
         
         Time currentStart = startTime;
@@ -449,7 +420,7 @@ public with sharing class VolunteerAvailabilityService {
             Time_Slot__c ts = new Time_Slot__c();
             ts.Start_Time__c = currentStart;
             ts.End_Time__c = currentEnd;
-            ts.Day__c = normalizedDate; // Use normalized date to ensure exact date storage
+            ts.Day__c = normalizedDate;
             ts.Status__c = 'Available';
             ts.Volunteer__c = volunteerId;
             
@@ -465,7 +436,6 @@ public with sharing class VolunteerAvailabilityService {
     }
     
     private static List<Time_Slot__c> processTimeSlotsForInsert(List<Time_Slot__c> potentialSlots) {
-        // Deduplicate within submission
         Set<String> submissionKeys = new Set<String>();
         List<Time_Slot__c> deduplicated = new List<Time_Slot__c>();
         
@@ -477,7 +447,6 @@ public with sharing class VolunteerAvailabilityService {
             }
         }
         
-        // Check existing in database - collect dates and volunteer IDs
         Set<Date> dates = new Set<Date>();
         Set<Id> volunteerIds = new Set<Id>();
         for (Time_Slot__c ts : deduplicated) {
@@ -499,7 +468,6 @@ public with sharing class VolunteerAvailabilityService {
             existingKeys.add(buildTimeSlotKey(ts.Day__c, ts.Start_Time__c, ts.End_Time__c, ts.Volunteer__c));
         }
         
-        // Filter duplicates
         List<Time_Slot__c> toInsert = new List<Time_Slot__c>();
         Set<String> finalKeys = new Set<String>();
         
@@ -553,8 +521,6 @@ public with sharing class VolunteerAvailabilityService {
             return result;
         }
         
-        // Call VolunteerDisplayService to get volunteer information
-        // Services can call other services
         Map<String, Object> volunteerData = VolunteerDisplayService.getVolunteerById(volunteerId);
         
         if (volunteerData == null) {
@@ -577,8 +543,6 @@ public with sharing class VolunteerAvailabilityService {
      * @return Map containing list of volunteers and total count
      */
     public static Map<String, Object> getAllVolunteersForDisplay() {
-        // Call VolunteerDisplayService to get all volunteers
-        // Services can call other services
         return VolunteerDisplayService.getAllVolunteers();
     }
 }
