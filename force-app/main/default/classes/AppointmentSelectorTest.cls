@@ -50,11 +50,11 @@ private class AppointmentSelectorTest {
         List<Appointment__c> result = AppointmentSelector.getAppointmentById(appointment.Id);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(1, result.size(), 'Should return one appointment');
-        System.assertEquals(appointment.Id, result[0].Id, 'Should return correct appointment');
-        System.assertNotEquals(null, result[0].Appointment_Request__c, 'Should have appointment request');
-        System.assertNotEquals(null, result[0].Time_Slot__c, 'Should have time slot');
+        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.areEqual(1, result.size(), 'Should return one appointment');
+        Assert.areEqual(appointment.Id, result[0].Id, 'Should return correct appointment');
+        Assert.isNotNull(null, result[0].Appointment_Request__c, 'Should have appointment request');
+        Assert.isNotNull(null, result[0].Time_Slot__c, 'Should have time slot');
     }
     
     @isTest
@@ -65,8 +65,8 @@ private class AppointmentSelectorTest {
         List<Appointment__c> result = AppointmentSelector.getAppointmentById(fakeId);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(0, result.size(), 'Should return empty list');
+        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.areEqual(0, result.size(), 'Should return empty list');
     }
 }
 

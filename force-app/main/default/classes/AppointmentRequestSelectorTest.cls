@@ -35,11 +35,11 @@ private class AppointmentRequestSelectorTest {
         List<Appointment_Request__c> result = AppointmentRequestSelector.getAppointmentRequestById(request.Id);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(1, result.size(), 'Should return one request');
-        System.assertEquals(request.Id, result[0].Id, 'Should return correct request');
-        System.assertNotEquals(null, result[0].Volunteer__c, 'Should have volunteer');
-        System.assertNotEquals(null, result[0].Status__c, 'Should have status');
+        Assert.isNotNull(result, 'Result should not be null');
+        Assert.areEqual(1, result.size(), 'Should return one request');
+        Assert.areEqual(request.Id, result[0].Id, 'Should return correct request');
+        Assert.isNotNull(result[0].Volunteer__c, 'Should have volunteer');
+        Assert.isNotNull(result[0].Status__c, 'Should have status');
     }
     
     @isTest
@@ -51,11 +51,11 @@ private class AppointmentRequestSelectorTest {
         List<Appointment_Request__c> result = AppointmentRequestSelector.getAppointmentRequestById(request.Id);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(1, result.size(), 'Should return one request');
-        System.assertNotEquals(null, result[0].Reference_Email__c, 'Should have reference email');
-        System.assertNotEquals(null, result[0].Reference_First_Name__c, 'Should have first name');
-        System.assertNotEquals(null, result[0].Reference_Last_Name__c, 'Should have last name');
+        Assert.isNotNull(result, 'Result should not be null');
+        Assert.areEqual(1, result.size(), 'Should return one request');
+        Assert.isNotNull(result[0].Reference_Email__c, 'Should have reference email');
+        Assert.isNotNull(result[0].Reference_First_Name__c, 'Should have first name');
+        Assert.isNotNull(result[0].Reference_Last_Name__c, 'Should have last name');
     }
     
     @isTest
@@ -66,7 +66,7 @@ private class AppointmentRequestSelectorTest {
         List<Appointment_Request__c> result = AppointmentRequestSelector.getAppointmentRequestById(fakeId);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(0, result.size(), 'Should return empty list');
+        Assert.isNotNull(result, 'Result should not be null');
+        Assert.areEqual(0, result.size(), 'Should return empty list');
     }
 }

@@ -44,8 +44,8 @@ private class VolunteerAvailabilityControllerTest {
             List<VolunteerAvailabilityController.DayWrapper> result = 
                 VolunteerAvailabilityController.getTimeslotsForRange(startDate, endDate);
             
-            System.assertNotEquals(null, result, 'Result should not be null');
-            System.assert(result.size() > 0, 'Should return at least one day wrapper');
+            Assert.isNotNull(null, result, 'Result should not be null');
+            Assert.isTrue(result.size() > 0, 'Should return at least one day wrapper');
         }
         Test.stopTest();
     }
@@ -59,9 +59,9 @@ private class VolunteerAvailabilityControllerTest {
         System.runAs(admin) {
             try {
                 VolunteerAvailabilityController.getTimeslotsForRange(null, endDate);
-                System.assert(false, 'Should have thrown exception');
+                Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                System.assert(e instanceof AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
             }
         }
         Test.stopTest();
@@ -76,9 +76,9 @@ private class VolunteerAvailabilityControllerTest {
         System.runAs(admin) {
             try {
                 VolunteerAvailabilityController.getTimeslotsForRange(startDate, null);
-                System.assert(false, 'Should have thrown exception');
+                Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                System.assert(e instanceof AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
             }
         }
         Test.stopTest();
@@ -95,12 +95,12 @@ private class VolunteerAvailabilityControllerTest {
             VolunteerAvailabilityController.BookingResult result = 
                 VolunteerAvailabilityController.bookTimeSlot(slot.Id, reference.Id, null);
             
-            System.assertEquals(true, result.success, 'Booking should succeed');
-            System.assertNotEquals(null, result.appointmentId, 'Appointment ID should be set');
+            Assert.areEqual(true, result.success, 'Booking should succeed');
+            Assert.isNotNull(null, result.appointmentId, 'Appointment ID should be set');
             
             // Verify slot status updated
             Time_Slot__c updatedSlot = [SELECT Status__c FROM Time_Slot__c WHERE Id = :slot.Id];
-            System.assertEquals('Booked', updatedSlot.Status__c, 'Slot status should be Booked');
+            Assert.areEqual('Booked', updatedSlot.Status__c, 'Slot status should be Booked');
         }
         Test.stopTest();
     }
@@ -126,11 +126,11 @@ private class VolunteerAvailabilityControllerTest {
             VolunteerAvailabilityController.BookingResult result = 
                 VolunteerAvailabilityController.bookTimeSlot(slot.Id, null, request.Id);
             
-            System.assertEquals(true, result.success, 'Booking should succeed');
+            Assert.areEqual(true, result.success, 'Booking should succeed');
             
             // Verify appointment request status updated
             Appointment_Request__c updatedRequest = [SELECT Status__c FROM Appointment_Request__c WHERE Id = :request.Id];
-            System.assertEquals('Reserved', updatedRequest.Status__c, 'Request status should be Reserved');
+            Assert.areEqual('Reserved', updatedRequest.Status__c, 'Request status should be Reserved');
         }
         Test.stopTest();
     }
@@ -145,9 +145,9 @@ private class VolunteerAvailabilityControllerTest {
         System.runAs(admin) {
             try {
                 VolunteerAvailabilityController.bookTimeSlot(fakeId, reference.Id, null);
-                System.assert(false, 'Should have thrown exception');
+                Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                System.assert(e instanceof AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
             }
         }
         Test.stopTest();
@@ -173,8 +173,8 @@ private class VolunteerAvailabilityControllerTest {
             VolunteerAvailabilityController.CreateSlotsResult result = 
                 VolunteerAvailabilityController.createTimeSlotsFromRanges(ranges);
             
-            System.assertEquals(true, result.success, 'Should succeed');
-            System.assert(result.slotsCreated > 0, 'Should create slots');
+            Assert.areEqual(true, result.success, 'Should succeed');
+            Assert.isTrue(result.slotsCreated > 0, 'Should create slots');
         }
         Test.stopTest();
     }
@@ -190,7 +190,7 @@ private class VolunteerAvailabilityControllerTest {
             VolunteerAvailabilityController.CreateSlotsResult result = 
                 VolunteerAvailabilityController.createTimeSlotsFromRanges(ranges);
             
-            System.assertEquals(false, result.success, 'Should fail with empty ranges');
+            Assert.areEqual(false, result.success, 'Should fail with empty ranges');
         }
         Test.stopTest();
     }
@@ -216,7 +216,7 @@ private class VolunteerAvailabilityControllerTest {
                 VolunteerAvailabilityController.createTimeSlotsFromRanges(ranges);
             
             // Should handle gracefully
-            System.assertNotEquals(null, result, 'Result should not be null');
+            Assert.isNotNull(null, result, 'Result should not be null');
         }
         Test.stopTest();
     }
@@ -235,8 +235,8 @@ private class VolunteerAvailabilityControllerTest {
             VolunteerAvailabilityController.CreateSlotsResult result = 
                 VolunteerAvailabilityController.createTimeSlotsFromCSV(csvContent);
             
-            System.assertEquals(true, result.success, 'Should succeed');
-            System.assert(result.slotsCreated > 0, 'Should create slots');
+            Assert.areEqual(true, result.success, 'Should succeed');
+            Assert.isTrue(result.slotsCreated > 0, 'Should create slots');
         }
         Test.stopTest();
     }
@@ -250,7 +250,7 @@ private class VolunteerAvailabilityControllerTest {
             VolunteerAvailabilityController.CreateSlotsResult result = 
                 VolunteerAvailabilityController.createTimeSlotsFromCSV('');
             
-            System.assertEquals(false, result.success, 'Should fail with empty content');
+            Assert.areEqual(false, result.success, 'Should fail with empty content');
         }
         Test.stopTest();
     }
@@ -266,7 +266,7 @@ private class VolunteerAvailabilityControllerTest {
                 VolunteerAvailabilityController.createTimeSlotsFromCSV(csvContent);
             
             // Should handle gracefully
-            System.assertNotEquals(null, result, 'Result should not be null');
+            Assert.isNotNull(null, result, 'Result should not be null');
         }
         Test.stopTest();
     }
@@ -276,8 +276,8 @@ private class VolunteerAvailabilityControllerTest {
         // Test DayWrapper
         VolunteerAvailabilityController.DayWrapper dw = 
             new VolunteerAvailabilityController.DayWrapper('09:00-09:15');
-        System.assertEquals('09:00-09:15', dw.label, 'Label should match');
-        System.assertNotEquals(null, dw.slots, 'Slots list should be initialized');
+        Assert.areEqual('09:00-09:15', dw.label, 'Label should match');
+        Assert.isNotNull(null, dw.slots, 'Slots list should be initialized');
         
         // Test TimeslotWrapper - available slot
         Date testDate = Date.today();
@@ -289,32 +289,32 @@ private class VolunteerAvailabilityControllerTest {
             new VolunteerAvailabilityController.TimeslotWrapper(
                 'a00000000000000', startTime, endTime, testDate, volunteer.Id, volunteer.Name
             );
-        System.assertEquals(true, tw1.isAvailable, 'Should be available');
-        System.assertEquals(false, tw1.isUnavailable, 'Should not be unavailable');
+        Assert.areEqual(true, tw1.isAvailable, 'Should be available');
+        Assert.areEqual(false, tw1.isUnavailable, 'Should not be unavailable');
         
         // Test TimeslotWrapper - unavailable slot
         VolunteerAvailabilityController.TimeslotWrapper tw2 = 
             new VolunteerAvailabilityController.TimeslotWrapper('09:00-09:15', testDate);
-        System.assertEquals(false, tw2.isAvailable, 'Should not be available');
-        System.assertEquals(true, tw2.isUnavailable, 'Should be unavailable');
+        Assert.areEqual(false, tw2.isAvailable, 'Should not be available');
+        Assert.areEqual(true, tw2.isUnavailable, 'Should be unavailable');
         
         // Test BookingResult
         VolunteerAvailabilityController.BookingResult br = 
             new VolunteerAvailabilityController.BookingResult(true, 'Success', 'a00000000000000');
-        System.assertEquals(true, br.success, 'Success should match');
-        System.assertEquals('Success', br.message, 'Message should match');
+        Assert.areEqual(true, br.success, 'Success should match');
+        Assert.areEqual('Success', br.message, 'Message should match');
         
         // Test CreateSlotsResult - default constructor
         VolunteerAvailabilityController.CreateSlotsResult csr1 = 
             new VolunteerAvailabilityController.CreateSlotsResult();
-        System.assertEquals(false, csr1.success, 'Default success should be false');
-        System.assertEquals(0, csr1.slotsCreated, 'Default slots created should be 0');
+        Assert.areEqual(false, csr1.success, 'Default success should be false');
+        Assert.areEqual(0, csr1.slotsCreated, 'Default slots created should be 0');
         
         // Test CreateSlotsResult - parameterized constructor
         VolunteerAvailabilityController.CreateSlotsResult csr2 = 
             new VolunteerAvailabilityController.CreateSlotsResult(true, 'Success', 5);
-        System.assertEquals(true, csr2.success, 'Success should match');
-        System.assertEquals(5, csr2.slotsCreated, 'Slots created should match');
+        Assert.areEqual(true, csr2.success, 'Success should match');
+        Assert.areEqual(5, csr2.slotsCreated, 'Slots created should match');
     }
 }
 

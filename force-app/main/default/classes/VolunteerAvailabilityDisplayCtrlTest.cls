@@ -68,11 +68,11 @@ private class VolunteerAvailabilityDisplayCtrlTest {
             VolunteerAvailabilityDisplayController.VolunteerAvailabilityResult result = 
                 VolunteerAvailabilityDisplayController.getVolunteerAvailabilityData(null, null, 0, 50);
             
-            System.assertNotEquals(null, result, 'Result should not be null');
-            System.assertNotEquals(null, result.rows, 'Rows should not be null');
-            System.assert(result.rows.size() > 0, 'Should return at least one row');
-            System.assertNotEquals(null, result.totalCount, 'Total count should be set');
-            System.assertNotEquals(null, result.hasMore, 'HasMore should be set');
+            Assert.isNotNull(result, 'Result should not be null');
+            Assert.isNotNull(result.rows, 'Rows should not be null');
+            Assert.isTrue(result.rows.size() > 0, 'Should return at least one row');
+            Assert.isNotNull(result.totalCount, 'Total count should be set');
+            Assert.isNotNull(result.hasMore, 'HasMore should be set');
         }
         Test.stopTest();
     }
@@ -93,9 +93,9 @@ private class VolunteerAvailabilityDisplayCtrlTest {
                     50
                 );
             
-            System.assertNotEquals(null, result, 'Result should not be null');
-            System.assertNotEquals(null, result.rows, 'Rows should not be null');
-            System.assert(result.totalCount >= 0, 'Total count should be set');
+            Assert.isNotNull(result, 'Result should not be null');
+            Assert.isNotNull(result.rows, 'Rows should not be null');
+            Assert.isTrue(result.totalCount >= 0, 'Total count should be set');
         }
         Test.stopTest();
     }
@@ -111,8 +111,8 @@ private class VolunteerAvailabilityDisplayCtrlTest {
             VolunteerAvailabilityDisplayController.VolunteerAvailabilityResult result = 
                 VolunteerAvailabilityDisplayController.getVolunteerAvailabilityData(sameDateStr, sameDateStr, 0, 50);
             
-            System.assertNotEquals(null, result, 'Result should not be null');
-            System.assertNotEquals(null, result.rows, 'Rows should not be null');
+            Assert.isNotNull(result, 'Result should not be null');
+            Assert.isNotNull(result.rows, 'Rows should not be null');
         }
         Test.stopTest();
     }
@@ -127,15 +127,15 @@ private class VolunteerAvailabilityDisplayCtrlTest {
             VolunteerAvailabilityDisplayController.VolunteerAvailabilityResult result1 = 
                 VolunteerAvailabilityDisplayController.getVolunteerAvailabilityData(null, null, 0, 2);
             
-            System.assertNotEquals(null, result1, 'First page result should not be null');
-            System.assert(result1.rows.size() <= 2, 'First page should have at most 2 rows');
+            Assert.isNotNull(result1, 'First page result should not be null');
+            Assert.isTrue(result1.rows.size() <= 2, 'First page should have at most 2 rows');
             
             // Second page
             if (result1.hasMore) {
                 VolunteerAvailabilityDisplayController.VolunteerAvailabilityResult result2 = 
                     VolunteerAvailabilityDisplayController.getVolunteerAvailabilityData(null, null, 2, 2);
                 
-                System.assertNotEquals(null, result2, 'Second page result should not be null');
+                Assert.isNotNull(result2, 'Second page result should not be null');
             }
         }
         Test.stopTest();
@@ -151,8 +151,8 @@ private class VolunteerAvailabilityDisplayCtrlTest {
             VolunteerAvailabilityDisplayController.VolunteerAvailabilityResult result = 
                 VolunteerAvailabilityDisplayController.getVolunteerAvailabilityData(null, null, null, null);
             
-            System.assertNotEquals(null, result, 'Result should not be null');
-            System.assertNotEquals(null, result.rows, 'Rows should not be null');
+            Assert.isNotNull(result, 'Result should not be null');
+            Assert.isNotNull(result.rows, 'Rows should not be null');
         }
         Test.stopTest();
     }
@@ -167,7 +167,7 @@ private class VolunteerAvailabilityDisplayCtrlTest {
             VolunteerAvailabilityDisplayController.VolunteerAvailabilityResult result = 
                 VolunteerAvailabilityDisplayController.getVolunteerAvailabilityData(null, null, 0, 0);
             
-            System.assertNotEquals(null, result, 'Result should not be null');
+            Assert.isNotNull(result, 'Result should not be null');
             // Should default to 50
         }
         Test.stopTest();
@@ -183,10 +183,10 @@ private class VolunteerAvailabilityDisplayCtrlTest {
             VolunteerAvailabilityDisplayController.VolunteerInfoResult result = 
                 VolunteerAvailabilityDisplayController.getVolunteerInfo(volunteer.Id);
             
-            System.assertNotEquals(null, result, 'Result should not be null');
-            System.assertEquals(true, result.success, 'Should succeed');
-            System.assertNotEquals(null, result.volunteer, 'Volunteer should be set');
-            System.assertEquals(volunteer.Id, result.volunteer.id, 'Volunteer ID should match');
+            Assert.isNotNull(result, 'Result should not be null');
+            Assert.isTrue(result.success, 'Should succeed');
+            Assert.isNotNull(result.volunteer, 'Volunteer should be set');
+            Assert.areEqual(volunteer.Id, result.volunteer.id, 'Volunteer ID should match');
         }
         Test.stopTest();
     }
@@ -199,11 +199,11 @@ private class VolunteerAvailabilityDisplayCtrlTest {
         System.runAs(admin) {
             try {
                 VolunteerAvailabilityDisplayController.getVolunteerInfo(null);
-                System.assert(false, 'Should have thrown exception');
+                Assert.fail('Should have thrown exception');
             } catch (AuraHandledException e) {
                 // Verify exception was thrown
                 // Note: Cacheable methods wrap exceptions in "Script-thrown exception" message
-                System.assert(e != null, 'Exception should be thrown');
+                Assert.isNotNull(e, 'Exception should be thrown');
                 // Just verify it's an AuraHandledException - the exact message may be wrapped
             }
         }
@@ -221,7 +221,7 @@ private class VolunteerAvailabilityDisplayCtrlTest {
                 VolunteerAvailabilityDisplayController.getVolunteerInfo(fakeId);
             
             // May succeed or fail depending on whether the ID exists
-            System.assertNotEquals(null, result, 'Result should not be null');
+            Assert.isNotNull(result, 'Result should not be null');
         }
         Test.stopTest();
     }
@@ -235,10 +235,10 @@ private class VolunteerAvailabilityDisplayCtrlTest {
             VolunteerAvailabilityDisplayController.VolunteerListResult result = 
                 VolunteerAvailabilityDisplayController.getAllVolunteersForDisplay();
             
-            System.assertNotEquals(null, result, 'Result should not be null');
-            System.assertNotEquals(null, result.volunteers, 'Volunteers list should not be null');
-            System.assert(result.volunteers.size() > 0, 'Should return at least one volunteer');
-            System.assertNotEquals(null, result.totalCount, 'Total count should be set');
+            Assert.isNotNull(result, 'Result should not be null');
+            Assert.isNotNull(result.volunteers, 'Volunteers list should not be null');
+            Assert.isTrue(result.volunteers.size() > 0, 'Should return at least one volunteer');
+            Assert.isNotNull(result.totalCount, 'Total count should be set');
         }
         Test.stopTest();
     }
@@ -255,16 +255,16 @@ private class VolunteerAvailabilityDisplayCtrlTest {
             if (result.rows != null && result.rows.size() > 0) {
                 VolunteerAvailabilityDisplayController.VolunteerAvailabilityRow firstRow = result.rows[0];
                 
-                System.assertNotEquals(null, firstRow.volunteerId, 'Volunteer ID should be set');
-                System.assertNotEquals(null, firstRow.volunteerName, 'Volunteer name should be set');
-                System.assertNotEquals(null, firstRow.slotDate, 'Slot date should be set');
-                System.assertNotEquals(null, firstRow.timeSlots, 'Time slots should be set');
+                Assert.isNotNull(firstRow.volunteerId, 'Volunteer ID should be set');
+                Assert.isNotNull(firstRow.volunteerName, 'Volunteer name should be set');
+                Assert.isNotNull(firstRow.slotDate, 'Slot date should be set');
+                Assert.isNotNull(firstRow.timeSlots, 'Time slots should be set');
                 
                 if (firstRow.timeSlots.size() > 0) {
                     VolunteerAvailabilityDisplayController.TimeSlotData firstSlot = firstRow.timeSlots[0];
-                    System.assertNotEquals(null, firstSlot.id, 'Slot ID should be set');
-                    System.assertNotEquals(null, firstSlot.status, 'Status should be set');
-                    System.assertNotEquals(null, firstSlot.timeLabel, 'Time label should be set');
+                    Assert.isNotNull(firstSlot.id, 'Slot ID should be set');
+                    Assert.isNotNull(firstSlot.status, 'Status should be set');
+                    Assert.isNotNull(firstSlot.timeLabel, 'Time label should be set');
                 }
             }
         }

@@ -42,13 +42,13 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             List<Map<String, Object>> result = VolunteerAvailabilityService.getTimeslotsForRange(startDate, endDate);
             
-            System.assertNotEquals(null, result, 'Result should not be null');
-            System.assert(result.size() > 0, 'Should return time ranges');
+            Assert.isNotNull(null, result, 'Result should not be null');
+            Assert.isTrue(result.size() > 0, 'Should return time ranges');
             
             // Verify structure
             Map<String, Object> firstRange = result[0];
-            System.assert(firstRange.containsKey('timeRangeLabel'), 'Should have timeRangeLabel');
-            System.assert(firstRange.containsKey('slotDataList'), 'Should have slotDataList');
+            Assert.isTrue(firstRange.containsKey('timeRangeLabel'), 'Should have timeRangeLabel');
+            Assert.isTrue(firstRange.containsKey('slotDataList'), 'Should have slotDataList');
         }
         Test.stopTest();
     }
@@ -62,7 +62,7 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             List<Map<String, Object>> result = VolunteerAvailabilityService.getTimeslotsForRange(startDate, endDate);
             
-            System.assertNotEquals(null, result, 'Result should not be null');
+            Assert.isNotNull(null, result, 'Result should not be null');
             // Should still return structure even with no slots
         }
         Test.stopTest();
@@ -77,15 +77,15 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null);
             
-            System.assertEquals(true, result.get('success'), 'Should succeed');
-            System.assertNotEquals(null, result.get('appointmentId'), 'Should have appointment ID');
+            Assert.areEqual(true, result.get('success'), 'Should succeed');
+            Assert.isNotNull(null, result.get('appointmentId'), 'Should have appointment ID');
             
             // Verify records created/updated
             List<Appointment__c> appointments = [SELECT Id FROM Appointment__c WHERE Time_Slot__c = :slot.Id];
-            System.assertEquals(1, appointments.size(), 'Should create appointment');
+            Assert.areEqual(1, appointments.size(), 'Should create appointment');
             
             Time_Slot__c updatedSlot = [SELECT Status__c FROM Time_Slot__c WHERE Id = :slot.Id];
-            System.assertEquals('Booked', updatedSlot.Status__c, 'Slot should be booked');
+            Assert.areEqual('Booked', updatedSlot.Status__c, 'Slot should be booked');
         }
         Test.stopTest();
     }
@@ -107,10 +107,10 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, request.Id);
             
-            System.assertEquals(true, result.get('success'), 'Should succeed');
+            Assert.areEqual(true, result.get('success'), 'Should succeed');
             
             Appointment_Request__c updatedRequest = [SELECT Status__c FROM Appointment_Request__c WHERE Id = :request.Id];
-            System.assertEquals('Reserved', updatedRequest.Status__c, 'Request should be reserved');
+            Assert.areEqual('Reserved', updatedRequest.Status__c, 'Request should be reserved');
         }
         Test.stopTest();
     }
@@ -124,9 +124,9 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             try {
                 VolunteerAvailabilityService.bookTimeSlot(fakeId, reference.Id, null);
-                System.assert(false, 'Should have thrown exception');
+                Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                System.assert(e instanceof AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
             }
         }
         Test.stopTest();
@@ -144,9 +144,9 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             try {
                 VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null);
-                System.assert(false, 'Should have thrown exception');
+                Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                System.assert(e instanceof AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
             }
         }
         Test.stopTest();
@@ -164,9 +164,9 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             try {
                 VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null);
-                System.assert(false, 'Should have thrown exception');
+                Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                System.assert(e instanceof AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
             }
         }
         Test.stopTest();
@@ -181,9 +181,9 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             try {
                 VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, fakeRequestId);
-                System.assert(false, 'Should have thrown exception');
+                Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                System.assert(e instanceof AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
             }
         }
         Test.stopTest();
@@ -204,9 +204,9 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             try {
                 VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, request.Id);
-                System.assert(false, 'Should have thrown exception');
+                Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                System.assert(e instanceof AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
             }
         }
         Test.stopTest();
@@ -220,9 +220,9 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             try {
                 VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, null);
-                System.assert(false, 'Should have thrown exception');
+                Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                System.assert(e instanceof AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
             }
         }
         Test.stopTest();
@@ -243,9 +243,9 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.createTimeSlotsFromRanges(ranges, volunteer.Id);
             
-            System.assertEquals(true, result.get('success'), 'Should succeed');
+            Assert.areEqual(true, result.get('success'), 'Should succeed');
             Integer slotsCreated = (Integer) result.get('slotsCreated');
-            System.assert(slotsCreated > 0, 'Should create slots');
+            Assert.isTrue(slotsCreated > 0, 'Should create slots');
             
             // Verify slots created
             List<Time_Slot__c> createdSlots = [
@@ -253,7 +253,7 @@ private class VolunteerAvailabilityServiceTest {
                 WHERE Day__c = :Date.today().addDays(10) 
                 AND Volunteer__c = :volunteer.Id
             ];
-            System.assertEquals(slotsCreated, createdSlots.size(), 'Should match created count');
+            Assert.areEqual(slotsCreated, createdSlots.size(), 'Should match created count');
         }
         Test.stopTest();
     }
@@ -268,8 +268,8 @@ private class VolunteerAvailabilityServiceTest {
                 new List<Map<String, String>>(), volunteer.Id
             );
             
-            System.assertEquals(false, result.get('success'), 'Should fail');
-            System.assertEquals(0, result.get('slotsCreated'), 'Should create no slots');
+            Assert.areEqual(false, result.get('success'), 'Should fail');
+            Assert.areEqual(0, result.get('slotsCreated'), 'Should create no slots');
         }
         Test.stopTest();
     }
@@ -282,7 +282,7 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.createTimeSlotsFromRanges(null, volunteer.Id);
             
-            System.assertEquals(false, result.get('success'), 'Should fail');
+            Assert.areEqual(false, result.get('success'), 'Should fail');
         }
         Test.stopTest();
     }
@@ -314,10 +314,10 @@ private class VolunteerAvailabilityServiceTest {
             Map<String, Object> result = VolunteerAvailabilityService.createTimeSlotsFromRanges(ranges, volunteer.Id);
             
             // Should still succeed but skip duplicates
-            System.assertEquals(true, result.get('success'), 'Should succeed');
+            Assert.areEqual(true, result.get('success'), 'Should succeed');
             Integer slotsCreated = (Integer) result.get('slotsCreated');
             // Should create new slots but skip the duplicate
-            System.assert(slotsCreated >= 0, 'Should handle duplicates');
+            Assert.isTrue(slotsCreated >= 0, 'Should handle duplicates');
         }
         Test.stopTest();
     }
@@ -338,7 +338,7 @@ private class VolunteerAvailabilityServiceTest {
             Map<String, Object> result = VolunteerAvailabilityService.createTimeSlotsFromRanges(ranges, volunteer.Id);
             
             // Should handle gracefully
-            System.assertNotEquals(null, result, 'Result should not be null');
+            Assert.isNotNull(null, result, 'Result should not be null');
         }
         Test.stopTest();
     }
@@ -355,9 +355,9 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.createTimeSlotsFromCSV(csvContent);
             
-            System.assertEquals(true, result.get('success'), 'Should succeed');
+            Assert.areEqual(true, result.get('success'), 'Should succeed');
             Integer slotsCreated = (Integer) result.get('slotsCreated');
-            System.assert(slotsCreated > 0, 'Should create slots');
+            Assert.isTrue(slotsCreated > 0, 'Should create slots');
         }
         Test.stopTest();
     }
@@ -368,8 +368,8 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.createTimeSlotsFromCSV('');
             
-            System.assertEquals(false, result.get('success'), 'Should fail');
-            System.assertEquals(0, result.get('slotsCreated'), 'Should create no slots');
+            Assert.areEqual(false, result.get('success'), 'Should fail');
+            Assert.areEqual(0, result.get('slotsCreated'), 'Should create no slots');
         }
         Test.stopTest();
     }
@@ -380,7 +380,7 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.createTimeSlotsFromCSV(null);
             
-            System.assertEquals(false, result.get('success'), 'Should fail');
+            Assert.areEqual(false, result.get('success'), 'Should fail');
         }
         Test.stopTest();
     }
@@ -395,8 +395,8 @@ private class VolunteerAvailabilityServiceTest {
             Map<String, Object> result = VolunteerAvailabilityService.createTimeSlotsFromCSV(csvContent);
             
             // Should handle gracefully - no slots created for invalid user
-            System.assertEquals(true, result.get('success'), 'Should still succeed');
-            System.assertEquals(0, result.get('slotsCreated'), 'Should create no slots');
+            Assert.areEqual(true, result.get('success'), 'Should still succeed');
+            Assert.areEqual(0, result.get('slotsCreated'), 'Should create no slots');
         }
         Test.stopTest();
     }
@@ -409,8 +409,8 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.createTimeSlotsFromCSV(csvContent);
             
-            System.assertEquals(false, result.get('success'), 'Should fail');
-            System.assert(result.get('message').toString().contains('No valid records'), 'Should indicate no valid records');
+            Assert.areEqual(false, result.get('success'), 'Should fail');
+            Assert.isTrue(result.get('message').toString().contains('No valid records'), 'Should indicate no valid records');
         }
         Test.stopTest();
     }
@@ -424,26 +424,26 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.getVolunteerAvailabilityData(startDate, endDate, 0, 50);
             
-            System.assertNotEquals(null, result, 'Result should not be null');
+            Assert.isNotNull(null, result, 'Result should not be null');
             List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get('rows');
-            System.assertNotEquals(null, rows, 'Rows should not be null');
-            System.assert(rows.size() > 0, 'Should return rows');
+            Assert.isNotNull(null, rows, 'Rows should not be null');
+            Assert.isTrue(rows.size() > 0, 'Should return rows');
             
             // Verify structure
             for (Map<String, Object> row : rows) {
-                System.assertNotEquals(null, row.get('volunteerId'), 'Should have volunteerId');
-                System.assertNotEquals(null, row.get('volunteerName'), 'Should have volunteerName');
-                System.assertNotEquals(null, row.get('date'), 'Should have date');
+                Assert.isNotNull(null, row.get('volunteerId'), 'Should have volunteerId');
+                Assert.isNotNull(null, row.get('volunteerName'), 'Should have volunteerName');
+                Assert.isNotNull(null, row.get('date'), 'Should have date');
                 List<Map<String, Object>> timeSlots = (List<Map<String, Object>>) row.get('timeSlots');
-                System.assertNotEquals(null, timeSlots, 'Should have timeSlots list');
+                Assert.isNotNull(null, timeSlots, 'Should have timeSlots list');
             }
             
             Integer totalCount = (Integer) result.get('totalCount');
-            System.assertNotEquals(null, totalCount, 'Should have totalCount');
-            System.assert(totalCount >= rows.size(), 'Total count should be >= rows returned');
+            Assert.isNotNull(null, totalCount, 'Should have totalCount');
+            Assert.isTrue(totalCount >= rows.size(), 'Total count should be >= rows returned');
             
             Boolean hasMore = (Boolean) result.get('hasMore');
-            System.assertNotEquals(null, hasMore, 'Should have hasMore flag');
+            Assert.isNotNull(null, hasMore, 'Should have hasMore flag');
         }
         Test.stopTest();
     }
@@ -463,12 +463,12 @@ private class VolunteerAvailabilityServiceTest {
             Map<String, Object> result2 = VolunteerAvailabilityService.getVolunteerAvailabilityData(startDate, endDate, 2, 2);
             List<Map<String, Object>> rows2 = (List<Map<String, Object>>) result2.get('rows');
             
-            System.assertEquals(2, rows1.size(), 'First page should return 2 rows');
-            System.assert(rows2.size() <= 2, 'Second page should return <= 2 rows');
+            Assert.areEqual(2, rows1.size(), 'First page should return 2 rows');
+            Assert.isTrue(rows2.size() <= 2, 'Second page should return <= 2 rows');
             
             Integer totalCount1 = (Integer) result1.get('totalCount');
             Integer totalCount2 = (Integer) result2.get('totalCount');
-            System.assertEquals(totalCount1, totalCount2, 'Total count should be same');
+            Assert.areEqual(totalCount1, totalCount2, 'Total count should be same');
         }
         Test.stopTest();
     }
@@ -481,13 +481,13 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.getVolunteerAvailabilityData(singleDate, singleDate, 0, 50);
             
-            System.assertNotEquals(null, result, 'Result should not be null');
+            Assert.isNotNull(null, result, 'Result should not be null');
             List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get('rows');
             
             // Verify all rows are for the single date
             for (Map<String, Object> row : rows) {
                 Date rowDate = (Date) row.get('date');
-                System.assertEquals(singleDate, rowDate, 'All rows should be for the single date');
+                Assert.areEqual(singleDate, rowDate, 'All rows should be for the single date');
             }
         }
         Test.stopTest();
@@ -512,11 +512,11 @@ private class VolunteerAvailabilityServiceTest {
                 String nextName = (String) next.get('volunteerName');
                 
                 if (currentName != nextName) {
-                    System.assert(currentName <= nextName, 'Should be sorted by volunteer name');
+                    Assert.isTrue(currentName <= nextName, 'Should be sorted by volunteer name');
                 } else {
                     Date currentDate = (Date) current.get('date');
                     Date nextDate = (Date) next.get('date');
-                    System.assert(currentDate <= nextDate, 'Should be sorted by date when volunteer name is same');
+                    Assert.isTrue(currentDate <= nextDate, 'Should be sorted by date when volunteer name is same');
                 }
             }
         }
@@ -538,9 +538,9 @@ private class VolunteerAvailabilityServiceTest {
                 List<Map<String, Object>> timeSlots = (List<Map<String, Object>>) row.get('timeSlots');
                 for (Map<String, Object> slot : timeSlots) {
                     String timeLabel = (String) slot.get('timeLabel');
-                    System.assertNotEquals(null, timeLabel, 'Time slot should have formatted label');
-                    System.assert(timeLabel.contains('AM') || timeLabel.contains('PM'), 'Label should contain AM or PM');
-                    System.assert(timeLabel.contains('-'), 'Label should contain time range separator');
+                    Assert.isNotNull(null, timeLabel, 'Time slot should have formatted label');
+                    Assert.isTrue(timeLabel.contains('AM') || timeLabel.contains('PM'), 'Label should contain AM or PM');
+                    Assert.isTrue(timeLabel.contains('-'), 'Label should contain time range separator');
                 }
             }
         }

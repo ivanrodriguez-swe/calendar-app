@@ -55,13 +55,13 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(5, result.size(), 'Should return 5 available slots');
+        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.areEqual(5, result.size(), 'Should return 5 available slots');
         
         // Verify all are available
         for (Time_Slot__c slot : result) {
-            System.assertEquals('Available', slot.Status__c, 'All slots should be available');
-            System.assert(slot.Day__c >= startDate && slot.Day__c <= endDate, 'Should be in date range');
+            Assert.areEqual('Available', slot.Status__c, 'All slots should be available');
+            Assert.isTrue(slot.Day__c >= startDate && slot.Day__c <= endDate, 'Should be in date range');
         }
     }
     
@@ -74,8 +74,8 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(0, result.size(), 'Should return no slots');
+        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.areEqual(0, result.size(), 'Should return no slots');
     }
     
     @isTest
@@ -88,9 +88,9 @@ private class TimeSlotSelectorTest {
         Test.stopTest();
         
         // Should only return available slots, not booked ones
-        System.assertEquals(5, result.size(), 'Should only return available slots');
+        Assert.areEqual(5, result.size(), 'Should only return available slots');
         for (Time_Slot__c slot : result) {
-            System.assertEquals('Available', slot.Status__c, 'Should only return available slots');
+            Assert.areEqual('Available', slot.Status__c, 'Should only return available slots');
         }
     }
     
@@ -102,10 +102,10 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getTimeSlotById(slot.Id);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(1, result.size(), 'Should return one slot');
-        System.assertEquals(slot.Id, result[0].Id, 'Should return correct slot');
-        System.assertNotEquals(null, result[0].Volunteer__c, 'Should have volunteer');
+        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.areEqual(1, result.size(), 'Should return one slot');
+        Assert.areEqual(slot.Id, result[0].Id, 'Should return correct slot');
+        Assert.isNotNull(null, result[0].Volunteer__c, 'Should have volunteer');
     }
     
     @isTest
@@ -116,8 +116,8 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getTimeSlotById(fakeId);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(0, result.size(), 'Should return empty list');
+        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.areEqual(0, result.size(), 'Should return empty list');
     }
     
     @isTest
@@ -131,12 +131,12 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getExistingTimeSlotsByDatesAndVolunteers(dates, volunteerIds);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assert(result.size() > 0, 'Should return slots');
+        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isTrue(result.size() > 0, 'Should return slots');
         
         for (Time_Slot__c slot : result) {
-            System.assert(dates.contains(slot.Day__c), 'Should match date');
-            System.assert(volunteerIds.contains(slot.Volunteer__c), 'Should match volunteer');
+            Assert.isTrue(dates.contains(slot.Day__c), 'Should match date');
+            Assert.isTrue(volunteerIds.contains(slot.Volunteer__c), 'Should match volunteer');
         }
     }
     
@@ -151,8 +151,8 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getExistingTimeSlotsByDatesAndVolunteers(dates, volunteerIds);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(0, result.size(), 'Should return no slots');
+        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.areEqual(0, result.size(), 'Should return no slots');
     }
     
     @isTest
@@ -167,8 +167,8 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getExistingTimeSlotsByDatesAndVolunteers(dates, volunteerIds);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assert(result.size() > 0, 'Should return slots for multiple dates');
+        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isTrue(result.size() > 0, 'Should return slots for multiple dates');
     }
     
     @isTest
@@ -180,8 +180,8 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(8, result.size(), 'Should return all slots (5 available + 3 booked)');
+        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.areEqual(8, result.size(), 'Should return all slots (5 available + 3 booked)');
         
         // Verify ordering: by volunteer name, then date, then start time
         for (Integer i = 0; i < result.size() - 1; i++) {
@@ -190,14 +190,14 @@ private class TimeSlotSelectorTest {
             
             // Check volunteer name ordering
             if (current.Volunteer__r.Name != next.Volunteer__r.Name) {
-                System.assert(current.Volunteer__r.Name <= next.Volunteer__r.Name, 'Should be sorted by volunteer name');
+                Assert.isTrue(current.Volunteer__r.Name <= next.Volunteer__r.Name, 'Should be sorted by volunteer name');
             } else {
                 // Same volunteer, check date ordering
                 if (current.Day__c != next.Day__c) {
-                    System.assert(current.Day__c <= next.Day__c, 'Should be sorted by date');
+                    Assert.isTrue(current.Day__c <= next.Day__c, 'Should be sorted by date');
                 } else {
                     // Same date, check start time ordering
-                    System.assert(current.Start_Time__c <= next.Start_Time__c, 'Should be sorted by start time');
+                    Assert.isTrue(current.Start_Time__c <= next.Start_Time__c, 'Should be sorted by start time');
                 }
             }
         }
@@ -212,7 +212,7 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
+        Assert.isNotNull(null, result, 'Result should not be null');
         
         Boolean hasAvailable = false;
         Boolean hasBooked = false;
@@ -226,8 +226,8 @@ private class TimeSlotSelectorTest {
             }
         }
         
-        System.assertEquals(true, hasAvailable, 'Should include Available slots');
-        System.assertEquals(true, hasBooked, 'Should include Booked slots');
+        Assert.areEqual(true, hasAvailable, 'Should include Available slots');
+        Assert.areEqual(true, hasBooked, 'Should include Booked slots');
     }
     
     @isTest
@@ -239,8 +239,8 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
         Test.stopTest();
         
-        System.assertNotEquals(null, result, 'Result should not be null');
-        System.assertEquals(0, result.size(), 'Should return no slots');
+        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.areEqual(0, result.size(), 'Should return no slots');
     }
 }
 

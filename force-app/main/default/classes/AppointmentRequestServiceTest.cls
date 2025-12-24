@@ -26,9 +26,9 @@ private class AppointmentRequestServiceTest {
         System.runAs(admin) {
             Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
             
-            System.assertEquals(true, result.get('success'), 'Upload should succeed');
-            System.assertEquals(2, result.get('recordsCreated'), 'Should create 2 records');
-            System.assertNotEquals(null, result.get('message'), 'Message should be set');
+            Assert.isTrue((Boolean) result.get('success'), 'Upload should succeed');
+            Assert.areEqual(2, result.get('recordsCreated'), 'Should create 2 records');
+            Assert.isNotNull(result.get('message'), 'Message should be set');
         }
         Test.stopTest();
         
@@ -37,8 +37,8 @@ private class AppointmentRequestServiceTest {
             SELECT Id, Volunteer__c, Reference_First_Name__c, Reference_Last_Name__c, Reference_Email__c, Status__c
             FROM Appointment_Request__c
         ];
-        System.assertEquals(2, requests.size(), 'Should have 2 appointment requests');
-        System.assertEquals('New', requests[0].Status__c, 'Status should be New');
+        Assert.areEqual(2, requests.size(), 'Should have 2 appointment requests');
+        Assert.areEqual('New', requests[0].Status__c, 'Status should be New');
     }
     
     @isTest
@@ -53,8 +53,8 @@ private class AppointmentRequestServiceTest {
         System.runAs(admin) {
             Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
             
-            System.assertEquals(true, result.get('success'), 'Upload should succeed');
-            System.assertEquals(1, result.get('recordsCreated'), 'Should create 1 record');
+            Assert.isTrue((Boolean) result.get('success'), 'Upload should succeed');
+            Assert.areEqual(1, result.get('recordsCreated'), 'Should create 1 record');
         }
         Test.stopTest();
     }
@@ -70,8 +70,8 @@ private class AppointmentRequestServiceTest {
         System.runAs(admin) {
             Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
             
-            System.assertEquals(true, result.get('success'), 'Upload should succeed');
-            System.assertEquals(1, result.get('recordsCreated'), 'Should create 1 record');
+            Assert.isTrue((Boolean) result.get('success'), 'Upload should succeed');
+            Assert.areEqual(1, result.get('recordsCreated'), 'Should create 1 record');
         }
         Test.stopTest();
     }
@@ -84,9 +84,9 @@ private class AppointmentRequestServiceTest {
         System.runAs(admin) {
             Map<String, Object> result = AppointmentRequestService.uploadCSV('');
             
-            System.assertEquals(false, result.get('success'), 'Upload should fail');
-            System.assertEquals('CSV content is empty', result.get('message'), 'Should have correct error message');
-            System.assertEquals(0, result.get('recordsCreated'), 'Should not create any records');
+            Assert.isFalse((Boolean) result.get('success'), 'Upload should fail');
+            Assert.areEqual('CSV content is empty', result.get('message'), 'Should have correct error message');
+            Assert.areEqual(0, result.get('recordsCreated'), 'Should not create any records');
         }
         Test.stopTest();
     }
@@ -99,8 +99,8 @@ private class AppointmentRequestServiceTest {
         System.runAs(admin) {
             Map<String, Object> result = AppointmentRequestService.uploadCSV(null);
             
-            System.assertEquals(false, result.get('success'), 'Upload should fail');
-            System.assertEquals('CSV content is empty', result.get('message'), 'Should have correct error message');
+            Assert.areEqual(false, result.get('success'), 'Upload should fail');
+            Assert.areEqual('CSV content is empty', result.get('message'), 'Should have correct error message');
         }
         Test.stopTest();
     }
@@ -116,9 +116,9 @@ private class AppointmentRequestServiceTest {
         System.runAs(admin) {
             Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
             
-            System.assertEquals(false, result.get('success'), 'Upload should fail');
-            System.assert(String.valueOf(result.get('message')).contains('No valid appointment requests'), 'Should indicate no valid records');
-            System.assertEquals(0, result.get('recordsCreated'), 'Should not create any records');
+            Assert.isFalse((Boolean) result.get('success'), 'Upload should fail');
+            Assert.isTrue(String.valueOf(result.get('message')).contains('No valid appointment requests'), 'Should indicate no valid records');
+            Assert.areEqual(0, result.get('recordsCreated'), 'Should not create any records');
         }
         Test.stopTest();
     }
@@ -133,12 +133,12 @@ private class AppointmentRequestServiceTest {
         System.runAs(admin) {
             Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
             
-            System.assertEquals(false, result.get('success'), 'Upload should fail');
-            System.assert(String.valueOf(result.get('message')).contains('No valid appointment requests'), 'Should indicate no valid records');
-            System.assertEquals(0, result.get('recordsCreated'), 'Should not create any records');
+            Assert.isFalse((Boolean) result.get('success'), 'Upload should fail');
+            Assert.isTrue(String.valueOf(result.get('message')).contains('No valid appointment requests'), 'Should indicate no valid records');
+            Assert.areEqual(0, result.get('recordsCreated'), 'Should not create any records');
             
             List<String> skippedRecords = (List<String>) result.get('skippedRecords');
-            System.assert(skippedRecords.size() > 0, 'Should have skipped records');
+            Assert.isTrue(skippedRecords.size() > 0, 'Should have skipped records');
         }
         Test.stopTest();
     }
@@ -155,8 +155,8 @@ private class AppointmentRequestServiceTest {
         System.runAs(admin) {
             Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
             
-            System.assertEquals(true, result.get('success'), 'Upload should succeed');
-            System.assertEquals(1, result.get('recordsCreated'), 'Should create 1 record');
+            Assert.isTrue((Boolean) result.get('success'), 'Upload should succeed');
+            Assert.areEqual(1, result.get('recordsCreated'), 'Should create 1 record');
         }
         Test.stopTest();
     }
@@ -173,8 +173,8 @@ private class AppointmentRequestServiceTest {
         System.runAs(admin) {
             Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
             
-            System.assertEquals(false, result.get('success'), 'Upload should fail');
-            System.assertEquals('No valid records found in CSV', result.get('message'), 'Should have correct error message');
+            Assert.areEqual(false, result.get('success'), 'Upload should fail');
+            Assert.areEqual('No valid records found in CSV', result.get('message'), 'Should have correct error message');
         }
         Test.stopTest();
     }
@@ -192,11 +192,11 @@ private class AppointmentRequestServiceTest {
         System.runAs(admin) {
             Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
             
-            System.assertEquals(true, result.get('success'), 'Upload should succeed');
-            System.assertEquals(2, result.get('recordsCreated'), 'Should create 2 valid records');
+            Assert.areEqual(true, result.get('success'), 'Upload should succeed');
+            Assert.areEqual(2, result.get('recordsCreated'), 'Should create 2 valid records');
             
             List<String> skippedRecords = (List<String>) result.get('skippedRecords');
-            System.assert(skippedRecords.size() > 0, 'Should have skipped records');
+            Assert.isTrue(skippedRecords.size() > 0, 'Should have skipped records');
         }
         Test.stopTest();
     }
@@ -214,8 +214,8 @@ private class AppointmentRequestServiceTest {
         System.runAs(admin) {
             Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
             
-            System.assertEquals(true, result.get('success'), 'Upload should succeed');
-            System.assertEquals(2, result.get('recordsCreated'), 'Should create 2 records (blank line skipped)');
+            Assert.areEqual(true, result.get('success'), 'Upload should succeed');
+            Assert.areEqual(2, result.get('recordsCreated'), 'Should create 2 records (blank line skipped)');
         }
         Test.stopTest();
     }

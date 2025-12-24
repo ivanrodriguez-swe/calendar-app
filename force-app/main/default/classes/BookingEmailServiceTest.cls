@@ -51,9 +51,9 @@ private class BookingEmailServiceTest {
         Boolean result3 = BookingEmailService.isValidEmail('test+tag@example.com');
         Test.stopTest();
         
-        System.assertEquals(true, result1, 'Should validate standard email');
-        System.assertEquals(true, result2, 'Should validate email with subdomain');
-        System.assertEquals(true, result3, 'Should validate email with plus');
+        Assert.areEqual(true, result1, 'Should validate standard email');
+        Assert.areEqual(true, result2, 'Should validate email with subdomain');
+        Assert.areEqual(true, result3, 'Should validate email with plus');
     }
     
     @isTest
@@ -67,10 +67,10 @@ private class BookingEmailServiceTest {
         // The validation is simple and only checks for presence of these characters
         Test.stopTest();
         
-        System.assertEquals(false, result1, 'Should reject empty string');
-        System.assertEquals(false, result2, 'Should reject null');
-        System.assertEquals(false, result3, 'Should reject email without @');
-        System.assertEquals(false, result4, 'Should reject email without domain');
+        Assert.areEqual(false, result1, 'Should reject empty string');
+        Assert.areEqual(false, result2, 'Should reject null');
+        Assert.areEqual(false, result3, 'Should reject email without @');
+        Assert.areEqual(false, result4, 'Should reject email without domain');
         // result5 removed - '@example.com' actually passes the simple validation
     }
     
@@ -90,7 +90,7 @@ private class BookingEmailServiceTest {
         
         // Verify emails were sent (check email limits)
         // Note: In test context, emails may not actually be sent, but the method should complete
-        System.assert(true, 'Method should complete without error');
+        Assert.isTrue(true, 'Method should complete without error');
     }
     
     @isTest
@@ -111,7 +111,7 @@ private class BookingEmailServiceTest {
         Test.stopTest();
         
         // Should handle gracefully without volunteer email
-        System.assert(true, 'Should complete without error');
+        Assert.isTrue(true, 'Should complete without error');
     }
     
     @isTest
@@ -129,7 +129,7 @@ private class BookingEmailServiceTest {
         Test.stopTest();
         
         // Should handle gracefully without customer email
-        System.assert(true, 'Method should complete without error');
+        Assert.isTrue(true, 'Method should complete without error');
     }
     
     @isTest
@@ -147,7 +147,7 @@ private class BookingEmailServiceTest {
         Test.stopTest();
         
         // Should handle empty name gracefully
-        System.assert(true, 'Should complete without error');
+        Assert.isTrue(true, 'Should complete without error');
     }
 }
 
