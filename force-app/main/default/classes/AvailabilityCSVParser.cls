@@ -60,9 +60,6 @@ public class AvailabilityCSVParser {
                 row.startTime = values[2].trim();
                 row.endTime = values[3].trim();
                 
-                // Debug logging to trace date extraction from CSV
-                System.debug('CSV Parser - Extracted date value from CSV: "' + row.dayValue + '" (raw from column 2)');
-                
                 if (String.isNotBlank(row.volunteerEmail) && 
                     String.isNotBlank(row.dayValue) && 
                     String.isNotBlank(row.startTime) && 

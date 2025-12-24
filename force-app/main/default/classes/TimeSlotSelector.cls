@@ -92,13 +92,6 @@ public inherited sharing class TimeSlotSelector {
             Date normalizedStartDate = Date.newInstance(startDate.year(), startDate.month(), startDate.day());
             Date normalizedEndDate = Date.newInstance(endDate.year(), endDate.month(), endDate.day());
             
-            // Debug logging
-            System.debug('Selector query - startDate: ' + startDate + ', normalized: ' + normalizedStartDate);
-            System.debug('Selector query - endDate: ' + endDate + ', normalized: ' + normalizedEndDate);
-            System.debug('Selector query - startDate == endDate: ' + (normalizedStartDate == normalizedEndDate));
-            System.debug('Selector query - normalizedStartDate year: ' + normalizedStartDate.year() + ', month: ' + normalizedStartDate.month() + ', day: ' + normalizedStartDate.day());
-            System.debug('Selector query - normalizedEndDate year: ' + normalizedEndDate.year() + ', month: ' + normalizedEndDate.month() + ', day: ' + normalizedEndDate.day());
-            
             // Use inclusive range query - works for both single date and date range
             // For single date (startDate == endDate), this becomes: WHERE Day__c = :normalizedStartDate
             // For date range, this becomes: WHERE Day__c >= :normalizedStartDate AND Day__c <= :normalizedEndDate
@@ -109,60 +102,6 @@ public inherited sharing class TimeSlotSelector {
                 WHERE Day__c >= :normalizedStartDate AND Day__c <= :normalizedEndDate
                 ORDER BY Volunteer__r.Name, Day__c, Start_Time__c
             ];
-            
-            System.debug('Selector returned ' + results.size() + ' records');
-            if (!results.isEmpty()) {
-                System.debug('First record Day__c: ' + results[0].Day__c);
-                System.debug('Last record Day__c: ' + results[results.size() - 1].Day__c);
-            } else {
-                // Debug: Check if there are any records at all for debugging
-                List<Time_Slot__c> allSlots = [SELECT Id, Day__c FROM Time_Slot__c LIMIT 5];
-                System.debug('Sample records in database (first 5):');
-                for (Time_Slot__c slot : allSlots) {
-                    System.debug('  Slot Day__c: ' + slot.Day__c + ' (year: ' + slot.Day__c.year() + ', month: ' + slot.Day__c.month() + ', day: ' + slot.Day__c.day() + ')');
-                }
-                
-                // Also check if there are any records for the exact date we're searching for
-                List<Time_Slot__c> exactDateSlots = [
-                    SELECT Id, Day__c 
-                    FROM Time_Slot__c 
-                    WHERE Day__c = :normalizedStartDate 
-                    LIMIT 5
-                ];
-                System.debug('Records for exact search date (' + normalizedStartDate + '): ' + exactDateSlots.size());
-                for (Time_Slot__c slot : exactDateSlots) {
-                    System.debug('  Exact match Slot Day__c: ' + slot.Day__c);
-                }
-                
-                // Check for records within a wider range to see if there's a date mismatch
-                Date dayBefore = normalizedStartDate.addDays(-1);
-                Date dayAfter = normalizedStartDate.addDays(1);
-                List<Time_Slot__c> nearbySlots = [
-                    SELECT Id, Day__c 
-                    FROM Time_Slot__c 
-                    WHERE Day__c >= :dayBefore AND Day__c <= :dayAfter
-                    ORDER BY Day__c
-                    LIMIT 10
-                ];
-                System.debug('Records near search date (from ' + dayBefore + ' to ' + dayAfter + '): ' + nearbySlots.size());
-                for (Time_Slot__c slot : nearbySlots) {
-                    System.debug('  Nearby Slot Day__c: ' + slot.Day__c + ' (year: ' + slot.Day__c.year() + ', month: ' + slot.Day__c.month() + ', day: ' + slot.Day__c.day() + ')');
-                }
-                
-                // Additional diagnostic: Check if there are ANY records for Dec 21 in the entire database
-                // Query for the exact date to see if records exist
-                Date dec21 = Date.newInstance(2025, 12, 21);
-                List<Time_Slot__c> allDec21Records = [
-                    SELECT Id, Day__c, CreatedDate
-                    FROM Time_Slot__c 
-                    WHERE Day__c = :dec21
-                    LIMIT 10
-                ];
-                System.debug('Records with Day__c = 2025-12-21: ' + allDec21Records.size());
-                for (Time_Slot__c slot : allDec21Records) {
-                    System.debug('  Dec 21 record - Day__c: ' + slot.Day__c + ' (year: ' + slot.Day__c.year() + ', month: ' + slot.Day__c.month() + ', day: ' + slot.Day__c.day() + '), CreatedDate: ' + slot.CreatedDate);
-                }
-            }
             
             return results;
         }

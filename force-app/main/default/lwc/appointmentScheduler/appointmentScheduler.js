@@ -49,7 +49,6 @@ export default class AppointmentScheduler extends LightningElement {
             this.currentUserName = data.fields.Name.value;
         } else if (error && this.currentUserId) {
             // User not found - log but don't fail
-            console.log('User not found:', error);
         }
         // If currentUserId is null, this is a guest user - expected behavior
     }
@@ -61,7 +60,6 @@ export default class AppointmentScheduler extends LightningElement {
         } catch (e) {
             // USER_ID not available - this is expected for guest users on public sites
             this.currentUserId = null;
-            console.log('Guest user detected - no authentication required');
         }
         
         // Get appointment request ID from URL query parameter if not set by @api
@@ -71,7 +69,6 @@ export default class AppointmentScheduler extends LightningElement {
         }
         
         if (this.appointmentRequestId) {
-            console.log('Appointment Request ID from URL:', this.appointmentRequestId);
         }
         
         const today = new Date();

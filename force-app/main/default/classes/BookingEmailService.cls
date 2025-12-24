@@ -60,7 +60,7 @@ public class BookingEmailService {
             try {
                 Messaging.sendEmail(emails);
             } catch (Exception e) {
-                System.debug('Error sending emails: ' + e.getMessage());
+                // Error handled by exception
             }
         }
     }

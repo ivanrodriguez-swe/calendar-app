@@ -34,8 +34,6 @@ public without sharing class VolunteerAvailabilityDisplayController {
             Date normalizedStartDate = null;
             Date normalizedEndDate = null;
             
-            System.debug('Method called with - startDate: ' + startDate + ', endDate: ' + endDate + ', offset: ' + offset + ', pageSize: ' + pageSize);
-            
             if (String.isNotBlank(startDate)) {
                 try {
                     // Parse the date string directly by extracting components to avoid ANY timezone conversion
@@ -49,9 +47,7 @@ public without sharing class VolunteerAvailabilityDisplayController {
                     Integer day = Integer.valueOf(dateParts[2]);
                     // Create date directly from components - no timezone conversion possible
                     normalizedStartDate = Date.newInstance(year, month, day);
-                    System.debug('Date parsing - String startDate: ' + startDate + ' -> Direct parse: year=' + year + ', month=' + month + ', day=' + day + ' -> Normalized: ' + normalizedStartDate);
                 } catch (Exception e) {
-                    System.debug('Error parsing startDate string: ' + startDate + ' - ' + e.getMessage());
                     throw new AuraHandledException('Invalid start date format: ' + startDate + '. Expected YYYY-MM-DD format. Error: ' + e.getMessage());
                 }
             }
@@ -69,17 +65,9 @@ public without sharing class VolunteerAvailabilityDisplayController {
                     Integer day = Integer.valueOf(dateParts[2]);
                     // Create date directly from components - no timezone conversion possible
                     normalizedEndDate = Date.newInstance(year, month, day);
-                    System.debug('Date parsing - String endDate: ' + endDate + ' -> Direct parse: year=' + year + ', month=' + month + ', day=' + day + ' -> Normalized: ' + normalizedEndDate);
                 } catch (Exception e) {
-                    System.debug('Error parsing endDate string: ' + endDate + ' - ' + e.getMessage());
                     throw new AuraHandledException('Invalid end date format: ' + endDate + '. Expected YYYY-MM-DD format. Error: ' + e.getMessage());
                 }
-            }
-            
-            // Debug logging for date values
-            System.debug('Controller received dates - startDate string: ' + startDate + ' (normalized: ' + normalizedStartDate + '), endDate string: ' + endDate + ' (normalized: ' + normalizedEndDate + ')');
-            if (normalizedStartDate != null && normalizedEndDate != null) {
-                System.debug('Date comparison - normalizedStartDate == normalizedEndDate: ' + (normalizedStartDate == normalizedEndDate));
             }
             
             // Default pagination values
@@ -103,8 +91,6 @@ public without sharing class VolunteerAvailabilityDisplayController {
             
             return result;
         } catch (Exception e) {
-            System.debug('Error in getVolunteerAvailabilityData: ' + e.getMessage());
-            System.debug('Stack trace: ' + e.getStackTraceString());
             throw new AuraHandledException('Error retrieving volunteer availability data: ' + e.getMessage());
         }
     }

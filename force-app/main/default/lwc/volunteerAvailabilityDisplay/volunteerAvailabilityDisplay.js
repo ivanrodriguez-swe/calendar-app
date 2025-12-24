@@ -78,15 +78,6 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
         const startDate = this.fromDate || null;
         const endDate = this.toDate || null;
         
-        console.log('Loading data with dates:', { startDate, endDate, offset: this.currentOffset, pageSize: this.PAGE_SIZE });
-        if (startDate && endDate) {
-            if (startDate === endDate) {
-                console.log('Filtering records for single date:', startDate);
-            } else {
-                console.log('Filtering records for date range:', startDate, 'to', endDate);
-            }
-        }
-        
         getVolunteerAvailabilityData({
             startDate: startDate,
             endDate: endDate,
@@ -94,31 +85,19 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
             pageSize: this.PAGE_SIZE
         })
         .then(result => {
-            console.log('Data loaded:', result);
-            console.log('Result rows:', result?.rows);
-            console.log('Result rows length:', result?.rows?.length);
-            
             // Append new rows to existing rows
             if (result && result.rows && result.rows.length > 0) {
-                console.log('Adding rows:', result.rows.length);
                 this.rows = [...this.rows, ...result.rows];
-            } else {
-                console.log('No rows returned from server. Result:', result);
             }
             
             this.totalCount = (result && result.totalCount) ? result.totalCount : 0;
             this.hasMore = (result && result.hasMore) ? result.hasMore : false;
             this.currentOffset = this.rows.length;
             
-            console.log('Updated state:', { rowsCount: this.rows.length, totalCount: this.totalCount, hasMore: this.hasMore });
-            
             this.isLoading = false;
         })
         .catch(error => {
             console.error('Error loading data:', error);
-            console.error('Error body:', error.body);
-            console.error('Error message:', error.message);
-            console.error('Error stack:', error.stack);
             this.showToast('Error', this.getErrorMessage(error), 'error');
             this.isLoading = false;
         });

@@ -119,10 +119,9 @@ public without sharing class AppointmentRequestService {
             }
             result.put('message', successMsg);
             
-        } catch (Exception e) {
-            result.put('message', 'Error: ' + e.getMessage());
-            System.debug('Error in uploadCSV: ' + e.getStackTraceString());
-        }
+                    } catch (Exception e) {
+                        result.put('message', 'Error: ' + e.getMessage());
+                    }
         
         return result;
     }
@@ -274,12 +273,11 @@ public without sharing class AppointmentRequestService {
         
         try {
             // Get public site URL
-            String publicSiteUrl = getPublicSiteUrl();
-            
-            if (String.isBlank(publicSiteUrl)) {
-                System.debug('Public site URL not configured');
-                return 0;
-            }
+                        String publicSiteUrl = getPublicSiteUrl();
+                        
+                        if (String.isBlank(publicSiteUrl)) {
+                            return 0;
+                        }
             
             // Send individual email to each appointment request's referral email
             List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
@@ -328,13 +326,12 @@ public without sharing class AppointmentRequestService {
             
             if (!emails.isEmpty()) {
                 Messaging.sendEmail(emails);
-                emailsSent = emails.size();
-            }
-            
-        } catch (Exception e) {
-            System.debug('Error sending referral emails: ' + e.getMessage());
-            // Don't fail the entire operation if email fails
-        }
+                            emailsSent = emails.size();
+                        }
+                        
+                    } catch (Exception e) {
+                        // Don't fail the entire operation if email fails
+                    }
         
         return emailsSent;
     }
@@ -359,12 +356,11 @@ public without sharing class AppointmentRequestService {
             String domain = myDomain.contains('--') ? 'sandbox.lightning.force.com' : 'lightning.force.com';
             String siteUrl = 'https://' + myDomain + '.' + domain + '/' + urlPathPrefix;
             
-            return siteUrl;
-        } catch (Exception e) {
-            System.debug('Error getting Experience Cloud site URL: ' + e.getMessage());
-            // Fallback
-            return 'https://login.salesforce.com';
-        }
+                        return siteUrl;
+                    } catch (Exception e) {
+                        // Fallback
+                        return 'https://login.salesforce.com';
+                    }
     }
 }
 

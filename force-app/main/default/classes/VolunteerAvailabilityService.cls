@@ -366,28 +366,13 @@ public with sharing class VolunteerAvailabilityService {
                 continue;
             }
             
-            // Debug logging before parsing
-            System.debug('Service - About to parse date from CSV row. dayValue from CSV: "' + row.dayValue + '"');
-            
             Date slotDate = parseDate(row.dayValue);
-            
-            // Debug logging after parsing
-            if (slotDate != null) {
-                System.debug('Service - Parsed date result: ' + slotDate + ' (year: ' + slotDate.year() + ', month: ' + slotDate.month() + ', day: ' + slotDate.day() + ')');
-            } else {
-                System.debug('Service - Parsed date result: null');
-            }
-            
             Time startTime = TimeSlotFormatter.parseTime(row.startTime);
             Time endTime = TimeSlotFormatter.parseTime(row.endTime);
             
             if (slotDate != null && startTime != null && endTime != null && 
                 TimeSlotFormatter.isValidTimeRange(startTime, endTime)) {
                 List<Time_Slot__c> generatedSlots = generateTimeSlotsFromRange(slotDate, startTime, endTime, volunteerId);
-                // Debug logging for created slots
-                if (!generatedSlots.isEmpty()) {
-                    System.debug('Service - Created ' + generatedSlots.size() + ' slots with Day__c = ' + generatedSlots[0].Day__c + ' (year: ' + generatedSlots[0].Day__c.year() + ', month: ' + generatedSlots[0].Day__c.month() + ', day: ' + generatedSlots[0].Day__c.day() + ')');
-                }
                 slots.addAll(generatedSlots);
             }
         }
@@ -405,7 +390,6 @@ public with sharing class VolunteerAvailabilityService {
             // Split the string and create date directly from components - no timezone conversion possible
             List<String> dateParts = dateValue.split('-');
             if (dateParts.size() != 3) {
-                System.debug('Invalid date format: ' + dateValue + '. Expected YYYY-MM-DD format.');
                 return null;
             }
             Integer year = Integer.valueOf(dateParts[0]);
@@ -413,10 +397,8 @@ public with sharing class VolunteerAvailabilityService {
             Integer day = Integer.valueOf(dateParts[2]);
             // Create date directly from components - no timezone conversion possible
             Date result = Date.newInstance(year, month, day);
-            System.debug('Date parsing - String: ' + dateValue + ' -> Direct parse: year=' + year + ', month=' + month + ', day=' + day + ' -> Result: ' + result);
             return result;
         } catch (Exception e) {
-            System.debug('Error parsing date: ' + dateValue + ' - ' + e.getMessage());
             return null;
         }
     }

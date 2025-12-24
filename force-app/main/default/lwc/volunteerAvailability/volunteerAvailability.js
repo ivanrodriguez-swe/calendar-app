@@ -385,7 +385,6 @@ export default class VolunteerAvailability extends LightningElement {
                     startTime: range.startTime,
                     endTime: range.endTime
                 };
-                console.log('Prepared range object:', JSON.stringify(rangeObj));
                 return rangeObj;
             });
 
@@ -394,9 +393,6 @@ export default class VolunteerAvailability extends LightningElement {
             return;
         }
 
-        console.log('Sending ranges to Apex:', JSON.stringify(rangesToSend, null, 2));
-        console.log('Number of ranges:', rangesToSend.length);
-        console.log('First range:', rangesToSend[0]);
         
         this.submitting = true;
         createTimeSlotsFromRanges({ ranges: rangesToSend })
