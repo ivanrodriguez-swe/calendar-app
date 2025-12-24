@@ -407,8 +407,6 @@ export default class VolunteerAvailability extends LightningElement {
                 }
             })
             .catch(error => {
-                console.error('Error creating time slots:', error);
-                console.error('Error details:', JSON.stringify(error, null, 2));
                 const errorMessage = error.body?.message || error.message || 'An error occurred while creating time slots';
                 this.showToast('Error', errorMessage, 'error');
             })

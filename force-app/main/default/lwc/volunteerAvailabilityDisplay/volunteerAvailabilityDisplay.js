@@ -97,7 +97,6 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
             this.isLoading = false;
         })
         .catch(error => {
-            console.error('Error loading data:', error);
             this.showToast('Error', this.getErrorMessage(error), 'error');
             this.isLoading = false;
         });
@@ -158,8 +157,7 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
             }
         })
         .catch(error => {
-            console.error('Error refreshing data:', error);
-            // Silently fail for refresh - don't show toast
+            // Silently fail for refresh - don't show toast to avoid interrupting user experience
         });
     }
     

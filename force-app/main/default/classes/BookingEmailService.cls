@@ -60,7 +60,8 @@ public class BookingEmailService {
             try {
                 Messaging.sendEmail(emails);
             } catch (Exception e) {
-                // Error handled by exception
+                // Email sending failed - log error but don't throw to avoid breaking booking flow
+                // In production, consider logging to a custom object or using Platform Events
             }
         }
     }

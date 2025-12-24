@@ -72,7 +72,6 @@ export default class VolunteerAvailabilityUploader extends LightningElement {
                 this.showToast('Error', result.message, 'error');
             }
         } catch (error) {
-            console.error('Error uploading CSV:', error);
             this.showToast('Error', 
                 'Error processing CSV: ' + (error.body?.message || error.message || 'Unknown error'), 
                 'error');

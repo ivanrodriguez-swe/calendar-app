@@ -273,11 +273,11 @@ public without sharing class AppointmentRequestService {
         
         try {
             // Get public site URL
-                        String publicSiteUrl = getPublicSiteUrl();
-                        
-                        if (String.isBlank(publicSiteUrl)) {
-                            return 0;
-                        }
+            String publicSiteUrl = getPublicSiteUrl();
+            
+            if (String.isBlank(publicSiteUrl)) {
+                return 0;
+            }
             
             // Send individual email to each appointment request's referral email
             List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
@@ -325,13 +325,18 @@ public without sharing class AppointmentRequestService {
             }
             
             if (!emails.isEmpty()) {
-                Messaging.sendEmail(emails);
-                            emailsSent = emails.size();
-                        }
-                        
-                    } catch (Exception e) {
-                        // Don't fail the entire operation if email fails
-                    }
+                try {
+                    Messaging.sendEmail(emails);
+                    emailsSent = emails.size();
+                } catch (Exception e) {
+                    // Email sending failed - log error but don't throw to avoid breaking upload flow
+                    // In production, consider logging to a custom object or using Platform Events
+                }
+            }
+        } catch (Exception e) {
+            // Public site URL retrieval failed - return 0 emails sent
+            // In production, consider logging to a custom object or using Platform Events
+        }
         
         return emailsSent;
     }
@@ -356,11 +361,11 @@ public without sharing class AppointmentRequestService {
             String domain = myDomain.contains('--') ? 'sandbox.lightning.force.com' : 'lightning.force.com';
             String siteUrl = 'https://' + myDomain + '.' + domain + '/' + urlPathPrefix;
             
-                        return siteUrl;
-                    } catch (Exception e) {
-                        // Fallback
-                        return 'https://login.salesforce.com';
-                    }
+            return siteUrl;
+        } catch (Exception e) {
+            // Fallback to default URL if site configuration retrieval fails
+            return 'https://login.salesforce.com';
+        }
     }
 }
 

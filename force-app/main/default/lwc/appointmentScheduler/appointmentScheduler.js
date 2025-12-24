@@ -158,7 +158,6 @@ export default class AppointmentScheduler extends LightningElement {
             })
             .catch(error => {
                 // handle error - show no slots
-                console.error('Error fetching timeslots', error);
                 this.timeslotsMap = {};
                 this.timeRows = this.buildDefaultTimeRows();
             })
@@ -324,7 +323,6 @@ export default class AppointmentScheduler extends LightningElement {
             }
         })
         .catch(error => {
-            console.error('Booking error:', error);
             this.showToast('Error', error.body?.message || 'An error occurred while booking the time slot', 'error');
         })
         .finally(() => {
