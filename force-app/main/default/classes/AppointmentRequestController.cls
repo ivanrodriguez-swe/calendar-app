@@ -1,3 +1,8 @@
+// Controller for appointment request management
+// Using 'with sharing' for security
+// 
+// IMPORTANT: Controllers should NEVER call other controllers - only services.
+// Services can call other services, but controllers must remain independent.
 public with sharing class AppointmentRequestController {
     
     @AuraEnabled

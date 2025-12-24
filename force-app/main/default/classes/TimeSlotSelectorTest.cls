@@ -170,5 +170,77 @@ private class TimeSlotSelectorTest {
         System.assertNotEquals(null, result, 'Result should not be null');
         System.assert(result.size() > 0, 'Should return slots for multiple dates');
     }
+    
+    @isTest
+    static void testGetAllTimeSlotsForRange_Success() {
+        Date startDate = Date.today();
+        Date endDate = Date.today().addDays(4);
+        
+        Test.startTest();
+        List<Time_Slot__c> result = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
+        Test.stopTest();
+        
+        System.assertNotEquals(null, result, 'Result should not be null');
+        System.assertEquals(8, result.size(), 'Should return all slots (5 available + 3 booked)');
+        
+        // Verify ordering: by volunteer name, then date, then start time
+        for (Integer i = 0; i < result.size() - 1; i++) {
+            Time_Slot__c current = result[i];
+            Time_Slot__c next = result[i + 1];
+            
+            // Check volunteer name ordering
+            if (current.Volunteer__r.Name != next.Volunteer__r.Name) {
+                System.assert(current.Volunteer__r.Name <= next.Volunteer__r.Name, 'Should be sorted by volunteer name');
+            } else {
+                // Same volunteer, check date ordering
+                if (current.Day__c != next.Day__c) {
+                    System.assert(current.Day__c <= next.Day__c, 'Should be sorted by date');
+                } else {
+                    // Same date, check start time ordering
+                    System.assert(current.Start_Time__c <= next.Start_Time__c, 'Should be sorted by start time');
+                }
+            }
+        }
+    }
+    
+    @isTest
+    static void testGetAllTimeSlotsForRange_IncludesBothStatuses() {
+        Date startDate = Date.today();
+        Date endDate = Date.today().addDays(4);
+        
+        Test.startTest();
+        List<Time_Slot__c> result = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
+        Test.stopTest();
+        
+        System.assertNotEquals(null, result, 'Result should not be null');
+        
+        Boolean hasAvailable = false;
+        Boolean hasBooked = false;
+        
+        for (Time_Slot__c slot : result) {
+            if (slot.Status__c == 'Available') {
+                hasAvailable = true;
+            }
+            if (slot.Status__c == 'Booked') {
+                hasBooked = true;
+            }
+        }
+        
+        System.assertEquals(true, hasAvailable, 'Should include Available slots');
+        System.assertEquals(true, hasBooked, 'Should include Booked slots');
+    }
+    
+    @isTest
+    static void testGetAllTimeSlotsForRange_NoResults() {
+        Date startDate = Date.today().addDays(100);
+        Date endDate = Date.today().addDays(104);
+        
+        Test.startTest();
+        List<Time_Slot__c> result = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
+        Test.stopTest();
+        
+        System.assertNotEquals(null, result, 'Result should not be null');
+        System.assertEquals(0, result.size(), 'Should return no slots');
+    }
 }
 

@@ -29,5 +29,52 @@ public inherited sharing class OHRUserSelector {
             LIMIT 1
         ];
     }
+    
+    /**
+     * Get user by ID with full details
+     * @param userId User record ID
+     * @return User record with full details including IsActive and CreatedDate
+     */
+    public static List<User> getUserByIdWithDetails(Id userId) {
+        return [
+            SELECT Id, Name, Email, IsActive, CreatedDate
+            FROM User 
+            WHERE Id = :userId 
+            AND IsActive = true
+            LIMIT 1
+        ];
+    }
+    
+    /**
+     * Get all active users (volunteers)
+     * @return List of all active users ordered by name
+     */
+    public static List<User> getAllActiveUsers() {
+        return [
+            SELECT Id, Name, Email, IsActive, CreatedDate
+            FROM User
+            WHERE IsActive = true
+            ORDER BY Name
+        ];
+    }
+    
+    /**
+     * Get users by IDs
+     * @param userIds Set of user IDs to query
+     * @return List of active users matching the IDs, ordered by name
+     */
+    public static List<User> getUsersByIds(Set<Id> userIds) {
+        if (userIds == null || userIds.isEmpty()) {
+            return new List<User>();
+        }
+        
+        return [
+            SELECT Id, Name, Email, IsActive, CreatedDate
+            FROM User
+            WHERE Id IN :userIds
+            AND IsActive = true
+            ORDER BY Name
+        ];
+    }
 }
 

@@ -1,6 +1,9 @@
 // Service class for volunteer availability business logic
 // Uses 'with sharing' for security
 // Works with raw data (SObjects, primitives) - no wrapper classes
+// 
+// NOTE: Services CAN call other services if needed for business logic.
+// This is different from controllers, which must remain independent.
 public with sharing class VolunteerAvailabilityService {
     
     /**
@@ -101,6 +104,102 @@ public with sharing class VolunteerAvailabilityService {
         }
         
         return buildResult(true, 'Availability processed successfully', slotsToInsert.size());
+    }
+    
+    /**
+     * Get volunteer availability data organized by volunteer-date combination
+     * Returns flattened structure: one row per volunteer-date with all time slots
+     * All business logic handled here - controller just converts to wrappers
+     * Supports pagination with offset and pageSize
+     * 
+     * @param startDate Start date for filtering (null to get all records)
+     * @param endDate End date for filtering (null to get all records)
+     * @param offset Number of records to skip (for pagination)
+     * @param pageSize Maximum number of records to return (for pagination)
+     * @return Map containing 'rows' (List of data), 'totalCount' (Integer), and 'hasMore' (Boolean)
+     */
+    public static Map<String, Object> getVolunteerAvailabilityData(Date startDate, Date endDate, Integer offset, Integer pageSize) {
+        // Use existing selector - no logic here, just query
+        // Selector handles null dates (returns all records if both are null)
+        List<Time_Slot__c> slots = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
+        
+        // Group by volunteer-date combination (flattened structure)
+        Map<String, Map<String, Object>> volunteerDateMap = new Map<String, Map<String, Object>>();
+        
+        for (Time_Slot__c slot : slots) {
+            String key = String.valueOf(slot.Volunteer__c) + '-' + String.valueOf(slot.Day__c);
+            
+            if (!volunteerDateMap.containsKey(key)) {
+                Map<String, Object> rowData = new Map<String, Object>();
+                rowData.put('volunteerId', slot.Volunteer__c);
+                rowData.put('volunteerName', slot.Volunteer__r != null ? slot.Volunteer__r.Name : null);
+                rowData.put('volunteerEmail', slot.Volunteer__r != null ? slot.Volunteer__r.Email : null);
+                rowData.put('date', slot.Day__c);
+                rowData.put('timeSlots', new List<Map<String, Object>>());
+                volunteerDateMap.put(key, rowData);
+            }
+            
+            Map<String, Object> rowData = volunteerDateMap.get(key);
+            List<Map<String, Object>> timeSlots = 
+                (List<Map<String, Object>>) rowData.get('timeSlots');
+            
+            // Service formats the time label using TimeSlotFormatter
+            String timeLabel = TimeSlotFormatter.formatTime(slot.Start_Time__c) + 
+                              ' - ' + 
+                              TimeSlotFormatter.formatTime(slot.End_Time__c);
+            
+            Map<String, Object> slotData = new Map<String, Object>();
+            slotData.put('id', slot.Id);
+            slotData.put('startTime', slot.Start_Time__c);
+            slotData.put('endTime', slot.End_Time__c);
+            slotData.put('status', slot.Status__c);
+            slotData.put('timeLabel', timeLabel); // Service formats this
+            timeSlots.add(slotData);
+        }
+        
+        // Sort by volunteer name, then by date
+        List<Map<String, Object>> allRows = new List<Map<String, Object>>(volunteerDateMap.values());
+        allRows.sort(new VolunteerDateComparator());
+        
+        // Apply pagination
+        Integer totalCount = allRows.size();
+        Integer startIndex = offset != null ? offset : 0;
+        Integer endIndex = (pageSize != null && pageSize > 0) ? 
+                           Math.min(startIndex + pageSize, totalCount) : totalCount;
+        
+        List<Map<String, Object>> paginatedRows = new List<Map<String, Object>>();
+        for (Integer i = startIndex; i < endIndex; i++) {
+            paginatedRows.add(allRows[i]);
+        }
+        
+        Map<String, Object> result = new Map<String, Object>();
+        result.put('rows', paginatedRows);
+        result.put('totalCount', totalCount);
+        result.put('hasMore', endIndex < totalCount);
+        
+        return result;
+    }
+    
+    /**
+     * Comparator to sort by volunteer name, then by date
+     */
+    private class VolunteerDateComparator implements Comparator<Map<String, Object>> {
+        public Integer compare(Map<String, Object> m1, Map<String, Object> m2) {
+            String name1 = (String) m1.get('volunteerName');
+            String name2 = (String) m2.get('volunteerName');
+            if (name1 == null) name1 = '';
+            if (name2 == null) name2 = '';
+            Integer nameCompare = name1.compareTo(name2);
+            if (nameCompare != 0) {
+                return nameCompare;
+            }
+            Date date1 = (Date) m1.get('date');
+            Date date2 = (Date) m2.get('date');
+            if (date1 == null || date2 == null) {
+                return 0;
+            }
+            return date1.daysBetween(date2);
+        }
     }
     
     // Private helper methods
@@ -400,5 +499,49 @@ public with sharing class VolunteerAvailabilityService {
         result.put('message', message);
         result.put('appointmentId', appointmentId);
         return result;
+    }
+    
+    /**
+     * Get volunteer information for display
+     * This service calls VolunteerDisplayService to get volunteer details
+     * Services can call other services for business logic
+     * @param volunteerId Volunteer (User) ID
+     * @return Map containing success flag, message, and volunteer information
+     */
+    public static Map<String, Object> getVolunteerInfo(Id volunteerId) {
+        if (volunteerId == null) {
+            Map<String, Object> result = new Map<String, Object>();
+            result.put('success', false);
+            result.put('message', 'volunteerId is required');
+            return result;
+        }
+        
+        // Call VolunteerDisplayService to get volunteer information
+        // Services can call other services
+        Map<String, Object> volunteerData = VolunteerDisplayService.getVolunteerById(volunteerId);
+        
+        if (volunteerData == null) {
+            Map<String, Object> result = new Map<String, Object>();
+            result.put('success', false);
+            result.put('message', 'Volunteer not found');
+            return result;
+        }
+        
+        Map<String, Object> result = new Map<String, Object>();
+        result.put('success', true);
+        result.put('volunteer', volunteerData);
+        return result;
+    }
+    
+    /**
+     * Get all volunteers for selection/filtering
+     * This service calls VolunteerDisplayService to get all volunteers
+     * Services can call other services for business logic
+     * @return Map containing list of volunteers and total count
+     */
+    public static Map<String, Object> getAllVolunteersForDisplay() {
+        // Call VolunteerDisplayService to get all volunteers
+        // Services can call other services
+        return VolunteerDisplayService.getAllVolunteers();
     }
 }

@@ -414,5 +414,137 @@ private class VolunteerAvailabilityServiceTest {
         }
         Test.stopTest();
     }
+    
+    @isTest
+    static void testGetVolunteerAvailabilityData_Success() {
+        Date startDate = Date.today();
+        Date endDate = Date.today().addDays(4);
+        
+        Test.startTest();
+        System.runAs(getAdminUser()) {
+            Map<String, Object> result = VolunteerAvailabilityService.getVolunteerAvailabilityData(startDate, endDate, 0, 50);
+            
+            System.assertNotEquals(null, result, 'Result should not be null');
+            List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get('rows');
+            System.assertNotEquals(null, rows, 'Rows should not be null');
+            System.assert(rows.size() > 0, 'Should return rows');
+            
+            // Verify structure
+            for (Map<String, Object> row : rows) {
+                System.assertNotEquals(null, row.get('volunteerId'), 'Should have volunteerId');
+                System.assertNotEquals(null, row.get('volunteerName'), 'Should have volunteerName');
+                System.assertNotEquals(null, row.get('date'), 'Should have date');
+                List<Map<String, Object>> timeSlots = (List<Map<String, Object>>) row.get('timeSlots');
+                System.assertNotEquals(null, timeSlots, 'Should have timeSlots list');
+            }
+            
+            Integer totalCount = (Integer) result.get('totalCount');
+            System.assertNotEquals(null, totalCount, 'Should have totalCount');
+            System.assert(totalCount >= rows.size(), 'Total count should be >= rows returned');
+            
+            Boolean hasMore = (Boolean) result.get('hasMore');
+            System.assertNotEquals(null, hasMore, 'Should have hasMore flag');
+        }
+        Test.stopTest();
+    }
+    
+    @isTest
+    static void testGetVolunteerAvailabilityData_WithPagination() {
+        Date startDate = Date.today();
+        Date endDate = Date.today().addDays(4);
+        
+        Test.startTest();
+        System.runAs(getAdminUser()) {
+            // Get first page
+            Map<String, Object> result1 = VolunteerAvailabilityService.getVolunteerAvailabilityData(startDate, endDate, 0, 2);
+            List<Map<String, Object>> rows1 = (List<Map<String, Object>>) result1.get('rows');
+            
+            // Get second page
+            Map<String, Object> result2 = VolunteerAvailabilityService.getVolunteerAvailabilityData(startDate, endDate, 2, 2);
+            List<Map<String, Object>> rows2 = (List<Map<String, Object>>) result2.get('rows');
+            
+            System.assertEquals(2, rows1.size(), 'First page should return 2 rows');
+            System.assert(rows2.size() <= 2, 'Second page should return <= 2 rows');
+            
+            Integer totalCount1 = (Integer) result1.get('totalCount');
+            Integer totalCount2 = (Integer) result2.get('totalCount');
+            System.assertEquals(totalCount1, totalCount2, 'Total count should be same');
+        }
+        Test.stopTest();
+    }
+    
+    @isTest
+    static void testGetVolunteerAvailabilityData_SingleDate() {
+        Date singleDate = Date.today();
+        
+        Test.startTest();
+        System.runAs(getAdminUser()) {
+            Map<String, Object> result = VolunteerAvailabilityService.getVolunteerAvailabilityData(singleDate, singleDate, 0, 50);
+            
+            System.assertNotEquals(null, result, 'Result should not be null');
+            List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get('rows');
+            
+            // Verify all rows are for the single date
+            for (Map<String, Object> row : rows) {
+                Date rowDate = (Date) row.get('date');
+                System.assertEquals(singleDate, rowDate, 'All rows should be for the single date');
+            }
+        }
+        Test.stopTest();
+    }
+    
+    @isTest
+    static void testGetVolunteerAvailabilityData_SortedByVolunteerThenDate() {
+        Date startDate = Date.today();
+        Date endDate = Date.today().addDays(4);
+        
+        Test.startTest();
+        System.runAs(getAdminUser()) {
+            Map<String, Object> result = VolunteerAvailabilityService.getVolunteerAvailabilityData(startDate, endDate, 0, 50);
+            List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get('rows');
+            
+            // Verify sorting: volunteer name, then date
+            for (Integer i = 0; i < rows.size() - 1; i++) {
+                Map<String, Object> current = rows[i];
+                Map<String, Object> next = rows[i + 1];
+                
+                String currentName = (String) current.get('volunteerName');
+                String nextName = (String) next.get('volunteerName');
+                
+                if (currentName != nextName) {
+                    System.assert(currentName <= nextName, 'Should be sorted by volunteer name');
+                } else {
+                    Date currentDate = (Date) current.get('date');
+                    Date nextDate = (Date) next.get('date');
+                    System.assert(currentDate <= nextDate, 'Should be sorted by date when volunteer name is same');
+                }
+            }
+        }
+        Test.stopTest();
+    }
+    
+    @isTest
+    static void testGetVolunteerAvailabilityData_TimeSlotsFormatted() {
+        Date startDate = Date.today();
+        Date endDate = Date.today().addDays(4);
+        
+        Test.startTest();
+        System.runAs(getAdminUser()) {
+            Map<String, Object> result = VolunteerAvailabilityService.getVolunteerAvailabilityData(startDate, endDate, 0, 50);
+            List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get('rows');
+            
+            // Verify time slots have formatted labels
+            for (Map<String, Object> row : rows) {
+                List<Map<String, Object>> timeSlots = (List<Map<String, Object>>) row.get('timeSlots');
+                for (Map<String, Object> slot : timeSlots) {
+                    String timeLabel = (String) slot.get('timeLabel');
+                    System.assertNotEquals(null, timeLabel, 'Time slot should have formatted label');
+                    System.assert(timeLabel.contains('AM') || timeLabel.contains('PM'), 'Label should contain AM or PM');
+                    System.assert(timeLabel.contains('-'), 'Label should contain time range separator');
+                }
+            }
+        }
+        Test.stopTest();
+    }
 }
 
