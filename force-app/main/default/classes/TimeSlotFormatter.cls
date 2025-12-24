@@ -56,27 +56,5 @@ public class TimeSlotFormatter {
                endTime > startTime;
     }
     
-    /**
-     * Create time slot structure labels
-     * @return List of time range labels
-     */
-    public static List<String> createTimeSlotStructureLabels() {
-        List<String> result = new List<String>();
-        Time businessStart = Time.newInstance(9, 0, 0, 0);
-        Time businessEnd = Time.newInstance(16, 0, 0, 0);
-        Integer slotMinutes = 15;
-
-        Time currentStart = businessStart;
-        while (currentStart < businessEnd) {
-            Integer millis = slotMinutes * 60 * 1000;
-            Time currentEnd = Time.newInstance(currentStart.hour(), currentStart.minute(), currentStart.second(), currentStart.millisecond()).addMilliseconds(millis);
-            if (currentEnd > businessEnd) {
-                currentEnd = businessEnd;
-            }
-            result.add(String.valueOf(currentStart) + '-' + String.valueOf(currentEnd));
-            currentStart = currentEnd;
-        }
-        return result;
-    }
 }
 

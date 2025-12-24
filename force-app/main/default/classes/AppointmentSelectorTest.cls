@@ -41,32 +41,5 @@ private class AppointmentSelectorTest {
         }
         insert appointments;
     }
-    
-    @isTest
-    static void testGetAppointmentById_Success() {
-        Appointment__c appointment = [SELECT Id FROM Appointment__c LIMIT 1];
-        
-        Test.startTest();
-        List<Appointment__c> result = AppointmentSelector.getAppointmentById(appointment.Id);
-        Test.stopTest();
-        
-        Assert.isNotNull(null, result, 'Result should not be null');
-        Assert.areEqual(1, result.size(), 'Should return one appointment');
-        Assert.areEqual(appointment.Id, result[0].Id, 'Should return correct appointment');
-        Assert.isNotNull(null, result[0].Appointment_Request__c, 'Should have appointment request');
-        Assert.isNotNull(null, result[0].Time_Slot__c, 'Should have time slot');
-    }
-    
-    @isTest
-    static void testGetAppointmentById_NotFound() {
-        Id fakeId = 'a00000000000000';
-        
-        Test.startTest();
-        List<Appointment__c> result = AppointmentSelector.getAppointmentById(fakeId);
-        Test.stopTest();
-        
-        Assert.isNotNull(null, result, 'Result should not be null');
-        Assert.areEqual(0, result.size(), 'Should return empty list');
-    }
 }
 

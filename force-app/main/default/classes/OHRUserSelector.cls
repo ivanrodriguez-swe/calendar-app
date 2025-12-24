@@ -56,23 +56,5 @@ public inherited sharing class OHRUserSelector {
         ];
     }
     
-    /**
-     * Get users by IDs
-     * @param userIds Set of user IDs to query
-     * @return List of active users matching the IDs, ordered by name
-     */
-    public static List<User> getUsersByIds(Set<Id> userIds) {
-        if (userIds == null || userIds.isEmpty()) {
-            return new List<User>();
-        }
-        
-        return [
-            SELECT Id, Name, Email, IsActive, CreatedDate
-            FROM User
-            WHERE Id IN :userIds
-            AND IsActive = true
-            ORDER BY Name
-        ];
-    }
 }
 

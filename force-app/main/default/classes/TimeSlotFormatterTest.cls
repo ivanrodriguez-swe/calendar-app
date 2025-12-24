@@ -171,27 +171,5 @@ private class TimeSlotFormatterTest {
         
         Assert.areEqual(false, result, 'Should reject equal times');
     }
-    
-    @isTest
-    static void testCreateTimeSlotStructureLabels() {
-        Test.startTest();
-        List<String> result = TimeSlotFormatter.createTimeSlotStructureLabels();
-        Test.stopTest();
-        
-        Assert.isNotNull(null, result, 'Result should not be null');
-        Assert.isTrue(result.size() > 0, 'Should return time ranges');
-        
-        // Should have ranges from 9:00 to 16:00 in 15-minute intervals
-        // That's 7 hours * 4 intervals = 28 slots
-        Assert.isTrue(result.size() >= 20, 'Should have multiple time ranges');
-        
-        // Verify first range starts at 9:00
-        String firstRange = result[0];
-        Assert.isTrue(firstRange.contains('09:00:00'), 'First range should start at 9:00');
-        
-        // Verify last range ends at 16:00
-        String lastRange = result[result.size() - 1];
-        Assert.isTrue(lastRange.contains('16:00:00'), 'Last range should end at 16:00');
-    }
 }
 
