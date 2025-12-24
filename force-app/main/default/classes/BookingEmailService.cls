@@ -1,10 +1,9 @@
-// Service class for sending booking confirmation emails
 public class BookingEmailService {
     
     /**
      * Validate email format
-     * @param email Email address to validate
-     * @return True if email format is valid, false otherwise
+     * @param email Email address
+     * @return True if valid
      */
     public static Boolean isValidEmail(String email) {
         if (String.isBlank(email)) return false;
@@ -12,10 +11,10 @@ public class BookingEmailService {
     }
     
     /**
-     * Send booking confirmation emails to volunteer and customer
-     * @param slot Time slot that was booked
+     * Send booking confirmation emails
+     * @param slot Time slot
      * @param customerName Customer name
-     * @param customerEmail Customer email address
+     * @param customerEmail Customer email
      * @param appointment Appointment record
      * @param appointmentRequest Appointment request record
      */

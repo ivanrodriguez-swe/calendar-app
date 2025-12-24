@@ -1,12 +1,9 @@
-/**
- * Service for appointment request business logic
- */
 public without sharing class AppointmentRequestService {
     
     /**
-     * Process CSV upload and create appointment requests
-     * @param csvContent CSV string content
-     * @return Map with success, message, recordsCreated, emailsSent, and skippedRecords
+     * Process CSV and create appointment requests
+     * @param csvContent CSV content
+     * @return Map with success, message, recordsCreated, emailsSent, skippedRecords
      */
     public static Map<String, Object> uploadCSV(String csvContent) {
         Map<String, Object> result = new Map<String, Object>();
@@ -109,9 +106,9 @@ public without sharing class AppointmentRequestService {
     }
     
     /**
-     * Parse CSV content into list of maps
-     * @param csvContent CSV string content
-     * @return List of maps with parsed data
+     * Parse CSV content
+     * @param csvContent CSV content
+     * @return List of maps
      */
     private static List<Map<String, String>> parseCSV(String csvContent) {
         List<Map<String, String>> dataList = new List<Map<String, String>>();
@@ -167,9 +164,9 @@ public without sharing class AppointmentRequestService {
     }
     
     /**
-     * Parse a single CSV line handling quoted values
-     * @param line CSV line to parse
-     * @return List of parsed values (trimmed)
+     * Parse CSV line
+     * @param line CSV line
+     * @return List of values
      */
     private static List<String> parseCSVLine(String line) {
         List<String> values = new List<String>();
@@ -198,9 +195,9 @@ public without sharing class AppointmentRequestService {
     }
     
     /**
-     * Get volunteer email to ID mapping using selector
-     * @param dataList List of parsed CSV data
-     * @return Map of email (lowercase) to User ID
+     * Get volunteer email to ID mapping
+     * @param dataList CSV data
+     * @return Map of email to User ID
      */
     private static Map<String, Id> getVolunteerEmailToIdMap(List<Map<String, String>> dataList) {
         Set<String> volunteerEmails = new Set<String>();
@@ -229,8 +226,8 @@ public without sharing class AppointmentRequestService {
     }
     
     /**
-     * Send referral emails to references
-     * @param appointmentRequests List of appointment requests
+     * Send referral emails
+     * @param appointmentRequests Appointment requests
      * @return Number of emails sent
      */
     private static Integer sendReferralEmails(List<Appointment_Request__c> appointmentRequests) {
@@ -304,8 +301,8 @@ public without sharing class AppointmentRequestService {
     }
     
     /**
-     * Get public site URL for Experience Cloud
-     * @return Public site URL string
+     * Get public site URL
+     * @return Site URL
      */
     private static String getPublicSiteUrl() {
         try {

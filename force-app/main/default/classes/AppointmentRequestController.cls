@@ -1,23 +1,9 @@
-/**
- * Controller for appointment request management
- * 
- * IMPORTANT: Controllers should NEVER call other controllers - only services.
- * Services can call other services, but controllers must remain independent.
- * 
- * Responsibilities:
- * - Expose @AuraEnabled methods for the LWC
- * - Handle exception handling and validation
- * - Convert service data (Maps) to wrapper classes for LWC consumption
- * - NO business logic - all logic is in the service layer
- */
 public with sharing class AppointmentRequestController {
     
     /**
      * Upload CSV and create appointment requests
-     * Delegates all business logic to AppointmentRequestService
-     * 
-     * @param csvContent CSV string content
-     * @return UploadResult with success status, message, records created, and emails sent
+     * @param csvContent CSV content
+     * @return UploadResult
      */
     @AuraEnabled
     public static UploadResult uploadCSV(String csvContent) {
@@ -34,10 +20,8 @@ public with sharing class AppointmentRequestController {
         return result;
     }
     
-    // Wrapper Classes for LWC communication (DTOs with @AuraEnabled)
-    
     /**
-     * Result class for upload operation
+     * Upload result
      */
     public class UploadResult {
         @AuraEnabled public Boolean success;

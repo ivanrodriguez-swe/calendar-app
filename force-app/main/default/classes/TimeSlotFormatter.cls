@@ -1,9 +1,9 @@
 public class TimeSlotFormatter {
     
     /**
-     * Parse time string (HH:mm) to Time object
-     * @param timeStr Time string in HH:mm format
-     * @return Time object or null if invalid
+     * Parse time string to Time object
+     * @param timeStr Time string (HH:mm)
+     * @return Time object or null
      */
     public static Time parseTime(String timeStr) {
         if (String.isBlank(timeStr)) return null;
@@ -21,9 +21,9 @@ public class TimeSlotFormatter {
     }
     
     /**
-     * Format Time to readable string (e.g., "9:00 AM")
-     * @param t Time object to format
-     * @return Formatted time string (e.g., "9:00 AM", "2:30 PM")
+     * Format Time to string
+     * @param t Time object
+     * @return Formatted time string
      */
     public static String formatTime(Time t) {
         if (t == null) return '';
@@ -40,13 +40,10 @@ public class TimeSlotFormatter {
     }
     
     /**
-     * Validate time range is within business hours (9:00 AM - 4:00 PM)
-     * Start time must be between 9:00 AM and 3:45 PM
-     * End time must be between 9:15 AM and 4:00 PM
-     * End time must be after start time
+     * Validate time range
      * @param startTime Start time
      * @param endTime End time
-     * @return True if valid, false otherwise
+     * @return True if valid
      */
     public static Boolean isValidTimeRange(Time startTime, Time endTime) {
         Time minStartTime = Time.newInstance(9, 0, 0, 0);
@@ -60,9 +57,7 @@ public class TimeSlotFormatter {
     }
     
     /**
-     * Create time slot structure (9:00 AM - 4:00 PM in 15-minute intervals)
-     * Returns a list of time ranges as strings (e.g., "09:00:00.000Z-09:15:00.000Z")
-     * Used for building the calendar grid structure
+     * Create time slot structure labels
      * @return List of time range labels
      */
     public static List<String> createTimeSlotStructureLabels() {

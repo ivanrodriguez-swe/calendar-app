@@ -1,7 +1,7 @@
 public with sharing class VolunteerAvailabilityService {
     
     /**
-     * Get available time slots for a date range
+     * Get time slots for date range
      */
     public static List<Map<String, Object>> getTimeslotsForRange(Date startDate, Date endDate) {
         List<Time_Slot__c> slots = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate);
@@ -30,7 +30,7 @@ public with sharing class VolunteerAvailabilityService {
     }
     
     /**
-     * Book a time slot
+     * Book time slot
      */
     public static Map<String, Object> bookTimeSlot(Id timeSlotId, Id customerId, Id appointmentRequestId) {
         Time_Slot__c slot = getAndValidateTimeSlot(timeSlotId);
@@ -55,7 +55,7 @@ public with sharing class VolunteerAvailabilityService {
     }
     
     /**
-     * Create time slots from availability ranges
+     * Create time slots from ranges
      */
     public static Map<String, Object> createTimeSlotsFromRanges(List<Map<String, String>> ranges, Id volunteerId) {
         if (ranges == null || ranges.isEmpty()) {
@@ -74,7 +74,7 @@ public with sharing class VolunteerAvailabilityService {
     }
     
     /**
-     * Create time slots from CSV content
+     * Create time slots from CSV
      */
     public static Map<String, Object> createTimeSlotsFromCSV(String csvContent) {
         if (String.isBlank(csvContent)) {
@@ -98,16 +98,12 @@ public with sharing class VolunteerAvailabilityService {
     }
     
     /**
-     * Get volunteer availability data organized by volunteer-date combination
-     * Returns flattened structure: one row per volunteer-date with all time slots
-     * All business logic handled here - controller just converts to wrappers
-     * Supports pagination with offset and pageSize
-     * 
-     * @param startDate Start date for filtering (null to get all records)
-     * @param endDate End date for filtering (null to get all records)
-     * @param offset Number of records to skip (for pagination)
-     * @param pageSize Maximum number of records to return (for pagination)
-     * @return Map containing 'rows' (List of data), 'totalCount' (Integer), and 'hasMore' (Boolean)
+     * Get volunteer availability data
+     * @param startDate Start date or null
+     * @param endDate End date or null
+     * @param offset Pagination offset
+     * @param pageSize Page size
+     * @return Map with rows, totalCount, hasMore
      */
     public static Map<String, Object> getVolunteerAvailabilityData(Date startDate, Date endDate, Integer offset, Integer pageSize) {
         List<Time_Slot__c> slots = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
@@ -165,7 +161,7 @@ public with sharing class VolunteerAvailabilityService {
     }
     
     /**
-     * Comparator to sort by volunteer name, then by date
+     * Sort by volunteer name, then date
      */
     private class VolunteerDateComparator implements Comparator<Map<String, Object>> {
         public Integer compare(Map<String, Object> m1, Map<String, Object> m2) {
