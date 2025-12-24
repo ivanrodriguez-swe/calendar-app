@@ -16,7 +16,6 @@ export default class AppointmentRequestUploader extends LightningElement {
         this.showModal = false;
         this.selectedFile = null;
         this.fileName = '';
-        // Reset file input
         const fileInput = this.template.querySelector('lightning-input[type="file"]');
         if (fileInput) {
             fileInput.value = '';
@@ -44,10 +43,8 @@ export default class AppointmentRequestUploader extends LightningElement {
         this.uploading = true;
 
         try {
-            // Read file content
             const fileContent = await this.readFileContent(this.selectedFile);
             
-            // Call Apex to process CSV
             const result = await uploadCSV({
                 csvContent: fileContent
             });
@@ -58,7 +55,6 @@ export default class AppointmentRequestUploader extends LightningElement {
                     'success');
                 this.handleCloseModal();
                 
-                // Dispatch event to refresh parent component if needed
                 this.dispatchEvent(new CustomEvent('uploadsuccess'));
             } else {
                 this.showToast('Error', result.message, 'error');

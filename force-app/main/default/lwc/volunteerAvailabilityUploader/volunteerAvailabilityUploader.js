@@ -16,7 +16,6 @@ export default class VolunteerAvailabilityUploader extends LightningElement {
         this.showModal = false;
         this.selectedFile = null;
         this.fileName = '';
-        // Reset file input
         const fileInput = this.template.querySelector('lightning-input[type="file"]');
         if (fileInput) {
             fileInput.value = '';
@@ -44,10 +43,8 @@ export default class VolunteerAvailabilityUploader extends LightningElement {
         this.uploading = true;
 
         try {
-            // Read file content
             const fileContent = await this.readFileContent(this.selectedFile);
             
-            // Validate CSV format before submitting
             const validationResult = this.validateCSVContent(fileContent);
             if (!validationResult.isValid) {
                 this.showToast('Validation Error', validationResult.message, 'error');
@@ -55,7 +52,6 @@ export default class VolunteerAvailabilityUploader extends LightningElement {
                 return;
             }
             
-            // Call Apex to process CSV
             const result = await createTimeSlotsFromCSV({
                 csvContent: fileContent
             });
@@ -66,7 +62,6 @@ export default class VolunteerAvailabilityUploader extends LightningElement {
                     'success');
                 this.handleCloseModal();
                 
-                // Dispatch event to refresh parent component if needed
                 this.dispatchEvent(new CustomEvent('uploadsuccess'));
             } else {
                 this.showToast('Error', result.message, 'error');
@@ -103,7 +98,6 @@ export default class VolunteerAvailabilityUploader extends LightningElement {
             return { isValid: false, message: 'CSV file contains no data' };
         }
         
-        // Check if first line looks like a header (optional)
         const firstLine = lines[0].trim().toLowerCase();
         let startIndex = 0;
         if (firstLine.includes('volunteer') || firstLine.includes('email') || 
@@ -117,13 +111,11 @@ export default class VolunteerAvailabilityUploader extends LightningElement {
             return { isValid: false, message: 'CSV file contains no data rows (only header or empty)' };
         }
         
-        // Validate that each row has at least 4 columns
         let invalidRows = [];
         for (let i = startIndex; i < lines.length; i++) {
             const line = lines[i].trim();
             if (line.length === 0) continue;
             
-            // Simple CSV parsing - count commas (assuming no quoted values with commas)
             const columns = line.split(',');
             if (columns.length < 4) {
                 invalidRows.push(i + 1);

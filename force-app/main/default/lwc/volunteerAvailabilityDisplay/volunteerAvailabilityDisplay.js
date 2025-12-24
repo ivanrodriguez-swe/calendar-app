@@ -13,17 +13,14 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
     currentOffset = 0;
     refreshIntervalId;
     PAGE_SIZE = 50;
-    REFRESH_INTERVAL = 30000; // 30 seconds
+    REFRESH_INTERVAL = 30000;
     
     connectedCallback() {
-        // Initialize with no date filters - will load ALL records
         this.fromDate = null;
         this.toDate = null;
         
-        // Load initial data (all records)
         this.loadData();
         
-        // Set up auto-refresh polling
         this.refreshIntervalId = setInterval(() => {
             this.refreshData();
         }, this.REFRESH_INTERVAL);
@@ -51,14 +48,11 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
     }
     
     handleSearch() {
-        // Validate dates if provided
         if (this.fromDate && this.toDate && this.toDate < this.fromDate) {
             this.showToast('Error', 'To date must be greater than or equal to From date', 'error');
             return;
         }
         
-        // When both From and To dates are set, filter records within that date range
-        // Reset pagination and load data (with or without filters)
         this.currentOffset = 0;
         this.rows = [];
         this.hasMore = false;
@@ -72,9 +66,6 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
         
         this.isLoading = true;
         
-        // Apex expects dates as strings in YYYY-MM-DD format, or null for all records
-        // If dates are not set, pass null to get ALL records from database
-        // If both dates are set, Apex will filter records where Day__c is between startDate and endDate (inclusive)
         const startDate = this.fromDate || null;
         const endDate = this.toDate || null;
         
@@ -85,7 +76,6 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
             pageSize: this.PAGE_SIZE
         })
         .then(result => {
-            // Append new rows to existing rows
             if (result && result.rows && result.rows.length > 0) {
                 this.rows = [...this.rows, ...result.rows];
             }
@@ -109,7 +99,6 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
     }
     
     refreshData() {
-        // Only refresh if we have data loaded
         if (this.rows.length === 0 || this.isLoading) {
             return;
         }
@@ -117,7 +106,6 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
         const startDate = this.fromDate || null;
         const endDate = this.toDate || null;
         
-        // Get all current rows to compare (with or without date filters)
         getVolunteerAvailabilityData({
             startDate: startDate,
             endDate: endDate,
@@ -126,7 +114,6 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
         })
         .then(result => {
             if (result.rows && result.rows.length > 0) {
-                // Create a map of existing rows by time slot ID for quick lookup
                 const existingRowMap = new Map();
                 this.rows.forEach(row => {
                     if (row.timeSlots) {
@@ -138,7 +125,6 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
                     }
                 });
                 
-                // Update status of existing time slots
                 result.rows.forEach(newRow => {
                     if (newRow.timeSlots) {
                         newRow.timeSlots.forEach(newSlot => {
@@ -152,12 +138,10 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
                     }
                 });
                 
-                // Trigger reactivity
                 this.rows = [...this.rows];
             }
         })
         .catch(error => {
-            // Silently fail for refresh - don't show toast to avoid interrupting user experience
         });
     }
     
@@ -171,7 +155,6 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
         }
         
         return this.rows.map((row, index) => {
-            // Process time slots to add bubble class
             const processedTimeSlots = row.timeSlots ? row.timeSlots.map(slot => {
                 return {
                     ...slot,
@@ -179,7 +162,6 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
                 };
             }) : [];
             
-            // Create a unique key for the row
             const rowKey = row.volunteerId + '-' + (row.slotDate ? row.slotDate.toString() : index);
             
             return {
@@ -208,27 +190,16 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
             return '';
         }
         
-        // CRITICAL FIX: Parse the date string directly to avoid timezone conversion
-        // Apex sends dates as ISO strings (e.g., "2025-12-22T00:00:00.000Z")
-        // When we use new Date(), it interprets in UTC and toLocaleDateString() converts to local timezone,
-        // which can shift the date by one day. Instead, extract the date components directly from the string.
-        
         let dateStr;
         if (typeof dateValue === 'string') {
-            // If it's already a string, use it directly
             dateStr = dateValue;
         } else {
-            // If it's a Date object, convert to ISO string
             dateStr = dateValue.toISOString();
         }
         
-        // Extract date components from ISO string (YYYY-MM-DDTHH:mm:ss.sssZ)
-        // Take only the date part (YYYY-MM-DD) before the 'T'
         const datePart = dateStr.split('T')[0];
         const [year, month, day] = datePart.split('-').map(Number);
         
-        // Create a date object using local timezone components (not UTC)
-        // This ensures the date displays as the actual date value, not shifted by timezone
         const date = new Date(year, month - 1, day);
         const options = { year: 'numeric', month: 'short', day: 'numeric' };
         return date.toLocaleDateString('en-US', options);
@@ -250,27 +221,19 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
             return '';
         }
         
-        // Time values from Apex are time-of-day only (no timezone)
-        // They may come as strings (e.g., "09:00:00.000Z") or Time objects
-        // Extract hours and minutes directly without timezone conversion
-        
         const formatSingleTime = (timeValue) => {
             let hours, minutes;
             
             if (typeof timeValue === 'string') {
-                // Parse from string format (e.g., "09:00:00.000Z" or "09:00:00")
-                const timePart = timeValue.split('T')[1] || timeValue; // Handle both DateTime and Time strings
-                const timeOnly = timePart.split('.')[0]; // Remove milliseconds
+                const timePart = timeValue.split('T')[1] || timeValue;
+                const timeOnly = timePart.split('.')[0];
                 const [h, m] = timeOnly.split(':').map(Number);
                 hours = h;
                 minutes = m || 0;
             } else if (timeValue instanceof Date) {
-                // If it's a Date object, extract hours and minutes
-                // Use UTC methods to avoid timezone conversion
                 hours = timeValue.getUTCHours();
                 minutes = timeValue.getUTCMinutes();
             } else {
-                // If it's a Time object or other format, try to extract
                 const timeStr = String(timeValue);
                 const timePart = timeStr.split('T')[1] || timeStr;
                 const timeOnly = timePart.split('.')[0];
@@ -279,7 +242,6 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
                 minutes = m || 0;
             }
             
-            // Format as 12-hour time with AM/PM
             const ampm = hours >= 12 ? 'PM' : 'AM';
             let displayHours = hours > 12 ? hours - 12 : hours;
             if (displayHours === 0) displayHours = 12;
