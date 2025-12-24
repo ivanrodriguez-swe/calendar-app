@@ -1,6 +1,6 @@
 import { LightningElement, track } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import getVolunteerAvailabilityData from '@salesforce/apex/VolunteerAvailabilityController.getVolunteerAvailabilityData';
+import getVolunteerAvailabilityData from '@salesforce/apex/VolunteerAvailabilityDisplayController.getVolunteerAvailabilityData';
 
 export default class VolunteerAvailabilityDisplay extends LightningElement {
     @track rows = [];
@@ -231,9 +231,87 @@ export default class VolunteerAvailabilityDisplay extends LightningElement {
             return '';
         }
         
-        const date = new Date(dateValue);
+        // CRITICAL FIX: Parse the date string directly to avoid timezone conversion
+        // Apex sends dates as ISO strings (e.g., "2025-12-22T00:00:00.000Z")
+        // When we use new Date(), it interprets in UTC and toLocaleDateString() converts to local timezone,
+        // which can shift the date by one day. Instead, extract the date components directly from the string.
+        
+        let dateStr;
+        if (typeof dateValue === 'string') {
+            // If it's already a string, use it directly
+            dateStr = dateValue;
+        } else {
+            // If it's a Date object, convert to ISO string
+            dateStr = dateValue.toISOString();
+        }
+        
+        // Extract date components from ISO string (YYYY-MM-DDTHH:mm:ss.sssZ)
+        // Take only the date part (YYYY-MM-DD) before the 'T'
+        const datePart = dateStr.split('T')[0];
+        const [year, month, day] = datePart.split('-').map(Number);
+        
+        // Create a date object using local timezone components (not UTC)
+        // This ensures the date displays as the actual date value, not shifted by timezone
+        const date = new Date(year, month - 1, day);
         const options = { year: 'numeric', month: 'short', day: 'numeric' };
         return date.toLocaleDateString('en-US', options);
+    }
+    
+    /**
+     * Format time slot for display (fallback method if timeLabel is not provided)
+     * This method ensures times are displayed correctly regardless of timezone.
+     * 
+     * NOTE: Times are typically pre-formatted in Apex (timezone-safe).
+     * This is a fallback for edge cases.
+     * 
+     * @param {Time|String|Date} startTime - Start time
+     * @param {Time|String|Date} endTime - End time
+     * @returns {String} Formatted time range (e.g., "9:00 AM - 9:15 AM")
+     */
+    formatTimeSlot(startTime, endTime) {
+        if (!startTime || !endTime) {
+            return '';
+        }
+        
+        // Time values from Apex are time-of-day only (no timezone)
+        // They may come as strings (e.g., "09:00:00.000Z") or Time objects
+        // Extract hours and minutes directly without timezone conversion
+        
+        const formatSingleTime = (timeValue) => {
+            let hours, minutes;
+            
+            if (typeof timeValue === 'string') {
+                // Parse from string format (e.g., "09:00:00.000Z" or "09:00:00")
+                const timePart = timeValue.split('T')[1] || timeValue; // Handle both DateTime and Time strings
+                const timeOnly = timePart.split('.')[0]; // Remove milliseconds
+                const [h, m] = timeOnly.split(':').map(Number);
+                hours = h;
+                minutes = m || 0;
+            } else if (timeValue instanceof Date) {
+                // If it's a Date object, extract hours and minutes
+                // Use UTC methods to avoid timezone conversion
+                hours = timeValue.getUTCHours();
+                minutes = timeValue.getUTCMinutes();
+            } else {
+                // If it's a Time object or other format, try to extract
+                const timeStr = String(timeValue);
+                const timePart = timeStr.split('T')[1] || timeStr;
+                const timeOnly = timePart.split('.')[0];
+                const [h, m] = timeOnly.split(':').map(Number);
+                hours = h;
+                minutes = m || 0;
+            }
+            
+            // Format as 12-hour time with AM/PM
+            const ampm = hours >= 12 ? 'PM' : 'AM';
+            let displayHours = hours > 12 ? hours - 12 : hours;
+            if (displayHours === 0) displayHours = 12;
+            const displayMinutes = minutes < 10 ? '0' + minutes : String(minutes);
+            
+            return `${displayHours}:${displayMinutes} ${ampm}`;
+        };
+        
+        return `${formatSingleTime(startTime)} - ${formatSingleTime(endTime)}`;
     }
     
     showToast(title, message, variant) {

@@ -23,8 +23,13 @@ public class TimeSlotFormatter {
     
     /**
      * Format Time to readable string (e.g., "9:00 AM")
+     * 
+     * TIMEZONE-SAFE: This method formats Time objects (which are time-of-day only, no timezone)
+     * into readable strings. Since Time objects don't have timezone information, formatting
+     * them server-side ensures consistent display regardless of the user's timezone.
+     * 
      * @param t Time object to format
-     * @return Formatted time string
+     * @return Formatted time string (e.g., "9:00 AM", "2:30 PM")
      */
     public static String formatTime(Time t) {
         if (t == null) return '';

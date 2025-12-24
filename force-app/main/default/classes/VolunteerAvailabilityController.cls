@@ -76,99 +76,6 @@ public without sharing class VolunteerAvailabilityController {
         }
     }
     
-    // Get volunteer availability data for display table (used by volunteerAvailabilityDisplay LWC)
-    // If startDate and endDate are null, returns all records from database
-    @AuraEnabled
-    public static VolunteerAvailabilityResult getVolunteerAvailabilityData(Date startDate, Date endDate, Integer offset, Integer pageSize) {
-        // Date filters are optional - if both are null, get all records
-        
-        // Debug logging for date values
-        System.debug('Controller received dates - startDate: ' + startDate + ', endDate: ' + endDate);
-        if (startDate != null && endDate != null) {
-            System.debug('Date comparison - startDate == endDate: ' + (startDate == endDate));
-        }
-        
-        // Default pagination values
-        Integer offsetValue = offset != null ? offset : 0;
-        Integer pageSizeValue = (pageSize != null && pageSize > 0) ? pageSize : 50;
-        
-        // Service handles all logic and returns pre-organized data with pagination
-        Map<String, Object> serviceResult = 
-            VolunteerAvailabilityService.getVolunteerAvailabilityData(startDate, endDate, offsetValue, pageSizeValue);
-        
-        // Controller just converts to wrapper classes (simple data transformation)
-        List<Map<String, Object>> serviceRows = (List<Map<String, Object>>) serviceResult.get('rows');
-        List<VolunteerAvailabilityRow> rows = convertToVolunteerAvailabilityRows(serviceRows);
-        
-        VolunteerAvailabilityResult result = new VolunteerAvailabilityResult();
-        result.rows = rows;
-        result.totalCount = (Integer) serviceResult.get('totalCount');
-        result.hasMore = (Boolean) serviceResult.get('hasMore');
-        
-        return result;
-    }
-    
-    // Get volunteer information for display (used by volunteerAvailabilityDisplay LWC)
-    // Delegates to VolunteerAvailabilityService, which calls VolunteerDisplayService if needed
-    @AuraEnabled(cacheable=true)
-    public static VolunteerInfoResult getVolunteerInfo(Id volunteerId) {
-        if (volunteerId == null) {
-            throw new AuraHandledException('volunteerId is required.');
-        }
-        
-        // Service handles all logic - can call other services
-        Map<String, Object> serviceResult = VolunteerAvailabilityService.getVolunteerInfo(volunteerId);
-        
-        if (serviceResult == null || !(Boolean) serviceResult.get('success')) {
-            VolunteerInfoResult result = new VolunteerInfoResult();
-            result.success = false;
-            result.message = (String) serviceResult?.get('message') ?? 'Volunteer not found';
-            return result;
-        }
-        
-        // Controller converts to wrapper class (simple data transformation)
-        Map<String, Object> serviceVolunteer = (Map<String, Object>) serviceResult.get('volunteer');
-        VolunteerInfo volunteerInfo = new VolunteerInfo();
-        volunteerInfo.id = (Id) serviceVolunteer.get('id');
-        volunteerInfo.name = (String) serviceVolunteer.get('name');
-        volunteerInfo.email = (String) serviceVolunteer.get('email');
-        volunteerInfo.isActive = (Boolean) serviceVolunteer.get('isActive');
-        volunteerInfo.createdDate = (DateTime) serviceVolunteer.get('createdDate');
-        
-        VolunteerInfoResult result = new VolunteerInfoResult();
-        result.success = true;
-        result.volunteer = volunteerInfo;
-        
-        return result;
-    }
-    
-    // Get all volunteers for selection/filtering (used by volunteerAvailabilityDisplay LWC)
-    @AuraEnabled(cacheable=true)
-    public static VolunteerListResult getAllVolunteersForDisplay() {
-        // Service handles all logic - can call other services
-        Map<String, Object> serviceResult = VolunteerAvailabilityService.getAllVolunteersForDisplay();
-        
-        // Controller converts to wrapper classes (simple data transformation)
-        List<Map<String, Object>> serviceVolunteers = (List<Map<String, Object>>) serviceResult.get('volunteers');
-        List<VolunteerInfo> volunteers = new List<VolunteerInfo>();
-        
-        for (Map<String, Object> volunteerData : serviceVolunteers) {
-            VolunteerInfo volunteer = new VolunteerInfo();
-            volunteer.id = (Id) volunteerData.get('id');
-            volunteer.name = (String) volunteerData.get('name');
-            volunteer.email = (String) volunteerData.get('email');
-            volunteer.isActive = (Boolean) volunteerData.get('isActive');
-            volunteer.createdDate = (DateTime) volunteerData.get('createdDate');
-            volunteers.add(volunteer);
-        }
-        
-        VolunteerListResult result = new VolunteerListResult();
-        result.volunteers = volunteers;
-        result.totalCount = (Integer) serviceResult.get('totalCount');
-        
-        return result;
-    }
-    
     // Private conversion methods - simple data transformation, no business logic
     
     /**
@@ -220,38 +127,6 @@ public without sharing class VolunteerAvailabilityController {
             serviceRanges.add(serviceRange);
         }
         return serviceRanges;
-    }
-    
-    /**
-     * Convert service's organized data to wrapper classes
-     * Simple data transformation - no business logic
-     */
-    private static List<VolunteerAvailabilityRow> convertToVolunteerAvailabilityRows(List<Map<String, Object>> serviceData) {
-        List<VolunteerAvailabilityRow> rows = new List<VolunteerAvailabilityRow>();
-        
-        for (Map<String, Object> rowData : serviceData) {
-            VolunteerAvailabilityRow row = new VolunteerAvailabilityRow();
-            row.volunteerId = (Id) rowData.get('volunteerId');
-            row.volunteerName = (String) rowData.get('volunteerName');
-            row.volunteerEmail = (String) rowData.get('volunteerEmail');
-            row.slotDate = (Date) rowData.get('date');
-            
-            List<Map<String, Object>> timeSlotDataList = (List<Map<String, Object>>) rowData.get('timeSlots');
-            row.timeSlots = new List<TimeSlotData>();
-            for (Map<String, Object> slotData : timeSlotDataList) {
-                TimeSlotData tsd = new TimeSlotData();
-                tsd.id = (Id) slotData.get('id');
-                tsd.startTime = (Time) slotData.get('startTime');
-                tsd.endTime = (Time) slotData.get('endTime');
-                tsd.status = (String) slotData.get('status');
-                tsd.timeLabel = (String) slotData.get('timeLabel'); // Service formats this
-                row.timeSlots.add(tsd);
-            }
-            
-            rows.add(row);
-        }
-        
-        return rows;
     }
 
     // Wrapper Classes for LWC communication (DTOs with @AuraEnabled)
@@ -334,48 +209,5 @@ public without sharing class VolunteerAvailabilityController {
             this.message = message;
             this.slotsCreated = slotsCreated;
         }
-    }
-    
-    // Wrapper classes for volunteer availability display LWC
-    public class VolunteerAvailabilityRow {
-        @AuraEnabled public Id volunteerId;
-        @AuraEnabled public String volunteerName;
-        @AuraEnabled public String volunteerEmail;
-        @AuraEnabled public Date slotDate;
-        @AuraEnabled public List<TimeSlotData> timeSlots; // All time slots for this volunteer-date
-    }
-    
-    public class TimeSlotData {
-        @AuraEnabled public Id id;
-        @AuraEnabled public Time startTime;
-        @AuraEnabled public Time endTime;
-        @AuraEnabled public String status; // 'Available' or 'Booked'
-        @AuraEnabled public String timeLabel; // Formatted time range (e.g., "9:00 AM - 9:15 AM")
-    }
-    
-    public class VolunteerAvailabilityResult {
-        @AuraEnabled public List<VolunteerAvailabilityRow> rows;
-        @AuraEnabled public Integer totalCount;
-        @AuraEnabled public Boolean hasMore;
-    }
-    
-    // Wrapper classes for volunteer information (used by volunteerAvailabilityDisplay LWC)
-    public class VolunteerInfoResult {
-        @AuraEnabled public Boolean success;
-        @AuraEnabled public String message;
-        @AuraEnabled public VolunteerInfo volunteer;
-    }
-    
-    public class VolunteerListResult {
-        @AuraEnabled public List<VolunteerInfo> volunteers;
-        @AuraEnabled public Integer totalCount;
-    }
-    
-    public class VolunteerInfo {
-        @AuraEnabled public Id id;
-        @AuraEnabled public String name;
-        @AuraEnabled public String email;
-        @AuraEnabled public Boolean isActive;
-        @AuraEnabled public DateTime createdDate;
     }
 }

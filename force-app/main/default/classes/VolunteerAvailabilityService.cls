@@ -143,7 +143,10 @@ public with sharing class VolunteerAvailabilityService {
             List<Map<String, Object>> timeSlots = 
                 (List<Map<String, Object>>) rowData.get('timeSlots');
             
-            // Service formats the time label using TimeSlotFormatter
+            // TIMEZONE-SAFE: Format times server-side in Apex to avoid timezone conversion issues
+            // Time values in Salesforce are time-of-day only (no timezone), so formatting here
+            // ensures consistent display regardless of user's timezone. The formatted string
+            // (e.g., "9:00 AM - 9:15 AM") is sent to the LWC and displayed directly.
             String timeLabel = TimeSlotFormatter.formatTime(slot.Start_Time__c) + 
                               ' - ' + 
                               TimeSlotFormatter.formatTime(slot.End_Time__c);
@@ -153,7 +156,7 @@ public with sharing class VolunteerAvailabilityService {
             slotData.put('startTime', slot.Start_Time__c);
             slotData.put('endTime', slot.End_Time__c);
             slotData.put('status', slot.Status__c);
-            slotData.put('timeLabel', timeLabel); // Service formats this
+            slotData.put('timeLabel', timeLabel); // Pre-formatted string (timezone-safe)
             timeSlots.add(slotData);
         }
         
@@ -195,10 +198,23 @@ public with sharing class VolunteerAvailabilityService {
             }
             Date date1 = (Date) m1.get('date');
             Date date2 = (Date) m2.get('date');
-            if (date1 == null || date2 == null) {
+            if (date1 == null && date2 == null) {
                 return 0;
             }
-            return date1.daysBetween(date2);
+            if (date1 == null) {
+                return -1; // null dates come first
+            }
+            if (date2 == null) {
+                return 1; // null dates come first
+            }
+            // Compare dates: return negative if date1 < date2, positive if date1 > date2, 0 if equal
+            if (date1 < date2) {
+                return -1;
+            } else if (date1 > date2) {
+                return 1;
+            } else {
+                return 0;
+            }
         }
     }
     
@@ -350,13 +366,29 @@ public with sharing class VolunteerAvailabilityService {
                 continue;
             }
             
+            // Debug logging before parsing
+            System.debug('Service - About to parse date from CSV row. dayValue from CSV: "' + row.dayValue + '"');
+            
             Date slotDate = parseDate(row.dayValue);
+            
+            // Debug logging after parsing
+            if (slotDate != null) {
+                System.debug('Service - Parsed date result: ' + slotDate + ' (year: ' + slotDate.year() + ', month: ' + slotDate.month() + ', day: ' + slotDate.day() + ')');
+            } else {
+                System.debug('Service - Parsed date result: null');
+            }
+            
             Time startTime = TimeSlotFormatter.parseTime(row.startTime);
             Time endTime = TimeSlotFormatter.parseTime(row.endTime);
             
             if (slotDate != null && startTime != null && endTime != null && 
                 TimeSlotFormatter.isValidTimeRange(startTime, endTime)) {
-                slots.addAll(generateTimeSlotsFromRange(slotDate, startTime, endTime, volunteerId));
+                List<Time_Slot__c> generatedSlots = generateTimeSlotsFromRange(slotDate, startTime, endTime, volunteerId);
+                // Debug logging for created slots
+                if (!generatedSlots.isEmpty()) {
+                    System.debug('Service - Created ' + generatedSlots.size() + ' slots with Day__c = ' + generatedSlots[0].Day__c + ' (year: ' + generatedSlots[0].Day__c.year() + ', month: ' + generatedSlots[0].Day__c.month() + ', day: ' + generatedSlots[0].Day__c.day() + ')');
+                }
+                slots.addAll(generatedSlots);
             }
         }
         
@@ -365,8 +397,26 @@ public with sharing class VolunteerAvailabilityService {
     
     private static Date parseDate(String dateValue) {
         try {
-            return String.isNotBlank(dateValue) ? Date.valueOf(dateValue) : null;
+            if (String.isBlank(dateValue)) {
+                return null;
+            }
+            // CRITICAL FIX: Parse the date string directly by extracting components to avoid ANY timezone conversion
+            // Format: YYYY-MM-DD (e.g., "2025-12-22")
+            // Split the string and create date directly from components - no timezone conversion possible
+            List<String> dateParts = dateValue.split('-');
+            if (dateParts.size() != 3) {
+                System.debug('Invalid date format: ' + dateValue + '. Expected YYYY-MM-DD format.');
+                return null;
+            }
+            Integer year = Integer.valueOf(dateParts[0]);
+            Integer month = Integer.valueOf(dateParts[1]);
+            Integer day = Integer.valueOf(dateParts[2]);
+            // Create date directly from components - no timezone conversion possible
+            Date result = Date.newInstance(year, month, day);
+            System.debug('Date parsing - String: ' + dateValue + ' -> Direct parse: year=' + year + ', month=' + month + ', day=' + day + ' -> Result: ' + result);
+            return result;
         } catch (Exception e) {
+            System.debug('Error parsing date: ' + dateValue + ' - ' + e.getMessage());
             return null;
         }
     }
@@ -394,6 +444,11 @@ public with sharing class VolunteerAvailabilityService {
         List<Time_Slot__c> slots = new List<Time_Slot__c>();
         Integer slotMinutes = 15;
         
+        // CRITICAL: Normalize the date one more time before using it to ensure no timezone issues
+        // Even though times are 9 AM - 4 PM (safe range), we want to be absolutely certain
+        // the date is stored exactly as intended
+        Date normalizedDate = Date.newInstance(slotDate.year(), slotDate.month(), slotDate.day());
+        
         Time currentStart = startTime;
         while (currentStart < endTime) {
             Integer startMinutes = currentStart.hour() * 60 + currentStart.minute();
@@ -412,7 +467,7 @@ public with sharing class VolunteerAvailabilityService {
             Time_Slot__c ts = new Time_Slot__c();
             ts.Start_Time__c = currentStart;
             ts.End_Time__c = currentEnd;
-            ts.Day__c = slotDate;
+            ts.Day__c = normalizedDate; // Use normalized date to ensure exact date storage
             ts.Status__c = 'Available';
             ts.Volunteer__c = volunteerId;
             

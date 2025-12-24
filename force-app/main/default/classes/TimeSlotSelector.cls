@@ -86,22 +86,27 @@ public inherited sharing class TimeSlotSelector {
             // Both dates provided - filter by date range (inclusive on both ends)
             // If startDate equals endDate, returns records for that specific date
             // If startDate < endDate, returns records within the date range (inclusive)
-            // Returns all time slots where Day__c is between startDate and endDate (inclusive)
+            
+            // Normalize dates to ensure they're Date objects (no time component)
+            // This handles any potential timezone conversion issues
+            Date normalizedStartDate = Date.newInstance(startDate.year(), startDate.month(), startDate.day());
+            Date normalizedEndDate = Date.newInstance(endDate.year(), endDate.month(), endDate.day());
             
             // Debug logging
-            System.debug('Selector query - startDate: ' + startDate + ' (type: ' + (startDate != null ? String.valueOf(startDate) : 'null') + ')');
-            System.debug('Selector query - endDate: ' + endDate + ' (type: ' + (endDate != null ? String.valueOf(endDate) : 'null') + ')');
-            System.debug('Selector query - startDate == endDate: ' + (startDate == endDate));
-            if (startDate != null && endDate != null) {
-                System.debug('Selector query - startDate.compareTo(endDate): ' + startDate.daysBetween(endDate));
-            }
+            System.debug('Selector query - startDate: ' + startDate + ', normalized: ' + normalizedStartDate);
+            System.debug('Selector query - endDate: ' + endDate + ', normalized: ' + normalizedEndDate);
+            System.debug('Selector query - startDate == endDate: ' + (normalizedStartDate == normalizedEndDate));
+            System.debug('Selector query - normalizedStartDate year: ' + normalizedStartDate.year() + ', month: ' + normalizedStartDate.month() + ', day: ' + normalizedStartDate.day());
+            System.debug('Selector query - normalizedEndDate year: ' + normalizedEndDate.year() + ', month: ' + normalizedEndDate.month() + ', day: ' + normalizedEndDate.day());
             
             // Use inclusive range query - works for both single date and date range
+            // For single date (startDate == endDate), this becomes: WHERE Day__c = :normalizedStartDate
+            // For date range, this becomes: WHERE Day__c >= :normalizedStartDate AND Day__c <= :normalizedEndDate
             List<Time_Slot__c> results = [
                 SELECT Id, Start_Time__c, End_Time__c, Day__c, Status__c, 
                        Volunteer__c, Volunteer__r.Name, Volunteer__r.Email
                 FROM Time_Slot__c
-                WHERE Day__c >= :startDate AND Day__c <= :endDate
+                WHERE Day__c >= :normalizedStartDate AND Day__c <= :normalizedEndDate
                 ORDER BY Volunteer__r.Name, Day__c, Start_Time__c
             ];
             
@@ -114,7 +119,48 @@ public inherited sharing class TimeSlotSelector {
                 List<Time_Slot__c> allSlots = [SELECT Id, Day__c FROM Time_Slot__c LIMIT 5];
                 System.debug('Sample records in database (first 5):');
                 for (Time_Slot__c slot : allSlots) {
-                    System.debug('  Slot Day__c: ' + slot.Day__c);
+                    System.debug('  Slot Day__c: ' + slot.Day__c + ' (year: ' + slot.Day__c.year() + ', month: ' + slot.Day__c.month() + ', day: ' + slot.Day__c.day() + ')');
+                }
+                
+                // Also check if there are any records for the exact date we're searching for
+                List<Time_Slot__c> exactDateSlots = [
+                    SELECT Id, Day__c 
+                    FROM Time_Slot__c 
+                    WHERE Day__c = :normalizedStartDate 
+                    LIMIT 5
+                ];
+                System.debug('Records for exact search date (' + normalizedStartDate + '): ' + exactDateSlots.size());
+                for (Time_Slot__c slot : exactDateSlots) {
+                    System.debug('  Exact match Slot Day__c: ' + slot.Day__c);
+                }
+                
+                // Check for records within a wider range to see if there's a date mismatch
+                Date dayBefore = normalizedStartDate.addDays(-1);
+                Date dayAfter = normalizedStartDate.addDays(1);
+                List<Time_Slot__c> nearbySlots = [
+                    SELECT Id, Day__c 
+                    FROM Time_Slot__c 
+                    WHERE Day__c >= :dayBefore AND Day__c <= :dayAfter
+                    ORDER BY Day__c
+                    LIMIT 10
+                ];
+                System.debug('Records near search date (from ' + dayBefore + ' to ' + dayAfter + '): ' + nearbySlots.size());
+                for (Time_Slot__c slot : nearbySlots) {
+                    System.debug('  Nearby Slot Day__c: ' + slot.Day__c + ' (year: ' + slot.Day__c.year() + ', month: ' + slot.Day__c.month() + ', day: ' + slot.Day__c.day() + ')');
+                }
+                
+                // Additional diagnostic: Check if there are ANY records for Dec 21 in the entire database
+                // Query for the exact date to see if records exist
+                Date dec21 = Date.newInstance(2025, 12, 21);
+                List<Time_Slot__c> allDec21Records = [
+                    SELECT Id, Day__c, CreatedDate
+                    FROM Time_Slot__c 
+                    WHERE Day__c = :dec21
+                    LIMIT 10
+                ];
+                System.debug('Records with Day__c = 2025-12-21: ' + allDec21Records.size());
+                for (Time_Slot__c slot : allDec21Records) {
+                    System.debug('  Dec 21 record - Day__c: ' + slot.Day__c + ' (year: ' + slot.Day__c.year() + ', month: ' + slot.Day__c.month() + ', day: ' + slot.Day__c.day() + '), CreatedDate: ' + slot.CreatedDate);
                 }
             }
             

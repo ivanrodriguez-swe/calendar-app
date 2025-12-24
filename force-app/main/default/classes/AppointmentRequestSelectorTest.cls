@@ -70,4 +70,3 @@ private class AppointmentRequestSelectorTest {
         System.assertEquals(0, result.size(), 'Should return empty list');
     }
 }
-
