@@ -21,7 +21,6 @@ public class BookingEmailService {
     public static void sendBookingEmails(Time_Slot__c slot, String customerName, String customerEmail, Appointment__c appointment, Appointment_Request__c appointmentRequest) {
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
 
-        // Email to Volunteer
         if (slot.Volunteer__r != null && slot.Volunteer__r.Email != null) {
             Messaging.SingleEmailMessage volunteerEmail = new Messaging.SingleEmailMessage();
             volunteerEmail.setToAddresses(new List<String>{ slot.Volunteer__r.Email });
@@ -38,7 +37,6 @@ public class BookingEmailService {
             emails.add(volunteerEmail);
         }
 
-        // Email to Customer
         if (String.isNotBlank(customerEmail)) {
             Messaging.SingleEmailMessage customerEmailMsg = new Messaging.SingleEmailMessage();
             customerEmailMsg.setToAddresses(new List<String>{ customerEmail });
@@ -59,8 +57,6 @@ public class BookingEmailService {
             try {
                 Messaging.sendEmail(emails);
             } catch (Exception e) {
-                // Email sending failed - log error but don't throw to avoid breaking booking flow
-                // In production, consider logging to a custom object or using Platform Events
             }
         }
     }

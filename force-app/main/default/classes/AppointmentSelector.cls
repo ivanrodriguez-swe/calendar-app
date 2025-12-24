@@ -1,5 +1,3 @@
-// Selector class for Appointment__c object
-// Uses inherited sharing to inherit sharing context from caller
 public inherited sharing class AppointmentSelector {
     
     /**

@@ -65,7 +65,6 @@ public without sharing class AppointmentRequestService {
                     continue;
                 }
                 
-                // Set reference fields
                 request.Reference_First_Name__c = data.get('referenceFirstName');
                 request.Reference_Last_Name__c = data.get('referenceLastName');
                 request.Reference_Email__c = data.get('referenceEmail');
@@ -178,9 +177,7 @@ public without sharing class AppointmentRequestService {
             
             if (currentChar == '"') {
                 inQuotes = !inQuotes;
-                // Don't add quote to currentValue
             } else if (currentChar == ',' && !inQuotes) {
-                // Trim value before adding
                 values.add(currentValue.trim());
                 currentValue = '';
             } else {
@@ -188,7 +185,6 @@ public without sharing class AppointmentRequestService {
             }
         }
         
-        // Add last value (trimmed)
         values.add(currentValue.trim());
         
         return values;
@@ -240,7 +236,6 @@ public without sharing class AppointmentRequestService {
                 return 0;
             }
             
-            // Send individual email to each appointment request's referral email
             List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
             
             for (Appointment_Request__c request : appointmentRequests) {
@@ -289,12 +284,9 @@ public without sharing class AppointmentRequestService {
                     Messaging.sendEmail(emails);
                     emailsSent = emails.size();
                 } catch (Exception e) {
-                    // Email sending failed - log error but don't throw to avoid breaking upload flow
-                    // In production, consider logging to a custom object or using Platform Events
                 }
             }
         } catch (Exception e) {
-            // Public site URL retrieval failed - return 0 emails sent
         }
         
         return emailsSent;

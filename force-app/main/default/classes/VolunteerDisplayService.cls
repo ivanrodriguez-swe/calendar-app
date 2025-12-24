@@ -1,9 +1,3 @@
-// Service class for volunteer display business logic
-// Uses 'with sharing' for security
-// Works with raw data (SObjects, primitives) - no wrapper classes
-// 
-// NOTE: Services CAN call other services if needed for business logic.
-// This is different from controllers, which must remain independent.
 public with sharing class VolunteerDisplayService {
     
     /**
@@ -12,10 +6,8 @@ public with sharing class VolunteerDisplayService {
      * @return Map containing list of volunteers and total count
      */
     public static Map<String, Object> getAllVolunteers() {
-        // Use selector to get all active users
         List<User> users = OHRUserSelector.getAllActiveUsers();
         
-        // Convert to structured data using reusable method
         List<Map<String, Object>> volunteerData = convertUsersToMaps(users);
         
         return buildResult(volunteerData);
@@ -31,10 +23,8 @@ public with sharing class VolunteerDisplayService {
             return buildResult(new List<Map<String, Object>>());
         }
         
-        // Use selector to get users by IDs
         List<User> users = OHRUserSelector.getUsersByIds(volunteerIds);
         
-        // Convert to structured data using reusable method
         List<Map<String, Object>> volunteerData = convertUsersToMaps(users);
         
         return buildResult(volunteerData);
@@ -50,14 +40,12 @@ public with sharing class VolunteerDisplayService {
             return null;
         }
         
-        // Use selector to get user by ID
         List<User> users = OHRUserSelector.getUserByIdWithDetails(volunteerId);
         
         if (users.isEmpty()) {
             return null;
         }
         
-        // Convert to structured data using reusable method
         List<Map<String, Object>> volunteerData = convertUsersToMaps(users);
         return volunteerData[0];
     }
@@ -70,18 +58,14 @@ public with sharing class VolunteerDisplayService {
      * @return Map containing list of volunteers with statistics
      */
     public static Map<String, Object> getVolunteersWithStatistics(Date startDate, Date endDate) {
-        // Use selector to get all active volunteers
         List<User> users = OHRUserSelector.getAllActiveUsers();
         
-        // Get time slot statistics if date range is provided
         Map<Id, Map<String, Integer>> statisticsMap = new Map<Id, Map<String, Integer>>();
         if (startDate != null && endDate != null && !users.isEmpty()) {
             Set<Id> volunteerIds = new Map<Id, User>(users).keySet();
             
-            // Use selector to get time slots for the date range
             List<Time_Slot__c> slots = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
             
-            // Filter slots for the volunteers we're interested in
             for (Time_Slot__c slot : slots) {
                 if (volunteerIds.contains(slot.Volunteer__c)) {
                     if (!statisticsMap.containsKey(slot.Volunteer__c)) {
@@ -103,12 +87,10 @@ public with sharing class VolunteerDisplayService {
             }
         }
         
-        // Build result with statistics
         List<Map<String, Object>> volunteerData = new List<Map<String, Object>>();
         for (User u : users) {
             Map<String, Object> volunteer = convertUserToMap(u);
             
-            // Add statistics if available
             if (statisticsMap.containsKey(u.Id)) {
                 volunteer.put('statistics', statisticsMap.get(u.Id));
             } else {
@@ -124,8 +106,6 @@ public with sharing class VolunteerDisplayService {
         
         return buildResult(volunteerData);
     }
-    
-    // Private helper methods - reusable logic
     
     /**
      * Convert list of User records to list of Maps

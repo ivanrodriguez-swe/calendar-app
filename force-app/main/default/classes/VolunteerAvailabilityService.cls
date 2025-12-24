@@ -179,10 +179,10 @@ public with sharing class VolunteerAvailabilityService {
                 return 0;
             }
             if (date1 == null) {
-                return -1; // null dates come first
+                return -1;
             }
             if (date2 == null) {
-                return 1; // null dates come first
+                return 1;
             }
             if (date1 < date2) {
                 return -1;

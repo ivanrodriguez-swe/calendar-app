@@ -1,4 +1,3 @@
-// Utility class for date range operations
 public class DateRangeHelper {
     
     /**

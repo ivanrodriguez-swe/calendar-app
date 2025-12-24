@@ -1,26 +1,15 @@
-// Controller for volunteer availability and time slot management
-// Using 'without sharing' to allow guest users on public sites to access time slots and book appointments
-// Thin layer that delegates to VolunteerAvailabilityService and converts to wrapper classes for LWC
-// 
-// IMPORTANT: Controllers should NEVER call other controllers - only services.
-// Services can call other services, but controllers must remain independent.
 public without sharing class VolunteerAvailabilityController {
     
-    // Get available time slots for a date range (used by appointmentScheduler LWC)
     @AuraEnabled(cacheable=true)
     public static List<DayWrapper> getTimeslotsForRange(Date startDate, Date endDate) {
         if (startDate == null || endDate == null) {
             throw new AuraHandledException('startDate and endDate are required.');
         }
         
-        // Get organized data from service (service handles all business logic)
         List<Map<String, Object>> organizedData = VolunteerAvailabilityService.getTimeslotsForRange(startDate, endDate);
         
-        // Convert organized data to wrapper classes (simple conversion, no business logic)
         return convertToDayWrappers(organizedData);
     }
-
-    // Book a time slot (used by appointmentScheduler LWC)
     @AuraEnabled
     public static BookingResult bookTimeSlot(Id timeSlotId, Id customerId, Id appointmentRequestId) {
         try {
@@ -35,14 +24,11 @@ public without sharing class VolunteerAvailabilityController {
         }
     }
 
-    // Create time slots from availability ranges (used by volunteerAvailability LWC)
     @AuraEnabled
     public static CreateSlotsResult createTimeSlotsFromRanges(List<AvailabilityRange> ranges) {
         try {
-            // Convert controller wrappers to service input format
             List<Map<String, String>> serviceRanges = convertToServiceRanges(ranges);
             
-            // Delegate to service
             Map<String, Object> serviceResult = VolunteerAvailabilityService.createTimeSlotsFromRanges(serviceRanges, UserInfo.getUserId());
             
             return new CreateSlotsResult(
@@ -58,7 +44,6 @@ public without sharing class VolunteerAvailabilityController {
         }
     }
 
-    // Create time slots from CSV file (used by volunteerAvailabilityUploader LWC)
     @AuraEnabled
     public static CreateSlotsResult createTimeSlotsFromCSV(String csvContent) {
         try {
@@ -75,8 +60,6 @@ public without sharing class VolunteerAvailabilityController {
             return result;
         }
     }
-    
-    // Private conversion methods - simple data transformation, no business logic
     
     /**
      * Convert service's organized data structure to DayWrapper list
@@ -129,7 +112,6 @@ public without sharing class VolunteerAvailabilityController {
         return serviceRanges;
     }
 
-    // Wrapper Classes for LWC communication (DTOs with @AuraEnabled)
     public class DayWrapper {
         @AuraEnabled public String label;
         @AuraEnabled public List<TimeslotWrapper> slots;

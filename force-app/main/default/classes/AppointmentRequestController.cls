@@ -7,10 +7,8 @@ public with sharing class AppointmentRequestController {
      */
     @AuraEnabled
     public static UploadResult uploadCSV(String csvContent) {
-        // Service handles all business logic
         Map<String, Object> serviceResult = AppointmentRequestService.uploadCSV(csvContent);
         
-        // Controller converts to wrapper class (simple data transformation)
         UploadResult result = new UploadResult();
         result.success = (Boolean) serviceResult.get('success');
         result.message = (String) serviceResult.get('message');

@@ -1,5 +1,3 @@
-// Selector class for Time_Slot__c object
-// Uses inherited sharing to inherit sharing context from caller
 public inherited sharing class TimeSlotSelector {
     
     /**
@@ -57,7 +55,6 @@ public inherited sharing class TimeSlotSelector {
      */
     public static List<Time_Slot__c> getAllTimeSlotsForRange(Date startDate, Date endDate) {
         if (startDate == null && endDate == null) {
-            // Return all time slots if no date filter
             return [
                 SELECT Id, Start_Time__c, End_Time__c, Day__c, Status__c, 
                        Volunteer__c, Volunteer__r.Name, Volunteer__r.Email
@@ -65,7 +62,6 @@ public inherited sharing class TimeSlotSelector {
                 ORDER BY Volunteer__r.Name, Day__c, Start_Time__c
             ];
         } else if (startDate != null && endDate == null) {
-            // Only startDate provided - single date or from startDate onwards
             return [
                 SELECT Id, Start_Time__c, End_Time__c, Day__c, Status__c, 
                        Volunteer__c, Volunteer__r.Name, Volunteer__r.Email
@@ -74,7 +70,6 @@ public inherited sharing class TimeSlotSelector {
                 ORDER BY Volunteer__r.Name, Day__c, Start_Time__c
             ];
         } else if (startDate == null && endDate != null) {
-            // Only endDate provided - up to endDate
             return [
                 SELECT Id, Start_Time__c, End_Time__c, Day__c, Status__c, 
                        Volunteer__c, Volunteer__r.Name, Volunteer__r.Email
@@ -83,18 +78,9 @@ public inherited sharing class TimeSlotSelector {
                 ORDER BY Volunteer__r.Name, Day__c, Start_Time__c
             ];
         } else {
-            // Both dates provided - filter by date range (inclusive on both ends)
-            // If startDate equals endDate, returns records for that specific date
-            // If startDate < endDate, returns records within the date range (inclusive)
-            
-            // Normalize dates to ensure they're Date objects (no time component)
-            // This handles any potential timezone conversion issues
             Date normalizedStartDate = Date.newInstance(startDate.year(), startDate.month(), startDate.day());
             Date normalizedEndDate = Date.newInstance(endDate.year(), endDate.month(), endDate.day());
             
-            // Use inclusive range query - works for both single date and date range
-            // For single date (startDate == endDate), this becomes: WHERE Day__c = :normalizedStartDate
-            // For date range, this becomes: WHERE Day__c >= :normalizedStartDate AND Day__c <= :normalizedEndDate
             List<Time_Slot__c> results = [
                 SELECT Id, Start_Time__c, End_Time__c, Day__c, Status__c, 
                        Volunteer__c, Volunteer__r.Name, Volunteer__r.Email
