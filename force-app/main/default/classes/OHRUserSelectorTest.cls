@@ -56,7 +56,7 @@ private class OHRUserSelectorTest {
         List<User> result = OHRUserSelector.getUsersByEmails(emails);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(2, result.size(), 'Should return 2 users');
         
         for (User u : result) {
@@ -73,7 +73,7 @@ private class OHRUserSelectorTest {
         List<User> result = OHRUserSelector.getUsersByEmails(emails);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(0, result.size(), 'Should not return inactive user');
     }
     
@@ -85,7 +85,7 @@ private class OHRUserSelectorTest {
         List<User> result = OHRUserSelector.getUsersByEmails(emails);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(0, result.size(), 'Should return empty list');
     }
     
@@ -102,7 +102,7 @@ private class OHRUserSelectorTest {
         List<User> result = OHRUserSelector.getUsersByEmails(emails);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(3, result.size(), 'Should return 3 active users');
     }
     
@@ -114,11 +114,11 @@ private class OHRUserSelectorTest {
         List<User> result = OHRUserSelector.getUserById(testUser.Id);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(1, result.size(), 'Should return one user');
         Assert.areEqual(testUser.Id, result[0].Id, 'Should return correct user');
-        Assert.isNotNull(null, result[0].Name, 'Should have name');
-        Assert.isNotNull(null, result[0].Email, 'Should have email');
+        Assert.isNotNull( result[0].Name, 'Should have name');
+        Assert.isNotNull( result[0].Email, 'Should have email');
     }
     
     @isTest
@@ -129,7 +129,7 @@ private class OHRUserSelectorTest {
         List<User> result = OHRUserSelector.getUserById(fakeId);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(0, result.size(), 'Should return empty list');
     }
 }

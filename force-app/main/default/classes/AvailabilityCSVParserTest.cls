@@ -12,7 +12,7 @@ private class AvailabilityCSVParserTest {
             AvailabilityCSVParser.parseAvailabilityCSV(csvContent);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(2, result.size(), 'Should parse 2 rows');
         
         Assert.areEqual('volunteer1@test.com', result[0].volunteerEmail, 'Should parse email');
@@ -31,7 +31,7 @@ private class AvailabilityCSVParserTest {
             AvailabilityCSVParser.parseAvailabilityCSV(csvContent);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(2, result.size(), 'Should parse 2 rows');
     }
     
@@ -45,7 +45,7 @@ private class AvailabilityCSVParserTest {
             AvailabilityCSVParser.parseAvailabilityCSV(csvContent);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(1, result.size(), 'Should parse 1 row');
         Assert.areEqual('volunteer1@test.com', result[0].volunteerEmail, 'Should handle quotes');
     }
@@ -57,7 +57,7 @@ private class AvailabilityCSVParserTest {
             AvailabilityCSVParser.parseAvailabilityCSV('');
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(0, result.size(), 'Should return empty list');
     }
     
@@ -68,7 +68,7 @@ private class AvailabilityCSVParserTest {
             AvailabilityCSVParser.parseAvailabilityCSV(null);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(0, result.size(), 'Should return empty list');
     }
     
@@ -85,7 +85,7 @@ private class AvailabilityCSVParserTest {
             AvailabilityCSVParser.parseAvailabilityCSV(csvContent);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(2, result.size(), 'Should skip blank lines');
     }
     
@@ -100,7 +100,7 @@ private class AvailabilityCSVParserTest {
             AvailabilityCSVParser.parseAvailabilityCSV(csvContent);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(1, result.size(), 'Should skip incomplete rows');
     }
     
@@ -121,7 +121,7 @@ private class AvailabilityCSVParserTest {
             List<AvailabilityCSVParser.AvailabilityCSVRow> result = 
                 AvailabilityCSVParser.parseAvailabilityCSV(csvContent);
             
-            Assert.isNotNull(null, result, 'Result should not be null');
+            Assert.isNotNull( result, 'Result should not be null');
             Assert.areEqual(1, result.size(), 'Should parse with header: ' + header);
         }
         Test.stopTest();
@@ -135,7 +135,7 @@ private class AvailabilityCSVParserTest {
         List<String> result = AvailabilityCSVParser.parseCSVLine(line);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(3, result.size(), 'Should parse 3 values');
         Assert.areEqual('value1', result[0], 'Should parse first value');
         Assert.areEqual('value2', result[1], 'Should parse second value');
@@ -150,7 +150,7 @@ private class AvailabilityCSVParserTest {
         List<String> result = AvailabilityCSVParser.parseCSVLine(line);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(3, result.size(), 'Should parse 3 values');
         Assert.areEqual('value,with,commas', result[0], 'Should handle quoted commas');
     }
@@ -163,7 +163,7 @@ private class AvailabilityCSVParserTest {
         List<String> result = AvailabilityCSVParser.parseCSVLine(line);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(4, result.size(), 'Should parse 4 values including empty');
     }
 }

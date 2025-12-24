@@ -55,7 +55,7 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(5, result.size(), 'Should return 5 available slots');
         
         // Verify all are available
@@ -74,7 +74,7 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(0, result.size(), 'Should return no slots');
     }
     
@@ -102,10 +102,10 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getTimeSlotById(slot.Id);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(1, result.size(), 'Should return one slot');
         Assert.areEqual(slot.Id, result[0].Id, 'Should return correct slot');
-        Assert.isNotNull(null, result[0].Volunteer__c, 'Should have volunteer');
+        Assert.isNotNull( result[0].Volunteer__c, 'Should have volunteer');
     }
     
     @isTest
@@ -116,7 +116,7 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getTimeSlotById(fakeId);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(0, result.size(), 'Should return empty list');
     }
     
@@ -131,7 +131,7 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getExistingTimeSlotsByDatesAndVolunteers(dates, volunteerIds);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.isTrue(result.size() > 0, 'Should return slots');
         
         for (Time_Slot__c slot : result) {
@@ -151,7 +151,7 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getExistingTimeSlotsByDatesAndVolunteers(dates, volunteerIds);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(0, result.size(), 'Should return no slots');
     }
     
@@ -167,7 +167,7 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getExistingTimeSlotsByDatesAndVolunteers(dates, volunteerIds);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.isTrue(result.size() > 0, 'Should return slots for multiple dates');
     }
     
@@ -180,7 +180,7 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(8, result.size(), 'Should return all slots (5 available + 3 booked)');
         
         // Verify ordering: by volunteer name, then date, then start time
@@ -212,7 +212,7 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         
         Boolean hasAvailable = false;
         Boolean hasBooked = false;
@@ -239,7 +239,7 @@ private class TimeSlotSelectorTest {
         List<Time_Slot__c> result = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Result should not be null');
+        Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(0, result.size(), 'Should return no slots');
     }
 }

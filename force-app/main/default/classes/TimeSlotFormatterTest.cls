@@ -9,15 +9,15 @@ private class TimeSlotFormatterTest {
         Time result3 = TimeSlotFormatter.parseTime('23:59');
         Test.stopTest();
         
-        Assert.isNotNull(null, result1, 'Should parse 09:00');
+        Assert.isNotNull( result1, 'Should parse 09:00');
         Assert.areEqual(9, result1.hour(), 'Should have correct hour');
         Assert.areEqual(0, result1.minute(), 'Should have correct minute');
         
-        Assert.isNotNull(null, result2, 'Should parse 14:30');
+        Assert.isNotNull( result2, 'Should parse 14:30');
         Assert.areEqual(14, result2.hour(), 'Should have correct hour');
         Assert.areEqual(30, result2.minute(), 'Should have correct minute');
         
-        Assert.isNotNull(null, result3, 'Should parse 23:59');
+        Assert.isNotNull( result3, 'Should parse 23:59');
         Assert.areEqual(23, result3.hour(), 'Should have correct hour');
         Assert.areEqual(59, result3.minute(), 'Should have correct minute');
     }
@@ -28,7 +28,7 @@ private class TimeSlotFormatterTest {
         Time result = TimeSlotFormatter.parseTime('9:0');
         Test.stopTest();
         
-        Assert.isNotNull(null, result, 'Should parse single digit');
+        Assert.isNotNull( result, 'Should parse single digit');
         Assert.areEqual(9, result.hour(), 'Should have correct hour');
         Assert.areEqual(0, result.minute(), 'Should have correct minute');
     }
@@ -66,20 +66,20 @@ private class TimeSlotFormatterTest {
         String result5 = TimeSlotFormatter.formatTime(time5);
         Test.stopTest();
         
-        Assert.isNotNull(null, result1, 'Should format 9:00');
+        Assert.isNotNull( result1, 'Should format 9:00');
         Assert.isTrue(result1.contains('AM'), 'Should indicate AM');
         
-        Assert.isNotNull(null, result2, 'Should format 14:30');
+        Assert.isNotNull( result2, 'Should format 14:30');
         Assert.isTrue(result2.contains('PM'), 'Should indicate PM');
         Assert.isTrue(result2.contains('2:30'), 'Should convert to 12-hour format');
         
-        Assert.isNotNull(null, result3, 'Should format 23:59');
+        Assert.isNotNull( result3, 'Should format 23:59');
         Assert.isTrue(result3.contains('PM'), 'Should indicate PM');
         
-        Assert.isNotNull(null, result4, 'Should format 12:00');
+        Assert.isNotNull( result4, 'Should format 12:00');
         Assert.isTrue(result4.contains('PM'), 'Should indicate PM');
         
-        Assert.isNotNull(null, result5, 'Should format 00:00');
+        Assert.isNotNull( result5, 'Should format 00:00');
         Assert.isTrue(result5.contains('AM'), 'Should indicate AM');
     }
     

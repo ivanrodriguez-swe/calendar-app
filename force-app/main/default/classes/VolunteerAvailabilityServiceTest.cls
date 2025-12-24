@@ -42,7 +42,7 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             List<Map<String, Object>> result = VolunteerAvailabilityService.getTimeslotsForRange(startDate, endDate);
             
-            Assert.isNotNull(null, result, 'Result should not be null');
+            Assert.isNotNull( result, 'Result should not be null');
             Assert.isTrue(result.size() > 0, 'Should return time ranges');
             
             // Verify structure
@@ -62,7 +62,7 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             List<Map<String, Object>> result = VolunteerAvailabilityService.getTimeslotsForRange(startDate, endDate);
             
-            Assert.isNotNull(null, result, 'Result should not be null');
+            Assert.isNotNull( result, 'Result should not be null');
             // Should still return structure even with no slots
         }
         Test.stopTest();
@@ -78,7 +78,7 @@ private class VolunteerAvailabilityServiceTest {
             Map<String, Object> result = VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null);
             
             Assert.areEqual(true, result.get('success'), 'Should succeed');
-            Assert.isNotNull(null, result.get('appointmentId'), 'Should have appointment ID');
+            Assert.isNotNull( result.get('appointmentId'), 'Should have appointment ID');
             
             // Verify records created/updated
             List<Appointment__c> appointments = [SELECT Id FROM Appointment__c WHERE Time_Slot__c = :slot.Id];
@@ -126,7 +126,7 @@ private class VolunteerAvailabilityServiceTest {
                 VolunteerAvailabilityService.bookTimeSlot(fakeId, reference.Id, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
             }
         }
         Test.stopTest();
@@ -146,7 +146,7 @@ private class VolunteerAvailabilityServiceTest {
                 VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
             }
         }
         Test.stopTest();
@@ -166,7 +166,7 @@ private class VolunteerAvailabilityServiceTest {
                 VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
             }
         }
         Test.stopTest();
@@ -183,7 +183,7 @@ private class VolunteerAvailabilityServiceTest {
                 VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, fakeRequestId);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
             }
         }
         Test.stopTest();
@@ -206,7 +206,7 @@ private class VolunteerAvailabilityServiceTest {
                 VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, request.Id);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
             }
         }
         Test.stopTest();
@@ -222,7 +222,7 @@ private class VolunteerAvailabilityServiceTest {
                 VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
             }
         }
         Test.stopTest();
@@ -338,7 +338,7 @@ private class VolunteerAvailabilityServiceTest {
             Map<String, Object> result = VolunteerAvailabilityService.createTimeSlotsFromRanges(ranges, volunteer.Id);
             
             // Should handle gracefully
-            Assert.isNotNull(null, result, 'Result should not be null');
+            Assert.isNotNull( result, 'Result should not be null');
         }
         Test.stopTest();
     }
@@ -424,26 +424,26 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.getVolunteerAvailabilityData(startDate, endDate, 0, 50);
             
-            Assert.isNotNull(null, result, 'Result should not be null');
+            Assert.isNotNull( result, 'Result should not be null');
             List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get('rows');
-            Assert.isNotNull(null, rows, 'Rows should not be null');
+            Assert.isNotNull( rows, 'Rows should not be null');
             Assert.isTrue(rows.size() > 0, 'Should return rows');
             
             // Verify structure
             for (Map<String, Object> row : rows) {
-                Assert.isNotNull(null, row.get('volunteerId'), 'Should have volunteerId');
-                Assert.isNotNull(null, row.get('volunteerName'), 'Should have volunteerName');
-                Assert.isNotNull(null, row.get('date'), 'Should have date');
+                Assert.isNotNull( row.get('volunteerId'), 'Should have volunteerId');
+                Assert.isNotNull( row.get('volunteerName'), 'Should have volunteerName');
+                Assert.isNotNull( row.get('date'), 'Should have date');
                 List<Map<String, Object>> timeSlots = (List<Map<String, Object>>) row.get('timeSlots');
-                Assert.isNotNull(null, timeSlots, 'Should have timeSlots list');
+                Assert.isNotNull( timeSlots, 'Should have timeSlots list');
             }
             
             Integer totalCount = (Integer) result.get('totalCount');
-            Assert.isNotNull(null, totalCount, 'Should have totalCount');
+            Assert.isNotNull( totalCount, 'Should have totalCount');
             Assert.isTrue(totalCount >= rows.size(), 'Total count should be >= rows returned');
             
             Boolean hasMore = (Boolean) result.get('hasMore');
-            Assert.isNotNull(null, hasMore, 'Should have hasMore flag');
+            Assert.isNotNull( hasMore, 'Should have hasMore flag');
         }
         Test.stopTest();
     }
@@ -481,7 +481,7 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.getVolunteerAvailabilityData(singleDate, singleDate, 0, 50);
             
-            Assert.isNotNull(null, result, 'Result should not be null');
+            Assert.isNotNull( result, 'Result should not be null');
             List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get('rows');
             
             // Verify all rows are for the single date
@@ -538,7 +538,7 @@ private class VolunteerAvailabilityServiceTest {
                 List<Map<String, Object>> timeSlots = (List<Map<String, Object>>) row.get('timeSlots');
                 for (Map<String, Object> slot : timeSlots) {
                     String timeLabel = (String) slot.get('timeLabel');
-                    Assert.isNotNull(null, timeLabel, 'Time slot should have formatted label');
+                    Assert.isNotNull( timeLabel, 'Time slot should have formatted label');
                     Assert.isTrue(timeLabel.contains('AM') || timeLabel.contains('PM'), 'Label should contain AM or PM');
                     Assert.isTrue(timeLabel.contains('-'), 'Label should contain time range separator');
                 }

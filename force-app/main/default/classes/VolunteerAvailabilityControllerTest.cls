@@ -44,7 +44,7 @@ private class VolunteerAvailabilityControllerTest {
             List<VolunteerAvailabilityController.DayWrapper> result = 
                 VolunteerAvailabilityController.getTimeslotsForRange(startDate, endDate);
             
-            Assert.isNotNull(null, result, 'Result should not be null');
+            Assert.isNotNull( result, 'Result should not be null');
             Assert.isTrue(result.size() > 0, 'Should return at least one day wrapper');
         }
         Test.stopTest();
@@ -61,7 +61,7 @@ private class VolunteerAvailabilityControllerTest {
                 VolunteerAvailabilityController.getTimeslotsForRange(null, endDate);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
             }
         }
         Test.stopTest();
@@ -78,7 +78,7 @@ private class VolunteerAvailabilityControllerTest {
                 VolunteerAvailabilityController.getTimeslotsForRange(startDate, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
             }
         }
         Test.stopTest();
@@ -96,7 +96,7 @@ private class VolunteerAvailabilityControllerTest {
                 VolunteerAvailabilityController.bookTimeSlot(slot.Id, reference.Id, null);
             
             Assert.areEqual(true, result.success, 'Booking should succeed');
-            Assert.isNotNull(null, result.appointmentId, 'Appointment ID should be set');
+            Assert.isNotNull( result.appointmentId, 'Appointment ID should be set');
             
             // Verify slot status updated
             Time_Slot__c updatedSlot = [SELECT Status__c FROM Time_Slot__c WHERE Id = :slot.Id];
@@ -147,7 +147,7 @@ private class VolunteerAvailabilityControllerTest {
                 VolunteerAvailabilityController.bookTimeSlot(fakeId, reference.Id, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException, 'Should throw AuraHandledException');
+                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
             }
         }
         Test.stopTest();
@@ -216,7 +216,7 @@ private class VolunteerAvailabilityControllerTest {
                 VolunteerAvailabilityController.createTimeSlotsFromRanges(ranges);
             
             // Should handle gracefully
-            Assert.isNotNull(null, result, 'Result should not be null');
+            Assert.isNotNull( result, 'Result should not be null');
         }
         Test.stopTest();
     }
@@ -266,7 +266,7 @@ private class VolunteerAvailabilityControllerTest {
                 VolunteerAvailabilityController.createTimeSlotsFromCSV(csvContent);
             
             // Should handle gracefully
-            Assert.isNotNull(null, result, 'Result should not be null');
+            Assert.isNotNull( result, 'Result should not be null');
         }
         Test.stopTest();
     }
@@ -277,7 +277,7 @@ private class VolunteerAvailabilityControllerTest {
         VolunteerAvailabilityController.DayWrapper dw = 
             new VolunteerAvailabilityController.DayWrapper('09:00-09:15');
         Assert.areEqual('09:00-09:15', dw.label, 'Label should match');
-        Assert.isNotNull(null, dw.slots, 'Slots list should be initialized');
+        Assert.isNotNull( dw.slots, 'Slots list should be initialized');
         
         // Test TimeslotWrapper - available slot
         Date testDate = Date.today();
