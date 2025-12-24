@@ -3,8 +3,8 @@
     <flexiPageRegions>
         <itemInstances>
             <componentInstance>
-                <componentName>appointmentRequestUploader</componentName>
-                <identifier>c_appointmentRequestUploader</identifier>
+                <componentName>volunteerAvailabilityDisplay</componentName>
+                <identifier>c_volunteerAvailabilityDisplay</identifier>
             </componentInstance>
         </itemInstances>
         <name>top</name>
@@ -23,6 +23,12 @@
             <componentInstance>
                 <componentName>volunteerAvailabilityUploader</componentName>
                 <identifier>c_volunteerAvailabilityUploader</identifier>
+            </componentInstance>
+        </itemInstances>
+        <itemInstances>
+            <componentInstance>
+                <componentName>appointmentRequestUploader</componentName>
+                <identifier>c_appointmentRequestUploader</identifier>
             </componentInstance>
         </itemInstances>
         <itemInstances>
