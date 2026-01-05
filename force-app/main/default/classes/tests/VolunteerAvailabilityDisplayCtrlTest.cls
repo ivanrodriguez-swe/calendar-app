@@ -2,7 +2,7 @@
 private class VolunteerAvailabilityDisplayCtrlTest {
     
     private static User getAdminUser() {
-        return [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        return [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
     }
     
     /**
@@ -176,7 +176,7 @@ private class VolunteerAvailabilityDisplayCtrlTest {
     @isTest
     static void testGetVolunteerInfo_Success() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id FROM User WHERE Email LIKE 'volunteer%@test.com' LIMIT 1];
+        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
         
         Test.startTest();
         System.runAs(admin) {

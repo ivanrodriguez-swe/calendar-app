@@ -2,7 +2,7 @@
 private class AppointmentSelectorTest {
     
     private static User getAdminUser() {
-        return [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        return [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
     }
     
     @TestSetup

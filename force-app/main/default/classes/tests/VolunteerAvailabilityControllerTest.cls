@@ -2,7 +2,7 @@
 private class VolunteerAvailabilityControllerTest {
     
     private static User getAdminUser() {
-        return [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        return [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
     }
     
     @TestSetup
@@ -35,7 +35,7 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testGetTimeslotsForRange_Success() {
-        User admin = [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         Date startDate = Date.today();
         Date endDate = Date.today().addDays(2);
         
@@ -52,7 +52,7 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testGetTimeslotsForRange_NullStartDate() {
-        User admin = [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         Date endDate = Date.today();
         
         Test.startTest();
@@ -69,7 +69,7 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testGetTimeslotsForRange_NullEndDate() {
-        User admin = [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         Date startDate = Date.today();
         
         Test.startTest();
@@ -86,9 +86,9 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testBookTimeSlot_Success() {
-        User admin = [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         Time_Slot__c slot = [SELECT Id FROM Time_Slot__c LIMIT 1];
-        User reference = [SELECT Id FROM User WHERE Email = 'reference@test.com' LIMIT 1];
+        User reference = [SELECT Id FROM User WHERE FirstName = 'Reference' AND LastName = 'Test' LIMIT 1];
         
         Test.startTest();
         System.runAs(admin) {
@@ -107,9 +107,9 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testBookTimeSlot_WithAppointmentRequest() {
-        User admin = [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         Time_Slot__c slot = [SELECT Id, Volunteer__c FROM Time_Slot__c LIMIT 1];
-        User reference = [SELECT Id FROM User WHERE Email = 'reference@test.com' LIMIT 1];
+        User reference = [SELECT Id FROM User WHERE FirstName = 'Reference' AND LastName = 'Test' LIMIT 1];
         
         // Create appointment request
         Appointment_Request__c request = new Appointment_Request__c(
@@ -137,8 +137,8 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testBookTimeSlot_InvalidTimeSlot() {
-        User admin = [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
-        User reference = [SELECT Id FROM User WHERE Email = 'reference@test.com' LIMIT 1];
+        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
+        User reference = [SELECT Id FROM User WHERE FirstName = 'Reference' AND LastName = 'Test' LIMIT 1];
         Id fakeId = 'a00000000000000';
         
         Test.startTest();
@@ -155,8 +155,8 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testCreateTimeSlotsFromRanges_Success() {
-        User admin = [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
-        User volunteer = [SELECT Id FROM User WHERE Email = 'volunteer0@test.com' LIMIT 1];
+        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
+        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
         
         List<VolunteerAvailabilityController.AvailabilityRange> ranges = 
             new List<VolunteerAvailabilityController.AvailabilityRange>();
@@ -181,7 +181,7 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testCreateTimeSlotsFromRanges_EmptyRanges() {
-        User admin = [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         List<VolunteerAvailabilityController.AvailabilityRange> ranges = 
             new List<VolunteerAvailabilityController.AvailabilityRange>();
         
@@ -197,8 +197,8 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testCreateTimeSlotsFromRanges_InvalidTimeRange() {
-        User admin = [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
-        User volunteer = [SELECT Id FROM User WHERE Email = 'volunteer0@test.com' LIMIT 1];
+        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
+        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
         
         List<VolunteerAvailabilityController.AvailabilityRange> ranges = 
             new List<VolunteerAvailabilityController.AvailabilityRange>();
@@ -223,8 +223,8 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testCreateTimeSlotsFromCSV_Success() {
-        User admin = [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
-        User volunteer = [SELECT Id, Email FROM User WHERE Email = 'volunteer0@test.com' LIMIT 1];
+        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
+        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
         
         String csvContent = 'Volunteer Email,Day,Start Time,End Time\n' +
             volunteer.Email + ',' + String.valueOf(Date.today().addDays(10)) + ',09:00,10:00\n' +
@@ -243,7 +243,7 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testCreateTimeSlotsFromCSV_EmptyContent() {
-        User admin = [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         
         Test.startTest();
         System.runAs(admin) {
@@ -257,7 +257,7 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testCreateTimeSlotsFromCSV_InvalidFormat() {
-        User admin = [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         String csvContent = 'Invalid,CSV,Format';
         
         Test.startTest();
@@ -283,7 +283,7 @@ private class VolunteerAvailabilityControllerTest {
         Date testDate = Date.today();
         Time startTime = Time.newInstance(9, 0, 0, 0);
         Time endTime = Time.newInstance(9, 15, 0, 0);
-        User volunteer = [SELECT Id, Name FROM User WHERE Email = 'volunteer0@test.com' LIMIT 1];
+        User volunteer = [SELECT Id, Name FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
         
         VolunteerAvailabilityController.TimeslotWrapper tw1 = 
             new VolunteerAvailabilityController.TimeslotWrapper(

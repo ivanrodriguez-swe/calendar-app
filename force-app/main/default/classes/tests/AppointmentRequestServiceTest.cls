@@ -2,7 +2,7 @@
 private class AppointmentRequestServiceTest {
     
     private static User getAdminUser() {
-        return [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        return [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
     }
     
     @TestSetup
@@ -17,7 +17,7 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_Success() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id, Email FROM User WHERE Email LIKE 'volunteer%@test.com' LIMIT 1];
+        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
         
         String csvContent = volunteer.Email + ',John,Doe,john.doe@test.com\n' +
                            volunteer.Email + ',Jane,Smith,jane.smith@test.com';
@@ -44,7 +44,7 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_WithHeader() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id, Email FROM User WHERE Email LIKE 'volunteer%@test.com' LIMIT 1];
+        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
         
         String csvContent = 'Volunteer Email,First Name,Last Name,Email\n' +
                            volunteer.Email + ',John,Doe,john.doe@test.com';
@@ -62,7 +62,7 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_WithQuotedValues() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id, Email FROM User WHERE Email LIKE 'volunteer%@test.com' LIMIT 1];
+        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
         
         String csvContent = '"' + volunteer.Email + '","John","Doe","john.doe@test.com"';
         
@@ -146,7 +146,7 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_VolunteerIdAsEmail() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id FROM User WHERE Email LIKE 'volunteer%@test.com' LIMIT 1];
+        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
         
         // Use User ID directly (starts with 005)
         String csvContent = volunteer.Id + ',John,Doe,john.doe@test.com';
@@ -164,7 +164,7 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_MissingRequiredFields() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id, Email FROM User WHERE Email LIKE 'volunteer%@test.com' LIMIT 1];
+        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
         
         // Missing last name
         String csvContent = volunteer.Email + ',John,,john.doe@test.com';
@@ -182,7 +182,7 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_MixedValidAndInvalid() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id, Email FROM User WHERE Email LIKE 'volunteer%@test.com' LIMIT 1];
+        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
         
         String csvContent = volunteer.Email + ',John,Doe,john.doe@test.com\n' +
                            'nonexistent@test.com,Jane,Smith,jane.smith@test.com\n' +
@@ -204,7 +204,7 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_BlankLines() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id, Email FROM User WHERE Email LIKE 'volunteer%@test.com' LIMIT 1];
+        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
         
         String csvContent = volunteer.Email + ',John,Doe,john.doe@test.com\n' +
                            '\n' +

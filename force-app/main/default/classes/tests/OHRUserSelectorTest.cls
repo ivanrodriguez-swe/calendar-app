@@ -2,7 +2,7 @@
 private class OHRUserSelectorTest {
     
     private static User getAdminUser() {
-        return [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        return [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
     }
     
     @TestSetup
@@ -108,7 +108,7 @@ private class OHRUserSelectorTest {
     
     @isTest
     static void testGetUserById_Success() {
-        User testUser = [SELECT Id FROM User WHERE Email = 'testuser0@test.com' LIMIT 1];
+        User testUser = [SELECT Id FROM User WHERE FirstName = 'Test' AND LastName = 'User0' LIMIT 1];
         
         Test.startTest();
         List<User> result = OHRUserSelector.getUserById(testUser.Id);

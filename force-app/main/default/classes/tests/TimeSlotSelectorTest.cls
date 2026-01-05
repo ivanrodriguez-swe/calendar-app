@@ -2,7 +2,7 @@
 private class TimeSlotSelectorTest {
     
     private static User getAdminUser() {
-        return [SELECT Id FROM User WHERE Email = 'ohradmin@test.com' LIMIT 1];
+        return [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
     }
     
     @TestSetup
@@ -123,7 +123,7 @@ private class TimeSlotSelectorTest {
     @isTest
     static void testGetExistingTimeSlotsByDatesAndVolunteers_Success() {
         Date testDate = Date.today();
-        User volunteer = [SELECT Id FROM User WHERE Email = 'volunteer0@test.com' LIMIT 1];
+        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
         Set<Date> dates = new Set<Date>{ testDate };
         Set<Id> volunteerIds = new Set<Id>{ volunteer.Id };
         
@@ -143,7 +143,7 @@ private class TimeSlotSelectorTest {
     @isTest
     static void testGetExistingTimeSlotsByDatesAndVolunteers_NoMatches() {
         Date testDate = Date.today().addDays(100);
-        User volunteer = [SELECT Id FROM User WHERE Email = 'volunteer0@test.com' LIMIT 1];
+        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
         Set<Date> dates = new Set<Date>{ testDate };
         Set<Id> volunteerIds = new Set<Id>{ volunteer.Id };
         
@@ -159,7 +159,7 @@ private class TimeSlotSelectorTest {
     static void testGetExistingTimeSlotsByDatesAndVolunteers_MultipleDates() {
         Date date1 = Date.today();
         Date date2 = Date.today().addDays(1);
-        User volunteer = [SELECT Id FROM User WHERE Email = 'volunteer0@test.com' LIMIT 1];
+        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
         Set<Date> dates = new Set<Date>{ date1, date2 };
         Set<Id> volunteerIds = new Set<Id>{ volunteer.Id };
         
