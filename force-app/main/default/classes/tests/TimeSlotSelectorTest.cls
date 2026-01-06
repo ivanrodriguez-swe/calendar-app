@@ -6,7 +6,8 @@ private class TimeSlotSelectorTest {
     }
     
     private static User getVolunteer(Integer index) {
-        return [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test' + index LIMIT 1];
+        String lastName = 'Test' + index;
+        return [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = :lastName LIMIT 1];
     }
     
     private static Time_Slot__c getTimeSlot() {

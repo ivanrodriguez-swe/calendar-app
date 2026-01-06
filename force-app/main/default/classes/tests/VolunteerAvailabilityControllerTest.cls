@@ -6,7 +6,8 @@ private class VolunteerAvailabilityControllerTest {
     }
     
     private static User getVolunteer(Integer index) {
-        return [SELECT Id, Name FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test' + index LIMIT 1];
+        String lastName = 'Test' + index;
+        return [SELECT Id, Name, Email FROM User WHERE FirstName = 'Volunteer' AND LastName = :lastName LIMIT 1];
     }
     
     private static User getReferenceUser() {
@@ -228,8 +229,8 @@ private class VolunteerAvailabilityControllerTest {
         User volunteer = getVolunteer(0);
         
         String csvContent = 'Volunteer Email,Day,Start Time,End Time\n' +
-            volunteer.Id + ',' + String.valueOf(Date.today().addDays(10)) + ',09:00,10:00\n' +
-            volunteer.Id + ',' + String.valueOf(Date.today().addDays(11)) + ',10:00,11:00';
+            volunteer.Email + ',' + String.valueOf(Date.today().addDays(10)) + ',09:00,10:00\n' +
+            volunteer.Email + ',' + String.valueOf(Date.today().addDays(11)) + ',10:00,11:00';
         
         Test.startTest();
         System.runAs(getAdminUser()) {
