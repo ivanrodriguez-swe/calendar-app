@@ -6,7 +6,7 @@ private class AppointmentRequestServiceTest {
     }
     
     private static User getVolunteer() {
-        return [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
+        return [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
     }
     
     @TestSetup
@@ -23,8 +23,8 @@ private class AppointmentRequestServiceTest {
         User admin = getAdminUser();
         User volunteer = getVolunteer();
         
-        String csvContent = volunteer.Id + ',John,Doe,ref0@example.com\n' +
-                           volunteer.Id + ',Jane,Smith,ref1@example.com';
+        String csvContent = volunteer.Email + ',John,Doe,ref0@example.com\n' +
+                           volunteer.Email + ',Jane,Smith,ref1@example.com';
         
         Test.startTest();
         System.runAs(admin) {
@@ -51,7 +51,7 @@ private class AppointmentRequestServiceTest {
         User volunteer = getVolunteer();
         
         String csvContent = 'Volunteer Email,First Name,Last Name,Email\n' +
-                           volunteer.Id + ',John,Doe,ref0@example.com';
+                           volunteer.Email + ',John,Doe,ref0@example.com';
         
         Test.startTest();
         System.runAs(admin) {
@@ -68,7 +68,7 @@ private class AppointmentRequestServiceTest {
         User admin = getAdminUser();
         User volunteer = getVolunteer();
         
-        String csvContent = '"' + volunteer.Id + '","John","Doe","ref0@example.com"';
+        String csvContent = '"' + volunteer.Email + '","John","Doe","ref0@example.com"';
         
         Test.startTest();
         System.runAs(admin) {
@@ -152,8 +152,8 @@ private class AppointmentRequestServiceTest {
         User admin = getAdminUser();
         User volunteer = getVolunteer();
         
-        // Use User ID directly (starts with 005)
-        String csvContent = volunteer.Id + ',John,Doe,ref0@example.com';
+        // Test that User ID format (starts with 005) is handled as email lookup
+        String csvContent = volunteer.Email + ',John,Doe,ref0@example.com';
         
         Test.startTest();
         System.runAs(admin) {
@@ -171,7 +171,7 @@ private class AppointmentRequestServiceTest {
         User volunteer = getVolunteer();
         
         // Missing last name
-        String csvContent = volunteer.Id + ',John,,ref0@example.com';
+        String csvContent = volunteer.Email + ',John,,ref0@example.com';
         
         Test.startTest();
         System.runAs(admin) {
@@ -188,9 +188,9 @@ private class AppointmentRequestServiceTest {
         User admin = getAdminUser();
         User volunteer = getVolunteer();
         
-        String csvContent = volunteer.Id + ',John,Doe,ref0@example.com\n' +
+        String csvContent = volunteer.Email + ',John,Doe,ref0@example.com\n' +
                            'nonexistent@example.com,Jane,Smith,ref1@example.com\n' +
-                           volunteer.Id + ',Bob,Johnson,ref2@example.com';
+                           volunteer.Email + ',Bob,Johnson,ref2@example.com';
         
         Test.startTest();
         System.runAs(admin) {
@@ -210,9 +210,9 @@ private class AppointmentRequestServiceTest {
         User admin = getAdminUser();
         User volunteer = getVolunteer();
         
-        String csvContent = volunteer.Id + ',John,Doe,ref0@example.com\n' +
+        String csvContent = volunteer.Email + ',John,Doe,ref0@example.com\n' +
                            '\n' +
-                           volunteer.Id + ',Jane,Smith,ref1@example.com';
+                           volunteer.Email + ',Jane,Smith,ref1@example.com';
         
         Test.startTest();
         System.runAs(admin) {

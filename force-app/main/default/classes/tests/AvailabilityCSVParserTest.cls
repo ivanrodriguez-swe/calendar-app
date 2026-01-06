@@ -4,8 +4,8 @@ private class AvailabilityCSVParserTest {
     @isTest
     static void testParseAvailabilityCSV_Success() {
         String csvContent = 'Volunteer Email,Day,Start Time,End Time\n' +
-            'volunteer1.local,2025-01-15,09:00,10:00\n' +
-            'volunteer2.local,2025-01-16,10:00,11:00';
+            'volunteer1@example.com,2025-01-15,09:00,10:00\n' +
+            'volunteer2@example.com,2025-01-16,10:00,11:00';
         
         Test.startTest();
         List<AvailabilityCSVParser.AvailabilityCSVRow> result = 
@@ -15,7 +15,7 @@ private class AvailabilityCSVParserTest {
         Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(2, result.size(), 'Should parse 2 rows');
         
-        Assert.areEqual('volunteer1.local', result[0].volunteerEmail, 'Should parse email');
+        Assert.areEqual('volunteer1@example.com', result[0].volunteerEmail, 'Should parse email');
         Assert.areEqual('2025-01-15', result[0].dayValue, 'Should parse day');
         Assert.areEqual('09:00', result[0].startTime, 'Should parse start time');
         Assert.areEqual('10:00', result[0].endTime, 'Should parse end time');
@@ -23,8 +23,8 @@ private class AvailabilityCSVParserTest {
     
     @isTest
     static void testParseAvailabilityCSV_WithoutHeader() {
-        String csvContent = 'volunteer1.local,2025-01-15,09:00,10:00\n' +
-            'volunteer2.local,2025-01-16,10:00,11:00';
+        String csvContent = 'volunteer1@example.com,2025-01-15,09:00,10:00\n' +
+            'volunteer2@example.com,2025-01-16,10:00,11:00';
         
         Test.startTest();
         List<AvailabilityCSVParser.AvailabilityCSVRow> result = 
@@ -38,7 +38,7 @@ private class AvailabilityCSVParserTest {
     @isTest
     static void testParseAvailabilityCSV_WithQuotedValues() {
         String csvContent = 'Volunteer Email,Day,Start Time,End Time\n' +
-            '"volunteer1.local","2025-01-15","09:00","10:00"';
+            '"volunteer1@example.com","2025-01-15","09:00","10:00"';
         
         Test.startTest();
         List<AvailabilityCSVParser.AvailabilityCSVRow> result = 
@@ -47,7 +47,7 @@ private class AvailabilityCSVParserTest {
         
         Assert.isNotNull( result, 'Result should not be null');
         Assert.areEqual(1, result.size(), 'Should parse 1 row');
-        Assert.areEqual('volunteer1.local', result[0].volunteerEmail, 'Should handle quotes');
+        Assert.areEqual('volunteer1@example.com', result[0].volunteerEmail, 'Should handle quotes');
     }
     
     @isTest
@@ -75,9 +75,9 @@ private class AvailabilityCSVParserTest {
     @isTest
     static void testParseAvailabilityCSV_BlankLines() {
         String csvContent = 'Volunteer Email,Day,Start Time,End Time\n' +
-            'volunteer1.local,2025-01-15,09:00,10:00\n' +
+            'volunteer1@example.com,2025-01-15,09:00,10:00\n' +
             '\n' +
-            'volunteer2.local,2025-01-16,10:00,11:00\n' +
+            'volunteer2@example.com,2025-01-16,10:00,11:00\n' +
             '   \n';
         
         Test.startTest();
@@ -92,8 +92,8 @@ private class AvailabilityCSVParserTest {
     @isTest
     static void testParseAvailabilityCSV_IncompleteRows() {
         String csvContent = 'Volunteer Email,Day,Start Time,End Time\n' +
-            'volunteer1.local,2025-01-15,09:00\n' + // Missing end time
-            'volunteer2.local,2025-01-16,10:00,11:00';
+            'volunteer1@example.com,2025-01-15,09:00\n' + // Missing end time
+            'volunteer2@example.com,2025-01-16,10:00,11:00';
         
         Test.startTest();
         List<AvailabilityCSVParser.AvailabilityCSVRow> result = 
@@ -116,7 +116,7 @@ private class AvailabilityCSVParserTest {
         
         Test.startTest();
         for (String header : headers) {
-            String csvContent = header + '\nvolunteer1.local,2025-01-15,09:00,10:00';
+            String csvContent = header + '\nvolunteer1@example.com,2025-01-15,09:00,10:00';
             
             List<AvailabilityCSVParser.AvailabilityCSVRow> result = 
                 AvailabilityCSVParser.parseAvailabilityCSV(csvContent);
