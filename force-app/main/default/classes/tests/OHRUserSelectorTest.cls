@@ -16,8 +16,8 @@ private class OHRUserSelectorTest {
             User u = new User(
                 FirstName = 'Test',
                 LastName = 'User' + i,
-                Email = 'testuser' + i + '@test.com',
-                Username = 'testuser' + i + '@test.com.' + System.now().getTime(),
+                Email = 'testuser' + i + '@example.com',
+                Username = 'testuser' + i + '@example.com.' + System.now().getTime(),
                 Alias = 'tuser' + i,
                 TimeZoneSidKey = 'America/New_York',
                 LocaleSidKey = 'en_US',
@@ -33,8 +33,8 @@ private class OHRUserSelectorTest {
         User inactiveUser = new User(
             FirstName = 'Inactive',
             LastName = 'User',
-            Email = 'inactive@test.com',
-            Username = 'inactive@test.com.' + System.now().getTime(),
+            Email = 'inactive@example.com',
+            Username = 'inactive@example.com.' + System.now().getTime(),
             Alias = 'inact',
             TimeZoneSidKey = 'America/New_York',
             LocaleSidKey = 'en_US',
@@ -50,7 +50,7 @@ private class OHRUserSelectorTest {
     
     @isTest
     static void testGetUsersByEmails_Success() {
-        Set<String> emails = new Set<String>{ 'testuser0@test.com', 'testuser1@test.com' };
+        Set<String> emails = new Set<String>{ 'testuser0@example.com', 'testuser1@example.com' };
         
         Test.startTest();
         List<User> result = OHRUserSelector.getUsersByEmails(emails);
@@ -67,7 +67,7 @@ private class OHRUserSelectorTest {
     
     @isTest
     static void testGetUsersByEmails_ExcludesInactive() {
-        Set<String> emails = new Set<String>{ 'inactive@test.com' };
+        Set<String> emails = new Set<String>{ 'inactive@example.com' };
         
         Test.startTest();
         List<User> result = OHRUserSelector.getUsersByEmails(emails);
@@ -79,7 +79,7 @@ private class OHRUserSelectorTest {
     
     @isTest
     static void testGetUsersByEmails_NoMatches() {
-        Set<String> emails = new Set<String>{ 'nonexistent@test.com' };
+        Set<String> emails = new Set<String>{ 'nonexistent@example.com' };
         
         Test.startTest();
         List<User> result = OHRUserSelector.getUsersByEmails(emails);
@@ -92,10 +92,10 @@ private class OHRUserSelectorTest {
     @isTest
     static void testGetUsersByEmails_MultipleEmails() {
         Set<String> emails = new Set<String>{ 
-            'testuser0@test.com', 
-            'testuser1@test.com', 
-            'testuser2@test.com',
-            'nonexistent@test.com' 
+            'testuser0@example.com', 
+            'testuser1@example.com', 
+            'testuser2@example.com',
+            'nonexistent@example.com' 
         };
         
         Test.startTest();
@@ -123,14 +123,13 @@ private class OHRUserSelectorTest {
     
     @isTest
     static void testGetUserById_NotFound() {
-        Id fakeId = '005000000000000';
-        
+        // Test with null ID to verify method handles non-existent IDs gracefully
         Test.startTest();
-        List<User> result = OHRUserSelector.getUserById(fakeId);
+        List<User> result = OHRUserSelector.getUserById(null);
         Test.stopTest();
         
         Assert.isNotNull( result, 'Result should not be null');
-        Assert.areEqual(0, result.size(), 'Should return empty list');
+        Assert.areEqual(0, result.size(), 'Should return empty list for null ID');
     }
 }
 

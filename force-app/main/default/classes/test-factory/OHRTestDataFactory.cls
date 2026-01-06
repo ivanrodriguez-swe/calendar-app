@@ -16,8 +16,8 @@ public class OHRTestDataFactory {
         User adminUser = new User(
             FirstName = 'OHR',
             LastName = 'Admin',
-            Email = 'ohradmin@test.com',
-            Username = 'ohradmin@test.com.' + System.now().getTime() + (Integer)(Math.random() * 1000),
+            Email = 'ohradmin@example.com',
+            Username = 'ohradmin@example.com.' + System.now().getTime() + (Integer)(Math.random() * 1000),
             Alias = 'ohradm',
             TimeZoneSidKey = 'America/New_York',
             LocaleSidKey = 'en_US',
@@ -90,8 +90,8 @@ public class OHRTestDataFactory {
         User volunteer = new User(
             FirstName = 'Volunteer',
             LastName = 'Test' + index,
-            Email = 'volunteer' + index + '@test.com',
-            Username = 'volunteer' + index + '@test.com.' + System.now().getTime() + (Integer)(Math.random() * 1000),
+            Email = 'volunteer' + index + '@example.com',
+            Username = 'volunteer' + index + '@example.com.' + System.now().getTime() + (Integer)(Math.random() * 1000),
             Alias = 'vol' + index,
             TimeZoneSidKey = 'America/New_York',
             LocaleSidKey = 'en_US',
@@ -115,8 +115,8 @@ public class OHRTestDataFactory {
         User reference = new User(
             FirstName = 'Reference',
             LastName = 'Test',
-            Email = 'reference@test.com',
-            Username = 'reference@test.com.' + System.now().getTime() + (Integer)(Math.random() * 1000),
+            Email = 'reference@example.com',
+            Username = 'reference@example.com.' + System.now().getTime() + (Integer)(Math.random() * 1000),
             Alias = 'ref',
             TimeZoneSidKey = 'America/New_York',
             LocaleSidKey = 'en_US',

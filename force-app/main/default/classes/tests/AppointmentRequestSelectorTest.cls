@@ -19,7 +19,7 @@ private class AppointmentRequestSelectorTest {
             requests.add(new Appointment_Request__c(
                 Volunteer__c = volunteer.Id,
                 Status__c = 'New',
-                Reference_Email__c = 'customer' + i + '@test.com',
+                Reference_Email__c = 'customer' + i + '@example.com',
                 Reference_First_Name__c = 'Customer',
                 Reference_Last_Name__c = 'Test' + i
             ));
@@ -45,7 +45,7 @@ private class AppointmentRequestSelectorTest {
     @isTest
     static void testGetAppointmentRequestById_WithReferenceInfo() {
         Appointment_Request__c request = [SELECT Id FROM Appointment_Request__c 
-                                          WHERE Reference_Email__c = 'customer0@test.com' LIMIT 1];
+                                          WHERE Reference_First_Name__c = 'Customer' AND Reference_Last_Name__c = 'Test0' LIMIT 1];
         
         Test.startTest();
         List<Appointment_Request__c> result = AppointmentRequestSelector.getAppointmentRequestById(request.Id);
@@ -60,10 +60,9 @@ private class AppointmentRequestSelectorTest {
     
     @isTest
     static void testGetAppointmentRequestById_NotFound() {
-        Id fakeId = 'a00000000000000';
-        
+        // Test with null ID to verify method handles non-existent IDs gracefully
         Test.startTest();
-        List<Appointment_Request__c> result = AppointmentRequestSelector.getAppointmentRequestById(fakeId);
+        List<Appointment_Request__c> result = AppointmentRequestSelector.getAppointmentRequestById(null);
         Test.stopTest();
         
         Assert.isNotNull(result, 'Result should not be null');

@@ -5,6 +5,18 @@ private class VolunteerAvailabilityControllerTest {
         return [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
     }
     
+    private static User getVolunteer(Integer index) {
+        return [SELECT Id, Name FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test' + index LIMIT 1];
+    }
+    
+    private static User getReferenceUser() {
+        return [SELECT Id FROM User WHERE FirstName = 'Reference' AND LastName = 'Test' LIMIT 1];
+    }
+    
+    private static Time_Slot__c getTimeSlot() {
+        return [SELECT Id, Volunteer__c FROM Time_Slot__c LIMIT 1];
+    }
+    
     @TestSetup
     static void setupTestData() {
         // Create OHR Admin user with permissions already assigned
@@ -35,12 +47,11 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testGetTimeslotsForRange_Success() {
-        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         Date startDate = Date.today();
         Date endDate = Date.today().addDays(2);
         
         Test.startTest();
-        System.runAs(admin) {
+        System.runAs(getAdminUser()) {
             List<VolunteerAvailabilityController.DayWrapper> result = 
                 VolunteerAvailabilityController.getTimeslotsForRange(startDate, endDate);
             
@@ -52,11 +63,10 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testGetTimeslotsForRange_NullStartDate() {
-        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         Date endDate = Date.today();
         
         Test.startTest();
-        System.runAs(admin) {
+        System.runAs(getAdminUser()) {
             try {
                 VolunteerAvailabilityController.getTimeslotsForRange(null, endDate);
                 Assert.fail( 'Should have thrown exception');
@@ -69,11 +79,10 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testGetTimeslotsForRange_NullEndDate() {
-        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         Date startDate = Date.today();
         
         Test.startTest();
-        System.runAs(admin) {
+        System.runAs(getAdminUser()) {
             try {
                 VolunteerAvailabilityController.getTimeslotsForRange(startDate, null);
                 Assert.fail( 'Should have thrown exception');
@@ -86,12 +95,11 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testBookTimeSlot_Success() {
-        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
-        Time_Slot__c slot = [SELECT Id FROM Time_Slot__c LIMIT 1];
-        User reference = [SELECT Id FROM User WHERE FirstName = 'Reference' AND LastName = 'Test' LIMIT 1];
+        Time_Slot__c slot = getTimeSlot();
+        User reference = getReferenceUser();
         
         Test.startTest();
-        System.runAs(admin) {
+        System.runAs(getAdminUser()) {
             VolunteerAvailabilityController.BookingResult result = 
                 VolunteerAvailabilityController.bookTimeSlot(slot.Id, reference.Id, null);
             
@@ -107,22 +115,20 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testBookTimeSlot_WithAppointmentRequest() {
-        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
-        Time_Slot__c slot = [SELECT Id, Volunteer__c FROM Time_Slot__c LIMIT 1];
-        User reference = [SELECT Id FROM User WHERE FirstName = 'Reference' AND LastName = 'Test' LIMIT 1];
+        Time_Slot__c slot = getTimeSlot();
         
         // Create appointment request
         Appointment_Request__c request = new Appointment_Request__c(
             Volunteer__c = slot.Volunteer__c,
             Status__c = 'New',
-            Reference_Email__c = 'reference@test.com',
+            Reference_Email__c = 'reference@example.com',
             Reference_First_Name__c = 'Reference',
             Reference_Last_Name__c = 'Test'
         );
         insert request;
         
         Test.startTest();
-        System.runAs(admin) {
+        System.runAs(getAdminUser()) {
             VolunteerAvailabilityController.BookingResult result = 
                 VolunteerAvailabilityController.bookTimeSlot(slot.Id, null, request.Id);
             
@@ -137,14 +143,13 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testBookTimeSlot_InvalidTimeSlot() {
-        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
-        User reference = [SELECT Id FROM User WHERE FirstName = 'Reference' AND LastName = 'Test' LIMIT 1];
-        Id fakeId = 'a00000000000000';
+        User reference = getReferenceUser();
+        // Use null ID to test non-existent time slot scenario
         
         Test.startTest();
-        System.runAs(admin) {
+        System.runAs(getAdminUser()) {
             try {
-                VolunteerAvailabilityController.bookTimeSlot(fakeId, reference.Id, null);
+                VolunteerAvailabilityController.bookTimeSlot(null, reference.Id, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
                 Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
@@ -155,8 +160,7 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testCreateTimeSlotsFromRanges_Success() {
-        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
-        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
+        User volunteer = getVolunteer(0);
         
         List<VolunteerAvailabilityController.AvailabilityRange> ranges = 
             new List<VolunteerAvailabilityController.AvailabilityRange>();
@@ -169,7 +173,7 @@ private class VolunteerAvailabilityControllerTest {
         ranges.add(range1);
         
         Test.startTest();
-        System.runAs(admin) {
+        System.runAs(getAdminUser()) {
             VolunteerAvailabilityController.CreateSlotsResult result = 
                 VolunteerAvailabilityController.createTimeSlotsFromRanges(ranges);
             
@@ -181,12 +185,11 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testCreateTimeSlotsFromRanges_EmptyRanges() {
-        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         List<VolunteerAvailabilityController.AvailabilityRange> ranges = 
             new List<VolunteerAvailabilityController.AvailabilityRange>();
         
         Test.startTest();
-        System.runAs(admin) {
+        System.runAs(getAdminUser()) {
             VolunteerAvailabilityController.CreateSlotsResult result = 
                 VolunteerAvailabilityController.createTimeSlotsFromRanges(ranges);
             
@@ -197,8 +200,7 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testCreateTimeSlotsFromRanges_InvalidTimeRange() {
-        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
-        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
+        User volunteer = getVolunteer(0);
         
         List<VolunteerAvailabilityController.AvailabilityRange> ranges = 
             new List<VolunteerAvailabilityController.AvailabilityRange>();
@@ -211,7 +213,7 @@ private class VolunteerAvailabilityControllerTest {
         ranges.add(range1);
         
         Test.startTest();
-        System.runAs(admin) {
+        System.runAs(getAdminUser()) {
             VolunteerAvailabilityController.CreateSlotsResult result = 
                 VolunteerAvailabilityController.createTimeSlotsFromRanges(ranges);
             
@@ -223,15 +225,14 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testCreateTimeSlotsFromCSV_Success() {
-        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
-        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
+        User volunteer = getVolunteer(0);
         
         String csvContent = 'Volunteer Email,Day,Start Time,End Time\n' +
-            volunteer.Email + ',' + String.valueOf(Date.today().addDays(10)) + ',09:00,10:00\n' +
-            volunteer.Email + ',' + String.valueOf(Date.today().addDays(11)) + ',10:00,11:00';
+            volunteer.Id + ',' + String.valueOf(Date.today().addDays(10)) + ',09:00,10:00\n' +
+            volunteer.Id + ',' + String.valueOf(Date.today().addDays(11)) + ',10:00,11:00';
         
         Test.startTest();
-        System.runAs(admin) {
+        System.runAs(getAdminUser()) {
             VolunteerAvailabilityController.CreateSlotsResult result = 
                 VolunteerAvailabilityController.createTimeSlotsFromCSV(csvContent);
             
@@ -243,10 +244,8 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testCreateTimeSlotsFromCSV_EmptyContent() {
-        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
-        
         Test.startTest();
-        System.runAs(admin) {
+        System.runAs(getAdminUser()) {
             VolunteerAvailabilityController.CreateSlotsResult result = 
                 VolunteerAvailabilityController.createTimeSlotsFromCSV('');
             
@@ -257,11 +256,10 @@ private class VolunteerAvailabilityControllerTest {
     
     @isTest
     static void testCreateTimeSlotsFromCSV_InvalidFormat() {
-        User admin = [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
         String csvContent = 'Invalid,CSV,Format';
         
         Test.startTest();
-        System.runAs(admin) {
+        System.runAs(getAdminUser()) {
             VolunteerAvailabilityController.CreateSlotsResult result = 
                 VolunteerAvailabilityController.createTimeSlotsFromCSV(csvContent);
             
@@ -283,11 +281,13 @@ private class VolunteerAvailabilityControllerTest {
         Date testDate = Date.today();
         Time startTime = Time.newInstance(9, 0, 0, 0);
         Time endTime = Time.newInstance(9, 15, 0, 0);
-        User volunteer = [SELECT Id, Name FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
+        User volunteer = getVolunteer(0);
         
+        // Use actual test data ID for wrapper test
+        Time_Slot__c testSlot = getTimeSlot();
         VolunteerAvailabilityController.TimeslotWrapper tw1 = 
             new VolunteerAvailabilityController.TimeslotWrapper(
-                'a00000000000000', startTime, endTime, testDate, volunteer.Id, volunteer.Name
+                testSlot.Id, startTime, endTime, testDate, volunteer.Id, volunteer.Name
             );
         Assert.areEqual(true, tw1.isAvailable, 'Should be available');
         Assert.areEqual(false, tw1.isUnavailable, 'Should not be unavailable');
@@ -298,9 +298,10 @@ private class VolunteerAvailabilityControllerTest {
         Assert.areEqual(false, tw2.isAvailable, 'Should not be available');
         Assert.areEqual(true, tw2.isUnavailable, 'Should be unavailable');
         
-        // Test BookingResult
+        // Test BookingResult - use actual test data ID (Time_Slot__c ID since appointments may not exist in this test)
+        Time_Slot__c testSlotForBooking = getTimeSlot();
         VolunteerAvailabilityController.BookingResult br = 
-            new VolunteerAvailabilityController.BookingResult(true, 'Success', 'a00000000000000');
+            new VolunteerAvailabilityController.BookingResult(true, 'Success', testSlotForBooking.Id);
         Assert.areEqual(true, br.success, 'Success should match');
         Assert.areEqual('Success', br.message, 'Message should match');
         

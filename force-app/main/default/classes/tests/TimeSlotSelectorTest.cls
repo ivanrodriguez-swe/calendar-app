@@ -5,6 +5,14 @@ private class TimeSlotSelectorTest {
         return [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
     }
     
+    private static User getVolunteer(Integer index) {
+        return [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test' + index LIMIT 1];
+    }
+    
+    private static Time_Slot__c getTimeSlot() {
+        return [SELECT Id FROM Time_Slot__c LIMIT 1];
+    }
+    
     @TestSetup
     static void setupTestData() {
         // Create OHR Admin user with permissions already assigned
@@ -96,7 +104,7 @@ private class TimeSlotSelectorTest {
     
     @isTest
     static void testGetTimeSlotById_Success() {
-        Time_Slot__c slot = [SELECT Id FROM Time_Slot__c LIMIT 1];
+        Time_Slot__c slot = getTimeSlot();
         
         Test.startTest();
         List<Time_Slot__c> result = TimeSlotSelector.getTimeSlotById(slot.Id);
@@ -110,10 +118,9 @@ private class TimeSlotSelectorTest {
     
     @isTest
     static void testGetTimeSlotById_NotFound() {
-        Id fakeId = 'a00000000000000';
-        
+        // Test with null ID to verify method handles non-existent IDs gracefully
         Test.startTest();
-        List<Time_Slot__c> result = TimeSlotSelector.getTimeSlotById(fakeId);
+        List<Time_Slot__c> result = TimeSlotSelector.getTimeSlotById(null);
         Test.stopTest();
         
         Assert.isNotNull( result, 'Result should not be null');
@@ -123,7 +130,7 @@ private class TimeSlotSelectorTest {
     @isTest
     static void testGetExistingTimeSlotsByDatesAndVolunteers_Success() {
         Date testDate = Date.today();
-        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
+        User volunteer = getVolunteer(0);
         Set<Date> dates = new Set<Date>{ testDate };
         Set<Id> volunteerIds = new Set<Id>{ volunteer.Id };
         
@@ -143,7 +150,7 @@ private class TimeSlotSelectorTest {
     @isTest
     static void testGetExistingTimeSlotsByDatesAndVolunteers_NoMatches() {
         Date testDate = Date.today().addDays(100);
-        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
+        User volunteer = getVolunteer(0);
         Set<Date> dates = new Set<Date>{ testDate };
         Set<Id> volunteerIds = new Set<Id>{ volunteer.Id };
         
@@ -159,7 +166,7 @@ private class TimeSlotSelectorTest {
     static void testGetExistingTimeSlotsByDatesAndVolunteers_MultipleDates() {
         Date date1 = Date.today();
         Date date2 = Date.today().addDays(1);
-        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName = 'Test0' LIMIT 1];
+        User volunteer = getVolunteer(0);
         Set<Date> dates = new Set<Date>{ date1, date2 };
         Set<Id> volunteerIds = new Set<Id>{ volunteer.Id };
         

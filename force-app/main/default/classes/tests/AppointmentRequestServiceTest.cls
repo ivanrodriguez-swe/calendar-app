@@ -5,6 +5,10 @@ private class AppointmentRequestServiceTest {
         return [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
     }
     
+    private static User getVolunteer() {
+        return [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
+    }
+    
     @TestSetup
     static void setupTestData() {
         // Create OHR Admin user with permissions already assigned
@@ -17,10 +21,10 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_Success() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
+        User volunteer = getVolunteer();
         
-        String csvContent = volunteer.Email + ',John,Doe,john.doe@test.com\n' +
-                           volunteer.Email + ',Jane,Smith,jane.smith@test.com';
+        String csvContent = volunteer.Id + ',John,Doe,ref0@example.com\n' +
+                           volunteer.Id + ',Jane,Smith,ref1@example.com';
         
         Test.startTest();
         System.runAs(admin) {
@@ -44,10 +48,10 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_WithHeader() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
+        User volunteer = getVolunteer();
         
         String csvContent = 'Volunteer Email,First Name,Last Name,Email\n' +
-                           volunteer.Email + ',John,Doe,john.doe@test.com';
+                           volunteer.Id + ',John,Doe,ref0@example.com';
         
         Test.startTest();
         System.runAs(admin) {
@@ -62,9 +66,9 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_WithQuotedValues() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
+        User volunteer = getVolunteer();
         
-        String csvContent = '"' + volunteer.Email + '","John","Doe","john.doe@test.com"';
+        String csvContent = '"' + volunteer.Id + '","John","Doe","ref0@example.com"';
         
         Test.startTest();
         System.runAs(admin) {
@@ -109,8 +113,8 @@ private class AppointmentRequestServiceTest {
     static void testUploadCSV_NoValidRecords() {
         User admin = getAdminUser();
         
-        // CSV with invalid volunteer email - will be parsed but skipped during volunteer matching
-        String csvContent = 'invalid@test.com,John,Doe,john.doe@test.com';
+        // CSV with invalid volunteer identifier - will be parsed but skipped during volunteer matching
+        String csvContent = 'invalid@example.com,John,Doe,ref0@example.com';
         
         Test.startTest();
         System.runAs(admin) {
@@ -127,7 +131,7 @@ private class AppointmentRequestServiceTest {
     static void testUploadCSV_VolunteerEmailNotFound() {
         User admin = getAdminUser();
         
-        String csvContent = 'nonexistent@test.com,John,Doe,john.doe@test.com';
+        String csvContent = 'nonexistent@example.com,John,Doe,ref0@example.com';
         
         Test.startTest();
         System.runAs(admin) {
@@ -146,10 +150,10 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_VolunteerIdAsEmail() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
+        User volunteer = getVolunteer();
         
         // Use User ID directly (starts with 005)
-        String csvContent = volunteer.Id + ',John,Doe,john.doe@test.com';
+        String csvContent = volunteer.Id + ',John,Doe,ref0@example.com';
         
         Test.startTest();
         System.runAs(admin) {
@@ -164,10 +168,10 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_MissingRequiredFields() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
+        User volunteer = getVolunteer();
         
         // Missing last name
-        String csvContent = volunteer.Email + ',John,,john.doe@test.com';
+        String csvContent = volunteer.Id + ',John,,ref0@example.com';
         
         Test.startTest();
         System.runAs(admin) {
@@ -182,11 +186,11 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_MixedValidAndInvalid() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
+        User volunteer = getVolunteer();
         
-        String csvContent = volunteer.Email + ',John,Doe,john.doe@test.com\n' +
-                           'nonexistent@test.com,Jane,Smith,jane.smith@test.com\n' +
-                           volunteer.Email + ',Bob,Johnson,bob.johnson@test.com';
+        String csvContent = volunteer.Id + ',John,Doe,ref0@example.com\n' +
+                           'nonexistent@example.com,Jane,Smith,ref1@example.com\n' +
+                           volunteer.Id + ',Bob,Johnson,ref2@example.com';
         
         Test.startTest();
         System.runAs(admin) {
@@ -204,11 +208,11 @@ private class AppointmentRequestServiceTest {
     @isTest
     static void testUploadCSV_BlankLines() {
         User admin = getAdminUser();
-        User volunteer = [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
+        User volunteer = getVolunteer();
         
-        String csvContent = volunteer.Email + ',John,Doe,john.doe@test.com\n' +
+        String csvContent = volunteer.Id + ',John,Doe,ref0@example.com\n' +
                            '\n' +
-                           volunteer.Email + ',Jane,Smith,jane.smith@test.com';
+                           volunteer.Id + ',Jane,Smith,ref1@example.com';
         
         Test.startTest();
         System.runAs(admin) {

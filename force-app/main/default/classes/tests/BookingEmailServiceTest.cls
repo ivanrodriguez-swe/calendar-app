@@ -5,6 +5,24 @@ private class BookingEmailServiceTest {
         return [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
     }
     
+    private static Time_Slot__c getTimeSlotWithRelationships() {
+        return [SELECT Id, Day__c, Start_Time__c, End_Time__c, Volunteer__c, Volunteer__r.Email, Volunteer__r.Name 
+                FROM Time_Slot__c LIMIT 1];
+    }
+    
+    private static Time_Slot__c getTimeSlotBasic() {
+        return [SELECT Id, Day__c, Start_Time__c, End_Time__c, Volunteer__c 
+                FROM Time_Slot__c LIMIT 1];
+    }
+    
+    private static Appointment__c getAppointment() {
+        return [SELECT Id FROM Appointment__c LIMIT 1];
+    }
+    
+    private static Appointment_Request__c getAppointmentRequest() {
+        return [SELECT Id FROM Appointment_Request__c LIMIT 1];
+    }
+    
     @TestSetup
     static void setupTestData() {
         // Create OHR Admin user with permissions already assigned
@@ -47,7 +65,7 @@ private class BookingEmailServiceTest {
     static void testIsValidEmail_Success() {
         Test.startTest();
         Boolean result1 = BookingEmailService.isValidEmail('test@example.com');
-        Boolean result2 = BookingEmailService.isValidEmail('user.name@domain.co.uk');
+        Boolean result2 = BookingEmailService.isValidEmail('user.name@example.com');
         Boolean result3 = BookingEmailService.isValidEmail('test+tag@example.com');
         Test.stopTest();
         
@@ -76,13 +94,12 @@ private class BookingEmailServiceTest {
     
     @isTest
     static void testSendBookingEmails_Success() {
-        Time_Slot__c slot = [SELECT Id, Day__c, Start_Time__c, End_Time__c, Volunteer__c, Volunteer__r.Email, Volunteer__r.Name 
-                            FROM Time_Slot__c LIMIT 1];
-        Appointment__c appointment = [SELECT Id FROM Appointment__c LIMIT 1];
-        Appointment_Request__c request = [SELECT Id FROM Appointment_Request__c LIMIT 1];
+        Time_Slot__c slot = getTimeSlotWithRelationships();
+        Appointment__c appointment = getAppointment();
+        Appointment_Request__c request = getAppointmentRequest();
         
         String customerName = 'Customer Test';
-        String customerEmail = 'reference@test.com';
+        String customerEmail = 'reference@example.com';
         
         Test.startTest();
         BookingEmailService.sendBookingEmails(slot, customerName, customerEmail, appointment, request);
@@ -95,16 +112,15 @@ private class BookingEmailServiceTest {
     
     @isTest
     static void testSendBookingEmails_NoVolunteerEmail() {
-        Time_Slot__c slot = [SELECT Id, Day__c, Start_Time__c, End_Time__c, Volunteer__c 
-                            FROM Time_Slot__c LIMIT 1];
-        Appointment__c appointment = [SELECT Id FROM Appointment__c LIMIT 1];
-        Appointment_Request__c request = [SELECT Id FROM Appointment_Request__c LIMIT 1];
+        Time_Slot__c slot = getTimeSlotBasic();
+        Appointment__c appointment = getAppointment();
+        Appointment_Request__c request = getAppointmentRequest();
         
         // Manually set volunteer relationship to null email
         slot.Volunteer__r = null;
         
         String customerName = 'Customer Test';
-        String customerEmail = 'reference@test.com';
+        String customerEmail = 'reference@example.com';
         
         Test.startTest();
         BookingEmailService.sendBookingEmails(slot, customerName, customerEmail, appointment, request);
@@ -116,10 +132,9 @@ private class BookingEmailServiceTest {
     
     @isTest
     static void testSendBookingEmails_NoCustomerEmail() {
-        Time_Slot__c slot = [SELECT Id, Day__c, Start_Time__c, End_Time__c, Volunteer__c, Volunteer__r.Email, Volunteer__r.Name 
-                            FROM Time_Slot__c LIMIT 1];
-        Appointment__c appointment = [SELECT Id FROM Appointment__c LIMIT 1];
-        Appointment_Request__c request = [SELECT Id FROM Appointment_Request__c LIMIT 1];
+        Time_Slot__c slot = getTimeSlotWithRelationships();
+        Appointment__c appointment = getAppointment();
+        Appointment_Request__c request = getAppointmentRequest();
         
         String customerName = 'Customer Test';
         String customerEmail = '';
@@ -134,13 +149,12 @@ private class BookingEmailServiceTest {
     
     @isTest
     static void testSendBookingEmails_NoCustomerName() {
-        Time_Slot__c slot = [SELECT Id, Day__c, Start_Time__c, End_Time__c, Volunteer__c, Volunteer__r.Email, Volunteer__r.Name 
-                            FROM Time_Slot__c LIMIT 1];
-        Appointment__c appointment = [SELECT Id FROM Appointment__c LIMIT 1];
-        Appointment_Request__c request = [SELECT Id FROM Appointment_Request__c LIMIT 1];
+        Time_Slot__c slot = getTimeSlotWithRelationships();
+        Appointment__c appointment = getAppointment();
+        Appointment_Request__c request = getAppointmentRequest();
         
         String customerName = '';
-        String customerEmail = 'reference@test.com';
+        String customerEmail = 'reference@example.com';
         
         Test.startTest();
         BookingEmailService.sendBookingEmails(slot, customerName, customerEmail, appointment, request);
