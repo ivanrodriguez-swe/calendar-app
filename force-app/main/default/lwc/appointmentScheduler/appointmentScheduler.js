@@ -42,12 +42,13 @@ export default class AppointmentScheduler extends LightningElement {
             this.appointmentRequestId = urlParams.get('requestId');
         }
         
-        // Set the wire variable to trigger the wire adapter
+        // Set the wire variable to trigger the wire adapter only if we have a valid ID
         if (this.appointmentRequestId) {
             this._appointmentRequestIdForWire = this.appointmentRequestId;
         } else {
-            // No appointment request, fetch all available slots
-            this.fetchAvailableSlots();
+            // No appointment request ID provided - don't fetch any slots
+            this.loading = false;
+            this.groupedSlots = [];
         }
     }
 
