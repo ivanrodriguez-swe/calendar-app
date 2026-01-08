@@ -1,10 +1,29 @@
 public with sharing class VolunteerAvailabilityService {
     
     /**
-     * Get time slots for date range
+     * Get time slots for date range (all volunteers)
      */
     public static List<Map<String, Object>> getTimeslotsForRange(Date startDate, Date endDate) {
-        List<Time_Slot__c> slots = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate);
+        return getTimeslotsForRange(startDate, endDate, null);
+    }
+    
+    /**
+     * Get time slots for date range, optionally filtered by volunteer
+     * @param startDate Start date (inclusive)
+     * @param endDate End date (inclusive)
+     * @param volunteerId Optional volunteer ID to filter by (null = all volunteers)
+     * @return List of organized time slot data
+     */
+    public static List<Map<String, Object>> getTimeslotsForRange(Date startDate, Date endDate, Id volunteerId) {
+        Set<Id> volunteerIds = volunteerId != null ? new Set<Id>{ volunteerId } : null;
+        Map<Id, List<Time_Slot__c>> slotsByVolunteer = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate, volunteerIds);
+        
+        // Flatten the map to a single list
+        List<Time_Slot__c> slots = new List<Time_Slot__c>();
+        for (List<Time_Slot__c> volunteerSlots : slotsByVolunteer.values()) {
+            slots.addAll(volunteerSlots);
+        }
+        
         List<Date> dates = DateRangeHelper.getDatesBetween(startDate, endDate, true);
         List<String> timeRangeLabels = TimeSlotHelper.getTimeSlotStructureLabels();
         

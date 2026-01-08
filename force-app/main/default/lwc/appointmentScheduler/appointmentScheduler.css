@@ -1,44 +1,26 @@
-.grid-container {
-    display: block;
+/* Scrollable container */
+.slots-container {
+    max-height: 400px;
+    overflow-y: auto;
+    padding-right: 8px;
 }
 
-.time-cell { 
-    font-weight: bold;
+/* Date row container */
+.date-row {
+    background: #fafaf9;
+    border-radius: 8px;
+    padding: 12px 16px;
 }
-.col { 
-    border: 1px solid #ecebea; 
-    min-height: 48px; 
+
+/* Time slots container - flex wrap with gap */
+.time-slots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
 }
-.slot-button { 
-    width: 100%; 
-    text-align: left; 
-    background: #f4f6f9; 
-    border-radius: 4px; 
-    padding: 8px; 
-    transition: background-color 0.2s;
-}
-.slot-button:hover:not(:disabled) {
-    background: #e8f4f8;
-    cursor: pointer;
-}
-.slot-button[data-available="0"],
-.slot-button[data-available=""] {
-    background: #f3f2f2;
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-.slot-time { 
-    font-weight: 600; 
-    margin-bottom: 4px;
-}
-.slot-qty { 
-    font-size: 0.8rem; 
-    color: #666; 
-    margin-bottom: 2px;
-}
-.slot-volunteer {
-    font-size: 0.75rem;
-    color: #0176d3;
-    margin-top: 4px;
+
+/* Individual slot button styling */
+.time-slots lightning-button {
+    margin: 4px;
 }
 

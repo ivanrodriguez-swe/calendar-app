@@ -54,10 +54,36 @@ private class VolunteerAvailabilityControllerTest {
         Test.startTest();
         System.runAs(getAdminUser()) {
             List<VolunteerAvailabilityController.DayWrapper> result = 
-                VolunteerAvailabilityController.getTimeslotsForRange(startDate, endDate);
+                VolunteerAvailabilityController.getTimeslotsForRange(startDate, endDate, null);
             
-            Assert.isNotNull( result, 'Result should not be null');
+            Assert.isNotNull(result, 'Result should not be null');
             Assert.isTrue(result.size() > 0, 'Should return at least one day wrapper');
+        }
+        Test.stopTest();
+    }
+    
+    @isTest
+    static void testGetTimeslotsForRange_WithVolunteerId() {
+        Date startDate = Date.today();
+        Date endDate = Date.today().addDays(2);
+        User volunteer = getVolunteer(0);
+        
+        Test.startTest();
+        System.runAs(getAdminUser()) {
+            List<VolunteerAvailabilityController.DayWrapper> result = 
+                VolunteerAvailabilityController.getTimeslotsForRange(startDate, endDate, volunteer.Id);
+            
+            Assert.isNotNull(result, 'Result should not be null');
+            Assert.isTrue(result.size() > 0, 'Should return at least one day wrapper');
+            
+            // Verify all available slots belong to the filtered volunteer
+            for (VolunteerAvailabilityController.DayWrapper dw : result) {
+                for (VolunteerAvailabilityController.TimeslotWrapper slot : dw.slots) {
+                    if (slot.isAvailable && slot.volunteerId != null) {
+                        Assert.areEqual(volunteer.Id, slot.volunteerId, 'All available slots should belong to filtered volunteer');
+                    }
+                }
+            }
         }
         Test.stopTest();
     }
@@ -69,8 +95,8 @@ private class VolunteerAvailabilityControllerTest {
         Test.startTest();
         System.runAs(getAdminUser()) {
             try {
-                VolunteerAvailabilityController.getTimeslotsForRange(null, endDate);
-                Assert.fail( 'Should have thrown exception');
+                VolunteerAvailabilityController.getTimeslotsForRange(null, endDate, null);
+                Assert.fail('Should have thrown exception');
             } catch (Exception e) {
                 Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
             }
@@ -85,8 +111,8 @@ private class VolunteerAvailabilityControllerTest {
         Test.startTest();
         System.runAs(getAdminUser()) {
             try {
-                VolunteerAvailabilityController.getTimeslotsForRange(startDate, null);
-                Assert.fail( 'Should have thrown exception');
+                VolunteerAvailabilityController.getTimeslotsForRange(startDate, null, null);
+                Assert.fail('Should have thrown exception');
             } catch (Exception e) {
                 Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
             }

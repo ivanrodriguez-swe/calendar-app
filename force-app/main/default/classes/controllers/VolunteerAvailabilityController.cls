@@ -1,12 +1,12 @@
 public without sharing class VolunteerAvailabilityController {
     
     @AuraEnabled(cacheable=true)
-    public static List<DayWrapper> getTimeslotsForRange(Date startDate, Date endDate) {
+    public static List<DayWrapper> getTimeslotsForRange(Date startDate, Date endDate, Id volunteerId) {
         if (startDate == null || endDate == null) {
             throw new AuraHandledException('startDate and endDate are required.');
         }
         
-        List<Map<String, Object>> organizedData = VolunteerAvailabilityService.getTimeslotsForRange(startDate, endDate);
+        List<Map<String, Object>> organizedData = VolunteerAvailabilityService.getTimeslotsForRange(startDate, endDate, volunteerId);
         
         return convertToDayWrappers(organizedData);
     }
@@ -58,6 +58,45 @@ public without sharing class VolunteerAvailabilityController {
             result.success = false;
             result.message = 'Error processing CSV: ' + e.getMessage();
             return result;
+        }
+    }
+    
+    /**
+     * Get all available time slots for a volunteer, organized by date
+     * @param volunteerId Optional volunteer ID to filter by (null = all volunteers)
+     * @return List of available time slot wrappers sorted by date and time
+     */
+    @AuraEnabled(cacheable=true)
+    public static List<AvailableSlotWrapper> getAvailableSlotsByVolunteer(Id volunteerId) {
+        Set<Id> volunteerIds = volunteerId != null ? new Set<Id>{ volunteerId } : null;
+        Map<Id, List<Time_Slot__c>> slotsByVolunteer = TimeSlotSelector.getAvailableTimeSlotsForRange(null, null, volunteerIds);
+        
+        List<AvailableSlotWrapper> results = new List<AvailableSlotWrapper>();
+        
+        for (Id volId : slotsByVolunteer.keySet()) {
+            for (Time_Slot__c slot : slotsByVolunteer.get(volId)) {
+                results.add(new AvailableSlotWrapper(slot));
+            }
+        }
+        
+        return results;
+    }
+    
+    public class AvailableSlotWrapper {
+        @AuraEnabled public Id id;
+        @AuraEnabled public Date day;
+        @AuraEnabled public Time startTime;
+        @AuraEnabled public Time endTime;
+        @AuraEnabled public Id volunteerId;
+        @AuraEnabled public String volunteerName;
+        
+        public AvailableSlotWrapper(Time_Slot__c slot) {
+            this.id = slot.Id;
+            this.day = slot.Day__c;
+            this.startTime = slot.Start_Time__c;
+            this.endTime = slot.End_Time__c;
+            this.volunteerId = slot.Volunteer__c;
+            this.volunteerName = slot.Volunteer__r != null ? slot.Volunteer__r.Name : null;
         }
     }
     

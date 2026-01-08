@@ -61,16 +61,24 @@ private class TimeSlotSelectorTest {
         Date endDate = Date.today().addDays(4);
         
         Test.startTest();
-        List<Time_Slot__c> result = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate);
+        Map<Id, List<Time_Slot__c>> result = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate, null);
         Test.stopTest();
         
-        Assert.isNotNull( result, 'Result should not be null');
-        Assert.areEqual(5, result.size(), 'Should return 5 available slots');
+        Assert.isNotNull(result, 'Result should not be null');
+        
+        // Flatten the map to count total slots
+        Integer totalSlots = 0;
+        for (List<Time_Slot__c> slots : result.values()) {
+            totalSlots += slots.size();
+        }
+        Assert.areEqual(5, totalSlots, 'Should return 5 available slots');
         
         // Verify all are available
-        for (Time_Slot__c slot : result) {
-            Assert.areEqual('Available', slot.Status__c, 'All slots should be available');
-            Assert.isTrue(slot.Day__c >= startDate && slot.Day__c <= endDate, 'Should be in date range');
+        for (List<Time_Slot__c> slots : result.values()) {
+            for (Time_Slot__c slot : slots) {
+                Assert.areEqual('Available', slot.Status__c, 'All slots should be available');
+                Assert.isTrue(slot.Day__c >= startDate && slot.Day__c <= endDate, 'Should be in date range');
+            }
         }
     }
     
@@ -80,11 +88,11 @@ private class TimeSlotSelectorTest {
         Date endDate = Date.today().addDays(104);
         
         Test.startTest();
-        List<Time_Slot__c> result = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate);
+        Map<Id, List<Time_Slot__c>> result = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate, null);
         Test.stopTest();
         
-        Assert.isNotNull( result, 'Result should not be null');
-        Assert.areEqual(0, result.size(), 'Should return no slots');
+        Assert.isNotNull(result, 'Result should not be null');
+        Assert.areEqual(0, result.size(), 'Should return no volunteers with slots');
     }
     
     @isTest
@@ -93,14 +101,60 @@ private class TimeSlotSelectorTest {
         Date endDate = Date.today().addDays(4);
         
         Test.startTest();
-        List<Time_Slot__c> result = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate);
+        Map<Id, List<Time_Slot__c>> result = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate, null);
         Test.stopTest();
         
         // Should only return available slots, not booked ones
-        Assert.areEqual(5, result.size(), 'Should only return available slots');
-        for (Time_Slot__c slot : result) {
-            Assert.areEqual('Available', slot.Status__c, 'Should only return available slots');
+        Integer totalSlots = 0;
+        for (List<Time_Slot__c> slots : result.values()) {
+            totalSlots += slots.size();
+            for (Time_Slot__c slot : slots) {
+                Assert.areEqual('Available', slot.Status__c, 'Should only return available slots');
+            }
         }
+        Assert.areEqual(5, totalSlots, 'Should only return available slots');
+    }
+    
+    @isTest
+    static void testGetAvailableTimeSlotsForRange_FilterByVolunteer() {
+        Date startDate = Date.today();
+        Date endDate = Date.today().addDays(4);
+        User volunteer = getVolunteer(0);
+        Set<Id> volunteerIds = new Set<Id>{ volunteer.Id };
+        
+        Test.startTest();
+        Map<Id, List<Time_Slot__c>> result = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate, volunteerIds);
+        Test.stopTest();
+        
+        Assert.isNotNull(result, 'Result should not be null');
+        Assert.areEqual(1, result.size(), 'Should return one volunteer');
+        Assert.isTrue(result.containsKey(volunteer.Id), 'Should contain the filtered volunteer');
+        
+        List<Time_Slot__c> volunteerSlots = result.get(volunteer.Id);
+        Assert.areEqual(5, volunteerSlots.size(), 'Should return 5 slots for the volunteer');
+        
+        for (Time_Slot__c slot : volunteerSlots) {
+            Assert.areEqual(volunteer.Id, slot.Volunteer__c, 'All slots should belong to the filtered volunteer');
+        }
+    }
+    
+    @isTest
+    static void testGetAvailableTimeSlotsForRange_EmptyVolunteerSet() {
+        Date startDate = Date.today();
+        Date endDate = Date.today().addDays(4);
+        Set<Id> volunteerIds = new Set<Id>();
+        
+        Test.startTest();
+        Map<Id, List<Time_Slot__c>> result = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate, volunteerIds);
+        Test.stopTest();
+        
+        Assert.isNotNull(result, 'Result should not be null');
+        // Empty set should return all volunteers (same as null)
+        Integer totalSlots = 0;
+        for (List<Time_Slot__c> slots : result.values()) {
+            totalSlots += slots.size();
+        }
+        Assert.areEqual(5, totalSlots, 'Should return all available slots when empty set provided');
     }
     
     @isTest

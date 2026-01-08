@@ -1,19 +1,36 @@
 public inherited sharing class TimeSlotSelector {
     
     /**
-     * Get available time slots for a date range
-     * @param startDate Start date (inclusive)
-     * @param endDate End date (inclusive)
-     * @return List of available time slots with volunteer information
+     * Get available time slots for a date range, optionally filtered by volunteers
+     * @param startDate Start date (inclusive), null to ignore start date filter
+     * @param endDate End date (inclusive), null to ignore end date filter
+     * @param volunteerIds Optional set of volunteer IDs to filter by (null or empty = all volunteers)
+     * @return Map of volunteer ID to their list of available time slots
      */
-    public static List<Time_Slot__c> getAvailableTimeSlotsForRange(Date startDate, Date endDate) {
-        return [
-            SELECT Id, Start_Time__c, End_Time__c, Day__c, Status__c, Volunteer__c, Volunteer__r.Name
-            FROM Time_Slot__c
-            WHERE Day__c >= :startDate AND Day__c <= :endDate
-            AND Status__c = 'Available'
-            ORDER BY Start_Time__c
-        ];
+    public static Map<Id, List<Time_Slot__c>> getAvailableTimeSlotsForRange(Date startDate, Date endDate, Set<Id> volunteerIds) {
+        String query = 'SELECT Id, Start_Time__c, End_Time__c, Day__c, Status__c, Volunteer__c, Volunteer__r.Name ' +
+                       'FROM Time_Slot__c ' +
+                       'WHERE Status__c = \'Available\'';
+        
+        if (startDate != null) {
+            query += ' AND Day__c >= :startDate';
+        }
+        if (endDate != null) {
+            query += ' AND Day__c <= :endDate';
+        }
+        if (volunteerIds != null && !volunteerIds.isEmpty()) {
+            query += ' AND Volunteer__c IN :volunteerIds';
+        }
+        query += ' ORDER BY Day__c, Start_Time__c';
+        
+        Map<Id, List<Time_Slot__c>> result = new Map<Id, List<Time_Slot__c>>();
+        for (Time_Slot__c slot : Database.query(query)) {
+            if (!result.containsKey(slot.Volunteer__c)) {
+                result.put(slot.Volunteer__c, new List<Time_Slot__c>());
+            }
+            result.get(slot.Volunteer__c).add(slot);
+        }
+        return result;
     }
     
     /**
