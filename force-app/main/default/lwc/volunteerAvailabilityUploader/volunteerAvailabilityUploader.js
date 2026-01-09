@@ -111,25 +111,101 @@ export default class VolunteerAvailabilityUploader extends LightningElement {
             return { isValid: false, message: 'CSV file contains no data rows (only header or empty)' };
         }
         
-        let invalidRows = [];
+        let errors = [];
         for (let i = startIndex; i < lines.length; i++) {
             const line = lines[i].trim();
             if (line.length === 0) continue;
             
-            const columns = line.split(',');
+            const rowNum = i + 1;
+            const columns = this.parseCSVLine(line);
+            
+            // Check column count
             if (columns.length < 4) {
-                invalidRows.push(i + 1);
+                errors.push(`Row ${rowNum}: Expected 4 columns, found ${columns.length}`);
+                continue;
+            }
+            
+            const [email, day, startTime, endTime] = columns.map(c => c.trim());
+            
+            // Check required fields
+            if (!email) {
+                errors.push(`Row ${rowNum}: Volunteer email is empty`);
+                continue;
+            }
+            
+            // Validate date format (YYYY-MM-DD)
+            if (!this.isValidDateFormat(day)) {
+                errors.push(`Row ${rowNum}: Invalid date format "${day}" (expected YYYY-MM-DD)`);
+                continue;
+            }
+            
+            // Validate time formats (HH:mm)
+            if (!this.isValidTimeFormat(startTime)) {
+                errors.push(`Row ${rowNum}: Invalid start time "${startTime}" (expected HH:mm)`);
+                continue;
+            }
+            
+            if (!this.isValidTimeFormat(endTime)) {
+                errors.push(`Row ${rowNum}: Invalid end time "${endTime}" (expected HH:mm)`);
+                continue;
             }
         }
         
-        if (invalidRows.length > 0) {
-            return { 
-                isValid: false, 
-                message: `Rows ${invalidRows.join(', ')} do not have the required 4 columns (Volunteer Email, Day, Start Time, End Time)` 
-            };
+        if (errors.length > 0) {
+            // Show first 3 errors to keep message manageable
+            const displayErrors = errors.slice(0, 3).join('; ');
+            const suffix = errors.length > 3 ? ` (+${errors.length - 3} more errors)` : '';
+            return { isValid: false, message: displayErrors + suffix };
         }
         
         return { isValid: true, message: '' };
+    }
+
+    parseCSVLine(line) {
+        const values = [];
+        let inQuotes = false;
+        let currentValue = '';
+        
+        for (let i = 0; i < line.length; i++) {
+            const char = line[i];
+            if (char === '"') {
+                inQuotes = !inQuotes;
+            } else if (char === ',' && !inQuotes) {
+                values.push(currentValue);
+                currentValue = '';
+            } else {
+                currentValue += char;
+            }
+        }
+        values.push(currentValue);
+        return values;
+    }
+
+    isValidDateFormat(dateStr) {
+        if (!dateStr) return false;
+        const parts = dateStr.split('-');
+        if (parts.length !== 3) return false;
+        
+        const [year, month, day] = parts.map(p => parseInt(p, 10));
+        if (isNaN(year) || isNaN(month) || isNaN(day)) return false;
+        if (year < 2000 || year > 2100) return false;
+        if (month < 1 || month > 12) return false;
+        if (day < 1 || day > 31) return false;
+        
+        return true;
+    }
+
+    isValidTimeFormat(timeStr) {
+        if (!timeStr) return false;
+        const parts = timeStr.split(':');
+        if (parts.length !== 2) return false;
+        
+        const [hours, minutes] = parts.map(p => parseInt(p, 10));
+        if (isNaN(hours) || isNaN(minutes)) return false;
+        if (hours < 0 || hours > 23) return false;
+        if (minutes < 0 || minutes > 59) return false;
+        
+        return true;
     }
 
     showToast(title, message, variant) {
