@@ -70,7 +70,7 @@ export default class VolunteerAvailabilityUploader extends LightningElement {
                     } else {
                         // Some slots created - partial success
                         this.showToast('Partial Success', 
-                            `${result.slotsCreated} slots created. Volunteers not found: ${emailList}${suffix}`, 
+                            `No Volunteers could be found with the following emails: ${emailList}${suffix}`, 
                             'warning');
                         this.handleCloseModal();
                         this.dispatchEvent(new CustomEvent('uploadsuccess'));
