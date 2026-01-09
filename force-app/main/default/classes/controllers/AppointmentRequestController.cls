@@ -67,4 +67,51 @@ public with sharing class AppointmentRequestController {
             this.emailsSent = 0;
         }
     }
+    
+    /**
+     * Send invite emails to selected Appointment Requests
+     * @param requestIds List of Appointment Request IDs
+     * @return SendInvitesResult with emailsSent and errors
+     */
+    @AuraEnabled
+    public static SendInvitesResult sendInviteEmails(List<Id> requestIds) {
+        Map<String, Object> serviceResult = BookingEmailService.sendInviteEmails(requestIds);
+        
+        SendInvitesResult result = new SendInvitesResult();
+        result.success = (Boolean) serviceResult.get('success');
+        result.emailsSent = (Integer) serviceResult.get('emailsSent');
+        result.errors = (List<String>) serviceResult.get('errors');
+        
+        return result;
+    }
+    
+    /**
+     * Send invites result
+     */
+    public class SendInvitesResult {
+        @AuraEnabled public Boolean success;
+        @AuraEnabled public Integer emailsSent;
+        @AuraEnabled public List<String> errors;
+        
+        public SendInvitesResult() {
+            this.success = false;
+            this.emailsSent = 0;
+            this.errors = new List<String>();
+        }
+    }
+    
+    /**
+     * Get Appointment Requests with New status for the Send Invites datatable
+     * @return List of Appointment Requests with New status
+     */
+    @AuraEnabled(cacheable=true)
+    public static List<Appointment_Request__c> getNewAppointmentRequests() {
+        return [
+            SELECT Id, Reference_First_Name__c, Reference_Email__c, 
+                   Selectee__r.Name, Status__c, CreatedDate
+            FROM Appointment_Request__c
+            WHERE Status__c = 'New'
+            ORDER BY CreatedDate DESC
+        ];
+    }
 }

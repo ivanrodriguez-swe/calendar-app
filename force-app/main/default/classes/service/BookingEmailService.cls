@@ -20,36 +20,41 @@ public class BookingEmailService {
      */
     public static void sendBookingEmails(Time_Slot__c slot, String customerName, String customerEmail, Appointment__c appointment, Appointment_Request__c appointmentRequest) {
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
+        String timeRange = TimeSlotFormatter.formatTime(slot.Start_Time__c) + ' - ' + TimeSlotFormatter.formatTime(slot.End_Time__c);
 
+        // Volunteer notification email
         if (slot.Volunteer__r != null && slot.Volunteer__r.Email != null) {
+            EmailTemplates.EmailContent content = EmailTemplates.getVolunteerNotificationEmail(
+                slot.Volunteer__r.Name,
+                customerName,
+                customerEmail,
+                slot.Day__c,
+                timeRange
+            );
+            
             Messaging.SingleEmailMessage volunteerEmail = new Messaging.SingleEmailMessage();
             volunteerEmail.setToAddresses(new List<String>{ slot.Volunteer__r.Email });
-            volunteerEmail.setSubject('New Appointment Scheduled - ' + slot.Day__c.format());
-            volunteerEmail.setPlainTextBody(
-                'Hello ' + slot.Volunteer__r.Name + ',\n\n' +
-                'A new appointment has been scheduled:\n\n' +
-                'Customer: ' + (String.isNotBlank(customerName) ? customerName : 'Guest') + '\n' +
-                'Customer Email: ' + (String.isNotBlank(customerEmail) ? customerEmail : 'N/A') + '\n' +
-                'Date: ' + slot.Day__c.format() + '\n' +
-                'Time: ' + TimeSlotFormatter.formatTime(slot.Start_Time__c) + ' - ' + TimeSlotFormatter.formatTime(slot.End_Time__c) + '\n\n' +
-                'Thank you!'
-            );
+            volunteerEmail.setSubject(content.subject);
+            volunteerEmail.setHtmlBody(content.htmlBody);
+            volunteerEmail.setPlainTextBody(content.plainTextBody);
             emails.add(volunteerEmail);
         }
 
+        // Customer confirmation email
         if (String.isNotBlank(customerEmail)) {
+            String volunteerName = slot.Volunteer__r != null ? slot.Volunteer__r.Name : null;
+            EmailTemplates.EmailContent content = EmailTemplates.getCustomerConfirmationEmail(
+                customerName,
+                volunteerName,
+                slot.Day__c,
+                timeRange
+            );
+            
             Messaging.SingleEmailMessage customerEmailMsg = new Messaging.SingleEmailMessage();
             customerEmailMsg.setToAddresses(new List<String>{ customerEmail });
-            customerEmailMsg.setSubject('Appointment Confirmed - ' + slot.Day__c.format());
-            customerEmailMsg.setPlainTextBody(
-                'Hello ' + (String.isNotBlank(customerName) ? customerName : 'Guest') + ',\n\n' +
-                'Your appointment has been confirmed:\n\n' +
-                'Volunteer: ' + (slot.Volunteer__r != null ? slot.Volunteer__r.Name : 'N/A') + '\n' +
-                'Date: ' + slot.Day__c.format() + '\n' +
-                'Time: ' + TimeSlotFormatter.formatTime(slot.Start_Time__c) + ' - ' + TimeSlotFormatter.formatTime(slot.End_Time__c) + '\n\n' +
-                'We look forward to meeting with you!\n\n' +
-                'Thank you!'
-            );
+            customerEmailMsg.setSubject(content.subject);
+            customerEmailMsg.setHtmlBody(content.htmlBody);
+            customerEmailMsg.setPlainTextBody(content.plainTextBody);
             emails.add(customerEmailMsg);
         }
 
@@ -59,6 +64,136 @@ public class BookingEmailService {
             } catch (Exception e) {
             }
         }
+    }
+    
+    /**
+     * Send invite emails to references for selected Appointment Requests
+     * Updates status to 'Sent' for successfully emailed requests
+     * @param requestIds List of Appointment Request IDs
+     * @return Map with success, emailsSent, errors
+     */
+    public static Map<String, Object> sendInviteEmails(List<Id> requestIds) {
+        Map<String, Object> result = new Map<String, Object>();
+        result.put('success', false);
+        result.put('emailsSent', 0);
+        result.put('errors', new List<String>());
+        
+        if (requestIds == null || requestIds.isEmpty()) {
+            result.put('errors', new List<String>{ 'No records selected' });
+            return result;
+        }
+        
+        // Query Appointment Requests with required fields - only process 'New' status
+        List<Appointment_Request__c> requests = [
+            SELECT Id, Reference_Email__c, Reference_First_Name__c, URL_Invite__c, Status__c
+            FROM Appointment_Request__c
+            WHERE Id IN :requestIds AND Status__c = 'New'
+        ];
+        
+        // Check how many were skipped due to non-New status
+        Integer skippedCount = requestIds.size() - requests.size();
+        
+        if (requests.isEmpty()) {
+            String errorMsg = skippedCount > 0 
+                ? 'All ' + skippedCount + ' selected record(s) have already been sent or processed. Only records with "New" status can receive invites.'
+                : 'No appointment requests found';
+            result.put('errors', new List<String>{ errorMsg });
+            return result;
+        }
+        
+        // Get the base URL from custom label
+        String baseUrl = System.Label.OHRS_Site_Base_URL;
+        
+        List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
+        List<Appointment_Request__c> requestsToUpdate = new List<Appointment_Request__c>();
+        List<String> errors = new List<String>();
+        Map<Integer, Id> emailIndexToRequestId = new Map<Integer, Id>();
+        
+        Integer emailIndex = 0;
+        for (Appointment_Request__c request : requests) {
+            // Validate email
+            if (!isValidEmail(request.Reference_Email__c)) {
+                String referenceName = String.isNotBlank(request.Reference_First_Name__c) 
+                    ? request.Reference_First_Name__c 
+                    : 'Unknown';
+                String invalidEmail = String.isNotBlank(request.Reference_Email__c) 
+                    ? '"' + request.Reference_Email__c + '"'
+                    : 'missing';
+                errors.add(referenceName + ': email is ' + invalidEmail);
+                continue;
+            }
+            
+            // Build the invite URL (formula field returns HYPERLINK, we need just the URL)
+            String inviteUrl = baseUrl + request.Id;
+            
+            // Build email using template
+            EmailTemplates.EmailContent content = EmailTemplates.getAppointmentInviteEmail(
+                request.Reference_First_Name__c,
+                inviteUrl
+            );
+            
+            Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+            email.setToAddresses(new List<String>{ request.Reference_Email__c });
+            email.setSubject(content.subject);
+            email.setHtmlBody(content.htmlBody);
+            email.setPlainTextBody(content.plainTextBody);
+            emails.add(email);
+            emailIndexToRequestId.put(emailIndex, request.Id);
+            emailIndex++;
+        }
+        
+        if (emails.isEmpty()) {
+            result.put('errors', errors);
+            return result;
+        }
+        
+        // Check Salesforce governor limit (max 100 single emails per sendEmail call)
+        if (emails.size() > 100) {
+            result.put('errors', new List<String>{ 'Cannot send more than 100 emails at once. Please select fewer records.' });
+            return result;
+        }
+        
+        // Send emails
+        Integer emailsSent = 0;
+        try {
+            List<Messaging.SendEmailResult> sendResults = Messaging.sendEmail(emails, false);
+            
+            // Process results and update status for successful sends
+            for (Integer i = 0; i < sendResults.size(); i++) {
+                if (sendResults[i].isSuccess()) {
+                    emailsSent++;
+                    Id requestId = emailIndexToRequestId.get(i);
+                    requestsToUpdate.add(new Appointment_Request__c(
+                        Id = requestId,
+                        Status__c = 'Sent'
+                    ));
+                } else {
+                    Id requestId = emailIndexToRequestId.get(i);
+                    for (Messaging.SendEmailError err : sendResults[i].getErrors()) {
+                        errors.add('Failed to send email for request ' + requestId + ': ' + err.getMessage());
+                    }
+                }
+            }
+            
+            // Update successfully emailed requests to 'Sent' status
+            if (!requestsToUpdate.isEmpty()) {
+                update requestsToUpdate;
+            }
+            
+        } catch (Exception e) {
+            errors.add('Error sending emails: ' + e.getMessage());
+        }
+        
+        // Add info about skipped non-New records
+        if (skippedCount > 0) {
+            errors.add(skippedCount + ' record(s) already sent or processed');
+        }
+        
+        result.put('success', emailsSent > 0);
+        result.put('emailsSent', emailsSent);
+        result.put('errors', errors);
+        
+        return result;
     }
 }
 

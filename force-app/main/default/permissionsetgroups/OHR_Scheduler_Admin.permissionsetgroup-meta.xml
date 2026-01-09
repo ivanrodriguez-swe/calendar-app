@@ -4,6 +4,7 @@
     <hasActivationRequired>false</hasActivationRequired>
     <label>OHR Scheduler Admin</label>
     <permissionSets>Access_to_OHR_Scheduler_App</permissionSets>
+    <permissionSets>Can_Send_Appointment_Invites</permissionSets>
     <permissionSets>Read_Write_Access_to_Main_Objects_of_OHR_Scheduler_App</permissionSets>
     <status>Updated</status>
 </PermissionSetGroup>

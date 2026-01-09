@@ -1,0 +1,57 @@
+<template>
+    <lightning-card title="Send Invites" icon-name="utility:email">
+        <lightning-button-icon 
+            slot="actions" 
+            icon-name="utility:refresh" 
+            alternative-text="Refresh"
+            onclick={handleRefresh}>
+        </lightning-button-icon>
+        
+        <div class="slds-p-around_medium">
+            <template if:true={hasRecords}>
+                <!-- Action Bar -->
+                <div class="slds-m-bottom_medium">
+                    <lightning-button 
+                        variant="brand" 
+                        label={sendButtonLabel}
+                        onclick={handleSendInvites}
+                        disabled={isSendDisabled}
+                        icon-name="utility:email">
+                    </lightning-button>
+                </div>
+
+                <!-- Datatable -->
+                <lightning-datatable
+                    key-field="Id"
+                    data={data}
+                    columns={columns}
+                    onrowselection={handleRowSelection}
+                    show-row-number-column>
+                </lightning-datatable>
+
+                <!-- Record Count -->
+                <div class="slds-m-top_small slds-text-color_weak">
+                    {recordCountLabel}
+                </div>
+            </template>
+
+            <template if:false={hasRecords}>
+                <div class="slds-illustration slds-illustration_small">
+                    <div class="slds-text-align_center">
+                        <lightning-icon 
+                            icon-name="utility:check" 
+                            size="large" 
+                            alternative-text="All done"
+                            class="slds-m-bottom_small">
+                        </lightning-icon>
+                        <h3 class="slds-text-heading_medium slds-m-bottom_x-small">All caught up!</h3>
+                        <p class="slds-text-body_regular slds-text-color_weak">
+                            There are no pending invites to send at this time.
+                        </p>
+                    </div>
+                </div>
+            </template>
+        </div>
+    </lightning-card>
+</template>
+
