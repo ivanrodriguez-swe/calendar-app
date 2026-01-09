@@ -23,8 +23,22 @@ public inherited sharing class TimeSlotSelector {
         }
         query += ' ORDER BY Day__c, Start_Time__c';
         
+        // Get current datetime to filter out past time slots (with 15 min buffer)
+        DateTime nowDT = DateTime.now().addMinutes(15);
+        Date today = Date.today();
+        Time currentTime = Time.newInstance(nowDT.hour(), nowDT.minute(), 0, 0);
+        
         Map<Id, List<Time_Slot__c>> result = new Map<Id, List<Time_Slot__c>>();
         for (Time_Slot__c slot : Database.query(query)) {
+            // Skip time slots that are in the past
+            if (slot.Day__c < today) {
+                continue;
+            }
+            // For today, skip time slots where start time has already passed
+            if (slot.Day__c == today && slot.Start_Time__c != null && slot.Start_Time__c <= currentTime) {
+                continue;
+            }
+            
             if (!result.containsKey(slot.Volunteer__c)) {
                 result.put(slot.Volunteer__c, new List<Time_Slot__c>());
             }
