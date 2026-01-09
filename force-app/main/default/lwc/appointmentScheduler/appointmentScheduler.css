@@ -1,3 +1,9 @@
+/* Greeting section */
+.greeting-section {
+    border-left: 4px solid #0176d3;
+    background: #f3f3f3;
+}
+
 /* Scrollable container */
 .slots-container {
     max-height: 400px;

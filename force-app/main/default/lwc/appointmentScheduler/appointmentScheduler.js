@@ -2,6 +2,8 @@ import { LightningElement, track, wire, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
 import APPOINTMENT_REQUEST_VOLUNTEER from '@salesforce/schema/Appointment_Request__c.Volunteer__c';
+import APPOINTMENT_REQUEST_REF_FIRST_NAME from '@salesforce/schema/Appointment_Request__c.Reference_First_Name__c';
+import APPOINTMENT_REQUEST_STATUS from '@salesforce/schema/Appointment_Request__c.Status__c';
 import getAvailableSlotsByVolunteer from '@salesforce/apex/VolunteerAvailabilityController.getAvailableSlotsByVolunteer';
 import bookTimeSlot from '@salesforce/apex/VolunteerAvailabilityController.bookTimeSlot';
 
@@ -11,6 +13,9 @@ export default class AppointmentScheduler extends LightningElement {
     @track selectedSlot = null;
     @track bookingInProgress = false;
     @track groupedSlots = [];
+    @track referenceName = '';
+    @track noVolunteerAssigned = false;
+    @track appointmentBooked = false;
     
     @api appointmentRequestId = null;
     volunteerId = null;
@@ -19,32 +24,60 @@ export default class AppointmentScheduler extends LightningElement {
     get hasAvailableSlots() {
         return this.groupedSlots && this.groupedSlots.length > 0;
     }
+    
+    get hasReferenceName() {
+        return this.referenceName && this.referenceName.trim().length > 0;
+    }
 
     @wire(getRecord, { 
         recordId: '$_appointmentRequestIdForWire', 
-        fields: [APPOINTMENT_REQUEST_VOLUNTEER]
+        fields: [APPOINTMENT_REQUEST_VOLUNTEER, APPOINTMENT_REQUEST_REF_FIRST_NAME, APPOINTMENT_REQUEST_STATUS]
     })
     wiredAppointmentRequest({ error, data }) {
         if (data) {
             this.volunteerId = getFieldValue(data, APPOINTMENT_REQUEST_VOLUNTEER);
-            this.fetchAvailableSlots();
+            this.referenceName = getFieldValue(data, APPOINTMENT_REQUEST_REF_FIRST_NAME) || '';
+            const status = getFieldValue(data, APPOINTMENT_REQUEST_STATUS);
+            
+            // Check if appointment is already booked (status = Reserved or Completed)
+            if (status === 'Reserved' || status === 'Completed') {
+                this.appointmentBooked = true;
+                this.loading = false;
+                this.groupedSlots = [];
+                return;
+            }
+            
+            // Only fetch slots if we have a valid volunteer ID
+            if (this.volunteerId) {
+                this.noVolunteerAssigned = false;
+                this.fetchAvailableSlots();
+            } else {
+                this.noVolunteerAssigned = true;
+                this.loading = false;
+                this.groupedSlots = [];
+            }
         } else if (error) {
             console.error('Error fetching Appointment Request:', error);
             this.volunteerId = null;
+            this.referenceName = '';
+            this.noVolunteerAssigned = false;
             this.loading = false;
+            this.groupedSlots = [];
         }
     }
 
     connectedCallback() {
-        // Get appointmentRequestId from URL if not set via property
-        if (!this.appointmentRequestId) {
-            const urlParams = new URLSearchParams(window.location.search);
-            this.appointmentRequestId = urlParams.get('requestId');
-        }
+        // First, check URL for requestId parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlRequestId = urlParams.get('requestId');
+        
+        // Use URL parameter if available, otherwise fall back to LWC property
+        const effectiveRequestId = urlRequestId || this.appointmentRequestId;
         
         // Set the wire variable to trigger the wire adapter only if we have a valid ID
-        if (this.appointmentRequestId) {
-            this._appointmentRequestIdForWire = this.appointmentRequestId;
+        if (effectiveRequestId) {
+            this.appointmentRequestId = effectiveRequestId;
+            this._appointmentRequestIdForWire = effectiveRequestId;
         } else {
             // No appointment request ID provided - don't fetch any slots
             this.loading = false;
@@ -199,9 +232,10 @@ export default class AppointmentScheduler extends LightningElement {
         })
         .then(result => {
             if (result.success) {
-                this.showToast('Success', result.message, 'success');
+                this.showToast('Success', 'Appointment successfully booked!', 'success');
                 this.handleCloseModal();
-                this.fetchAvailableSlots(); // Refresh the list
+                this.appointmentBooked = true;
+                this.groupedSlots = [];
             } else {
                 this.showToast('Error', result.message, 'error');
             }
