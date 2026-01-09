@@ -91,7 +91,7 @@ private class VolunteerAvailabilityServiceTest {
         
         Test.startTest();
         System.runAs(getAdminUser()) {
-            Map<String, Object> result = VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null);
+            Map<String, Object> result = VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null, '555-123-4567');
             
             Assert.areEqual(true, result.get('success'), 'Should succeed');
             Assert.isNotNull( result.get('appointmentId'), 'Should have appointment ID');
@@ -121,12 +121,13 @@ private class VolunteerAvailabilityServiceTest {
         
         Test.startTest();
         System.runAs(getAdminUser()) {
-            Map<String, Object> result = VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, request.Id);
+            Map<String, Object> result = VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, request.Id, '555-987-6543');
             
             Assert.areEqual(true, result.get('success'), 'Should succeed');
             
-            Appointment_Request__c updatedRequest = [SELECT Status__c FROM Appointment_Request__c WHERE Id = :request.Id];
+            Appointment_Request__c updatedRequest = [SELECT Status__c, Reference_Phone_Number__c FROM Appointment_Request__c WHERE Id = :request.Id];
             Assert.areEqual('Reserved', updatedRequest.Status__c, 'Request should be reserved');
+            Assert.areEqual('555-987-6543', updatedRequest.Reference_Phone_Number__c, 'Phone number should be saved');
         }
         Test.stopTest();
     }
@@ -139,7 +140,7 @@ private class VolunteerAvailabilityServiceTest {
         Test.startTest();
         System.runAs(getAdminUser()) {
             try {
-                VolunteerAvailabilityService.bookTimeSlot(null, reference.Id, null);
+                VolunteerAvailabilityService.bookTimeSlot(null, reference.Id, null, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
                 Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
@@ -159,7 +160,7 @@ private class VolunteerAvailabilityServiceTest {
         Test.startTest();
         System.runAs(getAdminUser()) {
             try {
-                VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null);
+                VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
                 Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
@@ -179,7 +180,7 @@ private class VolunteerAvailabilityServiceTest {
         Test.startTest();
         System.runAs(getAdminUser()) {
             try {
-                VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null);
+                VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
                 Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
@@ -196,7 +197,7 @@ private class VolunteerAvailabilityServiceTest {
         Test.startTest();
         System.runAs(getAdminUser()) {
             try {
-                VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, null);
+                VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, null, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
                 Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
@@ -219,7 +220,7 @@ private class VolunteerAvailabilityServiceTest {
         Test.startTest();
         System.runAs(getAdminUser()) {
             try {
-                VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, request.Id);
+                VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, request.Id, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
                 Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
@@ -235,7 +236,7 @@ private class VolunteerAvailabilityServiceTest {
         Test.startTest();
         System.runAs(getAdminUser()) {
             try {
-                VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, null);
+                VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, null, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
                 Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');

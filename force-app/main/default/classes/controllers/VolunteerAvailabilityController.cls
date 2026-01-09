@@ -11,9 +11,9 @@ public without sharing class VolunteerAvailabilityController {
         return convertToDayWrappers(organizedData);
     }
     @AuraEnabled
-    public static BookingResult bookTimeSlot(Id timeSlotId, Id customerId, Id appointmentRequestId) {
+    public static BookingResult bookTimeSlot(Id timeSlotId, Id customerId, Id appointmentRequestId, String referencePhone) {
         try {
-            Map<String, Object> serviceResult = VolunteerAvailabilityService.bookTimeSlot(timeSlotId, customerId, appointmentRequestId);
+            Map<String, Object> serviceResult = VolunteerAvailabilityService.bookTimeSlot(timeSlotId, customerId, appointmentRequestId, referencePhone);
             return new BookingResult(
                 (Boolean) serviceResult.get('success'),
                 (String) serviceResult.get('message'),

@@ -16,6 +16,7 @@ export default class AppointmentScheduler extends LightningElement {
     @track referenceName = '';
     @track noVolunteerAssigned = false;
     @track appointmentBooked = false;
+    @track referencePhone = '';
     
     @api appointmentRequestId = null;
     volunteerId = null;
@@ -218,9 +219,22 @@ export default class AppointmentScheduler extends LightningElement {
         this.selectedSlot = null;
     }
 
+    handlePhoneChange(event) {
+        this.referencePhone = event.target.value;
+    }
+    
+    get isPhoneValid() {
+        return this.referencePhone && this.referencePhone.trim().length >= 10;
+    }
+
     handleConfirmBooking() {
         if (!this.selectedSlot) {
             this.showToast('Error', 'Unable to process booking. Please try again.', 'error');
+            return;
+        }
+        
+        if (!this.isPhoneValid) {
+            this.showToast('Error', 'Please enter a valid phone number.', 'error');
             return;
         }
 
@@ -228,7 +242,8 @@ export default class AppointmentScheduler extends LightningElement {
         bookTimeSlot({ 
             timeSlotId: this.selectedSlot.id, 
             customerId: null,
-            appointmentRequestId: this.appointmentRequestId
+            appointmentRequestId: this.appointmentRequestId,
+            referencePhone: this.referencePhone.trim()
         })
         .then(result => {
             if (result.success) {

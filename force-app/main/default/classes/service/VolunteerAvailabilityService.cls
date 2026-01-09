@@ -51,7 +51,7 @@ public with sharing class VolunteerAvailabilityService {
     /**
      * Book time slot
      */
-    public static Map<String, Object> bookTimeSlot(Id timeSlotId, Id customerId, Id appointmentRequestId) {
+    public static Map<String, Object> bookTimeSlot(Id timeSlotId, Id customerId, Id appointmentRequestId, String referencePhone) {
         Time_Slot__c slot = getAndValidateTimeSlot(timeSlotId);
         Appointment_Request__c appointmentRequest = getOrCreateAppointmentRequest(slot, customerId, appointmentRequestId);
         Map<String, String> customerInfo = getCustomerInfo(appointmentRequest, customerId);
@@ -64,6 +64,9 @@ public with sharing class VolunteerAvailabilityService {
         insert appointment;
 
         appointmentRequest.Status__c = 'Reserved';
+        if (String.isNotBlank(referencePhone)) {
+            appointmentRequest.Reference_Phone_Number__c = referencePhone;
+        }
         update appointmentRequest;
         slot.Status__c = 'Booked';
         update slot;

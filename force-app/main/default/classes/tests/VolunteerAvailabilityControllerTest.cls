@@ -128,7 +128,7 @@ private class VolunteerAvailabilityControllerTest {
         Test.startTest();
         System.runAs(getAdminUser()) {
             VolunteerAvailabilityController.BookingResult result = 
-                VolunteerAvailabilityController.bookTimeSlot(slot.Id, reference.Id, null);
+                VolunteerAvailabilityController.bookTimeSlot(slot.Id, reference.Id, null, '555-123-4567');
             
             Assert.areEqual(true, result.success, 'Booking should succeed');
             Assert.isNotNull( result.appointmentId, 'Appointment ID should be set');
@@ -157,13 +157,14 @@ private class VolunteerAvailabilityControllerTest {
         Test.startTest();
         System.runAs(getAdminUser()) {
             VolunteerAvailabilityController.BookingResult result = 
-                VolunteerAvailabilityController.bookTimeSlot(slot.Id, null, request.Id);
+                VolunteerAvailabilityController.bookTimeSlot(slot.Id, null, request.Id, '555-987-6543');
             
             Assert.areEqual(true, result.success, 'Booking should succeed');
             
-            // Verify appointment request status updated
-            Appointment_Request__c updatedRequest = [SELECT Status__c FROM Appointment_Request__c WHERE Id = :request.Id];
+            // Verify appointment request status updated with phone number
+            Appointment_Request__c updatedRequest = [SELECT Status__c, Reference_Phone_Number__c FROM Appointment_Request__c WHERE Id = :request.Id];
             Assert.areEqual('Reserved', updatedRequest.Status__c, 'Request status should be Reserved');
+            Assert.areEqual('555-987-6543', updatedRequest.Reference_Phone_Number__c, 'Phone number should be saved');
         }
         Test.stopTest();
     }
@@ -176,7 +177,7 @@ private class VolunteerAvailabilityControllerTest {
         Test.startTest();
         System.runAs(getAdminUser()) {
             try {
-                VolunteerAvailabilityController.bookTimeSlot(null, reference.Id, null);
+                VolunteerAvailabilityController.bookTimeSlot(null, reference.Id, null, null);
                 Assert.fail( 'Should have thrown exception');
             } catch (Exception e) {
                 Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
