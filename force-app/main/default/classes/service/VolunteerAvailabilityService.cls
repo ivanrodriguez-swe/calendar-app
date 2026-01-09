@@ -109,6 +109,18 @@ public with sharing class VolunteerAvailabilityService {
         }
         
         Map<String, Id> emailToUserIdMap = buildEmailToUserIdMap(csvRows);
+        
+        // Track volunteers not found (just the emails, not the full message)
+        List<String> warnings = new List<String>();
+        Set<String> notFoundEmails = new Set<String>();
+        for (AvailabilityCSVParser.AvailabilityCSVRow row : csvRows) {
+            String emailKey = row.volunteerEmail.toLowerCase();
+            if (!emailToUserIdMap.containsKey(emailKey) && !notFoundEmails.contains(emailKey)) {
+                notFoundEmails.add(emailKey);
+                warnings.add(row.volunteerEmail);
+            }
+        }
+        
         List<Time_Slot__c> potentialSlots = buildSlotsFromCSVRows(csvRows, emailToUserIdMap);
         List<Time_Slot__c> slotsToInsert = TimeSlotHelper.processTimeSlotsForInsert(potentialSlots);
         
@@ -116,7 +128,9 @@ public with sharing class VolunteerAvailabilityService {
             insert slotsToInsert;
         }
         
-        return buildResult(true, 'Availability processed successfully', slotsToInsert.size());
+        Map<String, Object> result = buildResult(true, 'Availability processed successfully', slotsToInsert.size());
+        result.put('warnings', warnings);
+        return result;
     }
     
     /**

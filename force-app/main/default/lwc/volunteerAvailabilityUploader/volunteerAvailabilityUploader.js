@@ -57,12 +57,29 @@ export default class VolunteerAvailabilityUploader extends LightningElement {
             });
 
             if (result.success) {
-                this.showToast('Success', 
-                    result.message, 
-                    'success');
-                this.handleCloseModal();
-                
-                this.dispatchEvent(new CustomEvent('uploadsuccess'));
+                // Check if there were warnings (e.g., volunteer not found)
+                if (result.warnings && result.warnings.length > 0) {
+                    const emailList = result.warnings.slice(0, 3).join(', ');
+                    const suffix = result.warnings.length > 3 ? ` (+${result.warnings.length - 3} more)` : '';
+                    
+                    if (result.slotsCreated === 0) {
+                        // No slots created - treat as error
+                        this.showToast('Error', 
+                            `No slots created. Volunteers not found: ${emailList}${suffix}`, 
+                            'error');
+                    } else {
+                        // Some slots created - partial success
+                        this.showToast('Partial Success', 
+                            `${result.slotsCreated} slots created. Volunteers not found: ${emailList}${suffix}`, 
+                            'warning');
+                        this.handleCloseModal();
+                        this.dispatchEvent(new CustomEvent('uploadsuccess'));
+                    }
+                } else {
+                    this.showToast('Success', result.message, 'success');
+                    this.handleCloseModal();
+                    this.dispatchEvent(new CustomEvent('uploadsuccess'));
+                }
             } else {
                 this.showToast('Error', result.message, 'error');
             }

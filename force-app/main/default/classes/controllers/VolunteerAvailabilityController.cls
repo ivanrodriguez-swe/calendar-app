@@ -48,10 +48,12 @@ public without sharing class VolunteerAvailabilityController {
     public static CreateSlotsResult createTimeSlotsFromCSV(String csvContent) {
         try {
             Map<String, Object> serviceResult = VolunteerAvailabilityService.createTimeSlotsFromCSV(csvContent);
+            List<String> warnings = (List<String>) serviceResult.get('warnings');
             return new CreateSlotsResult(
                 (Boolean) serviceResult.get('success'),
                 (String) serviceResult.get('message'),
-                (Integer) serviceResult.get('slotsCreated')
+                (Integer) serviceResult.get('slotsCreated'),
+                warnings
             );
         } catch (Exception e) {
             CreateSlotsResult result = new CreateSlotsResult();
@@ -219,16 +221,26 @@ public without sharing class VolunteerAvailabilityController {
         @AuraEnabled public Boolean success;
         @AuraEnabled public String message;
         @AuraEnabled public Integer slotsCreated;
+        @AuraEnabled public List<String> warnings;
         
         public CreateSlotsResult() {
             this.success = false;
             this.slotsCreated = 0;
+            this.warnings = new List<String>();
         }
         
         public CreateSlotsResult(Boolean success, String message, Integer slotsCreated) {
             this.success = success;
             this.message = message;
             this.slotsCreated = slotsCreated;
+            this.warnings = new List<String>();
+        }
+        
+        public CreateSlotsResult(Boolean success, String message, Integer slotsCreated, List<String> warnings) {
+            this.success = success;
+            this.message = message;
+            this.slotsCreated = slotsCreated;
+            this.warnings = warnings != null ? warnings : new List<String>();
         }
     }
 }
