@@ -4,7 +4,7 @@
     <description>Stores the last name of the reference</description>
     <externalId>false</externalId>
     <label>Reference Last Name</label>
-    <length>40</length>
+    <length>80</length>
     <required>false</required>
     <trackTrending>false</trackTrending>
     <type>Text</type>

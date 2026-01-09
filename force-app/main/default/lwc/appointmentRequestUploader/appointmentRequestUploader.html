@@ -1,5 +1,5 @@
 <template>
-    <lightning-card title="Appointment Request Upload">
+    <lightning-card title="References Upload">
         <div class="slds-p-around_medium">
             <lightning-button 
                 label="Upload CSV" 
@@ -42,10 +42,15 @@
                         <div class="slds-col">
                             <div class="slds-box slds-theme_info">
                                 <p class="slds-text-heading_small">CSV Format:</p>
-                                <p class="slds-text-body_small">Expected columns: Volunteer Email (or Volunteer Id), Reference First Name, Reference Last Name, Reference Email</p>
-                                <p class="slds-text-body_small slds-m-top_x-small">Note: Each row's Reference Email will receive an email with the calendar link.</p>
-                                <p class="slds-text-body_small slds-m-top_x-small">Example:</p>
-                                <pre class="slds-text-body_small">volunteer@example.com,John,Doe,john.doe@example.com</pre>
+                                <p class="slds-text-body_small">Expected columns:</p>
+                                <ul class="slds-list_dotted slds-text-body_small">
+                                    <li>Selectee Last Name, Selectee First Name, Selectee Email, Expected EOD (YYYY-MM-DD), Discipline</li>
+                                    <li>Reference#1 Name, Reference#1 Email, Reference#1 Relationship</li>
+                                    <li>Reference#2 Name, Reference#2 Email, Reference#2 Relationship</li>
+                                    <li>Reference#3 Name, Reference#3 Email, Reference#3 Relationship</li>
+                                </ul>
+                                <p class="slds-text-body_small slds-m-top_x-small"><strong>Date format:</strong> Expected EOD must be in YYYY-MM-DD format (e.g., 2025-03-15)</p>
+                                <p class="slds-text-body_small slds-m-top_x-small">Note: An Appointment Request record will be created for each reference listed on each row of the CSV file.</p>
                             </div>
                         </div>
                     </div>
@@ -59,4 +64,3 @@
         <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
 </template>
-

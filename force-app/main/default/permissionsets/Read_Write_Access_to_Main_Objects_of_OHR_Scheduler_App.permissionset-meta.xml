@@ -22,6 +22,16 @@
     </fieldPermissions>
     <fieldPermissions>
         <editable>true</editable>
+        <field>Appointment_Request__c.Relationship_Reference__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Appointment_Request__c.Selectee__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
         <field>Appointment_Request__c.Status__c</field>
         <readable>true</readable>
     </fieldPermissions>
@@ -33,6 +43,16 @@
     <fieldPermissions>
         <editable>true</editable>
         <field>Appointment__c.Status__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Selectee__c.Discipline__c</field>
+        <readable>true</readable>
+    </fieldPermissions>
+    <fieldPermissions>
+        <editable>true</editable>
+        <field>Selectee__c.Email__c</field>
         <readable>true</readable>
     </fieldPermissions>
     <fieldPermissions>
@@ -79,6 +99,16 @@
         <allowRead>true</allowRead>
         <modifyAllRecords>false</modifyAllRecords>
         <object>Appointment__c</object>
+        <viewAllFields>false</viewAllFields>
+        <viewAllRecords>false</viewAllRecords>
+    </objectPermissions>
+    <objectPermissions>
+        <allowCreate>true</allowCreate>
+        <allowDelete>false</allowDelete>
+        <allowEdit>true</allowEdit>
+        <allowRead>true</allowRead>
+        <modifyAllRecords>false</modifyAllRecords>
+        <object>Selectee__c</object>
         <viewAllFields>false</viewAllFields>
         <viewAllRecords>false</viewAllRecords>
     </objectPermissions>

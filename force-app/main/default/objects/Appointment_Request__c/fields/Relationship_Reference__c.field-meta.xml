@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
-    <fullName>Reference_First_Name__c</fullName>
-    <description>Stores the first name of the reference</description>
+    <fullName>Relationship_Reference__c</fullName>
+    <description>Stores the relationship that the candidate has with the selectee</description>
     <externalId>false</externalId>
-    <label>Reference First Name</label>
+    <label>Relationship Reference</label>
     <length>80</length>
     <required>false</required>
     <trackTrending>false</trackTrending>

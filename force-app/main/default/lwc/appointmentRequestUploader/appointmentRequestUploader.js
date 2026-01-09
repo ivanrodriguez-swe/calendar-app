@@ -1,5 +1,5 @@
 import { LightningElement, track } from 'lwc';
-import uploadCSV from '@salesforce/apex/AppointmentRequestController.uploadCSV';
+import processFile from '@salesforce/apex/AppointmentRequestController.processFile';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
 
 export default class AppointmentRequestUploader extends LightningElement {
@@ -45,13 +45,13 @@ export default class AppointmentRequestUploader extends LightningElement {
         try {
             const fileContent = await this.readFileContent(this.selectedFile);
             
-            const result = await uploadCSV({
-                csvContent: fileContent
+            const result = await processFile({
+                fileContent: fileContent
             });
 
             if (result.success) {
                 this.showToast('Success', 
-                    `${result.recordsCreated} Appointment Request(s) created successfully. ${result.emailsSent} email(s) sent.`, 
+                    `${result.selecteesCreated} Selectee(s) and ${result.requestsCreated} Appointment Request(s) created successfully.`, 
                     'success');
                 this.handleCloseModal();
                 
@@ -61,7 +61,7 @@ export default class AppointmentRequestUploader extends LightningElement {
             }
         } catch (error) {
             this.showToast('Error', 
-                'Error processing CSV: ' + (error.body?.message || error.message || 'Unknown error'), 
+                'Error processing file: ' + (error.body?.message || error.message || 'Unknown error'), 
                 'error');
         } finally {
             this.uploading = false;
@@ -81,11 +81,6 @@ export default class AppointmentRequestUploader extends LightningElement {
         });
     }
 
-    isValidEmail(email) {
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        return emailRegex.test(email);
-    }
-
     showToast(title, message, variant) {
         const event = new ShowToastEvent({
             title: title,
@@ -95,4 +90,3 @@ export default class AppointmentRequestUploader extends LightningElement {
         this.dispatchEvent(event);
     }
 }
-
