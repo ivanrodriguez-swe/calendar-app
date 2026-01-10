@@ -37,36 +37,39 @@ public class EmailTemplates {
         return new EmailContent(subject, htmlBody, plainTextBody);
     }
     
-    public static EmailContent getVolunteerNotificationEmail(
+    public static EmailContent getVolunteerConfirmationEmail(
         String volunteerName, 
         String customerName, 
         String customerEmail, 
         Date appointmentDate, 
         String timeRange
     ) {
-        String subject = 'New Appointment Scheduled - ' + appointmentDate.format();
+        String subject = 'Appointment Confirmed - ' + appointmentDate.format();
         
+        String safeVolunteerName = String.isNotBlank(volunteerName) ? volunteerName : 'Volunteer';
         String safeCustomerName = String.isNotBlank(customerName) ? customerName : 'Guest';
         String safeCustomerEmail = String.isNotBlank(customerEmail) ? customerEmail : 'N/A';
         
         String htmlBody = 
-            '<p style="margin-bottom: 16px;">Hello ' + volunteerName + ',</p>' +
-            '<p style="margin-bottom: 16px;">A new appointment has been scheduled:</p>' +
+            '<p style="margin-bottom: 16px;">Hello ' + safeVolunteerName + ',</p>' +
+            '<p style="margin-bottom: 16px;">Your appointment has been confirmed:</p>' +
             '<table style="margin-bottom: 24px;">' +
-            '<tr><td style="padding: 4px 16px 4px 0; font-weight: bold;">Customer:</td><td>' + safeCustomerName + '</td></tr>' +
-            '<tr><td style="padding: 4px 16px 4px 0; font-weight: bold;">Customer Email:</td><td>' + safeCustomerEmail + '</td></tr>' +
+            '<tr><td style="padding: 4px 16px 4px 0; font-weight: bold;">Reference:</td><td>' + safeCustomerName + '</td></tr>' +
+            '<tr><td style="padding: 4px 16px 4px 0; font-weight: bold;">Reference Email:</td><td>' + safeCustomerEmail + '</td></tr>' +
             '<tr><td style="padding: 4px 16px 4px 0; font-weight: bold;">Date:</td><td>' + appointmentDate.format() + '</td></tr>' +
             '<tr><td style="padding: 4px 16px 4px 0; font-weight: bold;">Time:</td><td>' + timeRange + '</td></tr>' +
             '</table>' +
+            '<p style="margin-bottom: 16px;">We look forward to your session!</p>' +
             '<p style="margin-top: 32px;">Thank you!</p>';
         
         String plainTextBody = 
-            'Hello ' + volunteerName + ',\n\n' +
-            'A new appointment has been scheduled:\n\n' +
-            'Customer: ' + safeCustomerName + '\n' +
-            'Customer Email: ' + safeCustomerEmail + '\n' +
+            'Hello ' + safeVolunteerName + ',\n\n' +
+            'Your appointment has been confirmed:\n\n' +
+            'Reference: ' + safeCustomerName + '\n' +
+            'Reference Email: ' + safeCustomerEmail + '\n' +
             'Date: ' + appointmentDate.format() + '\n' +
             'Time: ' + timeRange + '\n\n' +
+            'We look forward to your session!\n\n' +
             'Thank you!';
         
         return new EmailContent(subject, htmlBody, plainTextBody);

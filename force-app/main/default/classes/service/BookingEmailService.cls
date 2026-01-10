@@ -1,29 +1,43 @@
-public class BookingEmailService {
+public without sharing class BookingEmailService {
     
     public static Boolean isValidEmail(String email) {
         if (String.isBlank(email)) return false;
         return email.contains('@') && email.contains('.');
     }
     
-    public static void sendBookingEmails(Time_Slot__c slot, String customerName, String customerEmail, Appointment__c appointment, Appointment_Request__c appointmentRequest) {
+    private static Id getOrgWideEmailAddressId() {
+        List<OrgWideEmailAddress> owas = [
+            SELECT Id FROM OrgWideEmailAddress WHERE IsVerified = true LIMIT 1
+        ];
+        return owas.isEmpty() ? null : owas[0].Id;
+    }
+    
+    private static Messaging.SingleEmailMessage createEmail(String toAddress, EmailTemplates.EmailContent content, Id owaId) {
+        Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
+        email.setToAddresses(new List<String>{ toAddress });
+        email.setSubject(content.subject);
+        email.setHtmlBody(content.htmlBody);
+        email.setPlainTextBody(content.plainTextBody);
+        if (owaId != null) {
+            email.setOrgWideEmailAddressId(owaId);
+        }
+        return email;
+    }
+    
+    public static void sendBookingEmails(Time_Slot__c slot, String customerName, String customerEmail) {
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
         String timeRange = TimeSlotFormatter.formatTime(slot.Start_Time__c) + ' - ' + TimeSlotFormatter.formatTime(slot.End_Time__c);
+        Id owaId = getOrgWideEmailAddressId();
 
-        if (slot.Volunteer__r != null && slot.Volunteer__r.Email != null) {
-            EmailTemplates.EmailContent content = EmailTemplates.getVolunteerNotificationEmail(
+        if (slot.Volunteer__r != null && String.isNotBlank(slot.Volunteer__r.Email)) {
+            EmailTemplates.EmailContent content = EmailTemplates.getVolunteerConfirmationEmail(
                 slot.Volunteer__r.Name,
                 customerName,
                 customerEmail,
                 slot.Day__c,
                 timeRange
             );
-            
-            Messaging.SingleEmailMessage volunteerEmail = new Messaging.SingleEmailMessage();
-            volunteerEmail.setToAddresses(new List<String>{ slot.Volunteer__r.Email });
-            volunteerEmail.setSubject(content.subject);
-            volunteerEmail.setHtmlBody(content.htmlBody);
-            volunteerEmail.setPlainTextBody(content.plainTextBody);
-            emails.add(volunteerEmail);
+            emails.add(createEmail(slot.Volunteer__r.Email, content, owaId));
         }
 
         if (String.isNotBlank(customerEmail)) {
@@ -34,19 +48,14 @@ public class BookingEmailService {
                 slot.Day__c,
                 timeRange
             );
-            
-            Messaging.SingleEmailMessage customerEmailMsg = new Messaging.SingleEmailMessage();
-            customerEmailMsg.setToAddresses(new List<String>{ customerEmail });
-            customerEmailMsg.setSubject(content.subject);
-            customerEmailMsg.setHtmlBody(content.htmlBody);
-            customerEmailMsg.setPlainTextBody(content.plainTextBody);
-            emails.add(customerEmailMsg);
+            emails.add(createEmail(customerEmail, content, owaId));
         }
 
         if (!emails.isEmpty()) {
             try {
-                Messaging.sendEmail(emails);
+                Messaging.sendEmail(emails, false);
             } catch (Exception e) {
+                // Email sending failed but don't break the booking transaction
             }
         }
     }
@@ -78,10 +87,9 @@ public class BookingEmailService {
             return result;
         }
         
-        String baseUrl = System.Label.OHRS_Site_Base_URL;
+        Id owaId = getOrgWideEmailAddressId();
         
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
-        List<Appointment_Request__c> requestsToUpdate = new List<Appointment_Request__c>();
         List<String> errors = new List<String>();
         Map<Integer, Id> emailIndexToRequestId = new Map<Integer, Id>();
         
@@ -98,19 +106,13 @@ public class BookingEmailService {
                 continue;
             }
             
-            String inviteUrl = baseUrl + request.Id;
-            
+            String inviteUrl = request.URL_Invite__c;
             EmailTemplates.EmailContent content = EmailTemplates.getAppointmentInviteEmail(
                 request.Reference_First_Name__c,
                 inviteUrl
             );
             
-            Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
-            email.setToAddresses(new List<String>{ request.Reference_Email__c });
-            email.setSubject(content.subject);
-            email.setHtmlBody(content.htmlBody);
-            email.setPlainTextBody(content.plainTextBody);
-            emails.add(email);
+            emails.add(createEmail(request.Reference_Email__c, content, owaId));
             emailIndexToRequestId.put(emailIndex, request.Id);
             emailIndex++;
         }
@@ -126,21 +128,21 @@ public class BookingEmailService {
         }
         
         Integer emailsSent = 0;
+        List<Appointment_Request__c> requestsToUpdate = new List<Appointment_Request__c>();
+        
         try {
             List<Messaging.SendEmailResult> sendResults = Messaging.sendEmail(emails, false);
             
             for (Integer i = 0; i < sendResults.size(); i++) {
                 if (sendResults[i].isSuccess()) {
                     emailsSent++;
-                    Id requestId = emailIndexToRequestId.get(i);
                     requestsToUpdate.add(new Appointment_Request__c(
-                        Id = requestId,
+                        Id = emailIndexToRequestId.get(i),
                         Status__c = 'Sent'
                     ));
                 } else {
-                    Id requestId = emailIndexToRequestId.get(i);
                     for (Messaging.SendEmailError err : sendResults[i].getErrors()) {
-                        errors.add('Failed to send email for request ' + requestId + ': ' + err.getMessage());
+                        errors.add('Failed to send: ' + err.getMessage());
                     }
                 }
             }
@@ -148,7 +150,6 @@ public class BookingEmailService {
             if (!requestsToUpdate.isEmpty()) {
                 update requestsToUpdate;
             }
-            
         } catch (Exception e) {
             errors.add('Error sending emails: ' + e.getMessage());
         }

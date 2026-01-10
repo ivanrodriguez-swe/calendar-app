@@ -39,8 +39,11 @@ public without sharing class VolunteerAvailabilityService {
         selectedSlot.Status__c = 'Booked';
         update selectedSlot;
         
+        List<Time_Slot__c> refreshedSlots = TimeSlotSelector.getTimeSlotById(selectedSlot.Id);
+        Time_Slot__c slotForEmail = refreshedSlots.isEmpty() ? selectedSlot : refreshedSlots[0];
+        
         Map<String, String> customerInfo = getCustomerInfo(appointmentRequest);
-        BookingEmailService.sendBookingEmails(selectedSlot, customerInfo.get('name'), customerInfo.get('email'), appointment, appointmentRequest);
+        BookingEmailService.sendBookingEmails(slotForEmail, customerInfo.get('name'), customerInfo.get('email'));
         
         return buildResult(true, 'Time slot booked successfully!', appointment.Id);
     }

@@ -107,14 +107,27 @@
                                     value={referencePhone}
                                     onchange={handlePhoneChange}
                                     required
+                                    message-when-value-missing="Please enter a phone number"
+                                    pattern="[0-9]{10,}"
+                                    message-when-pattern-mismatch="Phone number must be at least 10 digits"
+                                    data-id="phoneInput"
                                     disabled={bookingInProgress}>
                                 </lightning-input>
                                 <p class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">Please provide a phone number where we can contact you.</p>
                             </div>
                         </div>
-                        <div class="slds-m-top_medium">
-                            <p class="slds-text-color_weak">By confirming, you will book this time slot.</p>
-                        </div>
+                        <template if:true={bookingError}>
+                            <div class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium" role="alert">
+                                <span class="slds-assistive-text">error</span>
+                                <lightning-icon icon-name="utility:error" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+                                <h2>{bookingError}</h2>
+                            </div>
+                        </template>
+                        <template if:false={bookingError}>
+                            <div class="slds-m-top_medium">
+                                <p class="slds-text-color_weak">By confirming, you will book this time slot.</p>
+                            </div>
+                        </template>
                     </template>
                 </div>
                 <footer class="slds-modal__footer">

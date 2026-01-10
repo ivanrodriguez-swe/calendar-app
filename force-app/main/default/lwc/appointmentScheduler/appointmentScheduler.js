@@ -1,20 +1,20 @@
-import { LightningElement, track, api } from 'lwc';
-import { ShowToastEvent } from 'lightning/platformShowToastEvent';
+import { LightningElement, api } from 'lwc';
 import getAppointmentRequestInfo from '@salesforce/apex/VolunteerAvailabilityController.getAppointmentRequestInfo';
 import getAllAvailableSlots from '@salesforce/apex/VolunteerAvailabilityController.getAllAvailableSlots';
 import bookSlotWithRandomVolunteer from '@salesforce/apex/VolunteerAvailabilityController.bookSlotWithRandomVolunteer';
 
 export default class AppointmentScheduler extends LightningElement {
-    @track loading = true;
-    @track showBookingModal = false;
-    @track selectedSlot = null;
-    @track bookingInProgress = false;
-    @track groupedSlots = [];
-    @track referenceName = '';
-    @track appointmentBooked = false;
-    @track referencePhone = '';
-    
     @api appointmentRequestId = null;
+    
+    loading = true;
+    showBookingModal = false;
+    selectedSlot = null;
+    bookingInProgress = false;
+    groupedSlots = [];
+    referenceName = '';
+    appointmentBooked = false;
+    referencePhone = '';
+    bookingError = '';
     
     get hasAvailableSlots() {
         return this.groupedSlots && this.groupedSlots.length > 0;
@@ -115,10 +115,9 @@ export default class AppointmentScheduler extends LightningElement {
         }
         
         const grouped = Array.from(dateMap.values());
-        grouped.sort((a, b) => a.date < b.date ? -1 : 1);
-        
+        grouped.sort((a, b) => (a.date < b.date ? -1 : 1));
         grouped.forEach(dateGroup => {
-            dateGroup.slots.sort((a, b) => a.startTime < b.startTime ? -1 : 1);
+            dateGroup.slots.sort((a, b) => (a.startTime < b.startTime ? -1 : 1));
         });
         
         this.groupedSlots = grouped;
@@ -171,7 +170,6 @@ export default class AppointmentScheduler extends LightningElement {
 
     handleSlotClick(event) {
         const button = event.currentTarget;
-        
         this.selectedSlot = {
             dayLabel: button.dataset.date,
             time: button.dataset.time,
@@ -185,23 +183,23 @@ export default class AppointmentScheduler extends LightningElement {
     handleCloseModal() {
         this.showBookingModal = false;
         this.selectedSlot = null;
+        this.referencePhone = '';
+        this.bookingError = '';
     }
 
     handlePhoneChange(event) {
         this.referencePhone = event.target.value;
     }
     
-    get isPhoneValid() {
-        return this.referencePhone && this.referencePhone.trim().length >= 10;
+    validateInputs() {
+        const phoneInput = this.template.querySelector('lightning-input[data-id="phoneInput"]');
+        return phoneInput ? phoneInput.reportValidity() : false;
     }
 
     parseTimeToMillis(timeStr) {
         if (!timeStr) return null;
         if (typeof timeStr === 'number') return timeStr;
-        
-        if (!timeStr.includes(':')) {
-            return parseInt(timeStr, 10);
-        }
+        if (!timeStr.includes(':')) return parseInt(timeStr, 10);
         
         const parts = timeStr.split(':');
         const hours = parseInt(parts[0], 10);
@@ -212,17 +210,12 @@ export default class AppointmentScheduler extends LightningElement {
     }
 
     handleConfirmBooking() {
-        if (!this.selectedSlot) {
-            this.showToast('Error', 'Unable to process booking. Please try again.', 'error');
-            return;
-        }
-        
-        if (!this.isPhoneValid) {
-            this.showToast('Error', 'Please enter a valid phone number.', 'error');
+        if (!this.selectedSlot || !this.validateInputs()) {
             return;
         }
 
         this.bookingInProgress = true;
+        this.bookingError = '';
         
         const request = {
             slotDate: this.selectedSlot.slotDate,
@@ -235,23 +228,18 @@ export default class AppointmentScheduler extends LightningElement {
         bookSlotWithRandomVolunteer({ request })
             .then(result => {
                 if (result.success) {
-                    this.showToast('Success', 'Appointment successfully booked!', 'success');
                     this.handleCloseModal();
                     this.appointmentBooked = true;
                     this.groupedSlots = [];
                 } else {
-                    this.showToast('Error', result.message, 'error');
+                    this.bookingError = result.message || 'Unable to book this time slot.';
                 }
             })
             .catch(error => {
-                this.showToast('Error', error.body?.message || 'An error occurred while booking the time slot', 'error');
+                this.bookingError = error.body?.message || 'An error occurred while booking the time slot.';
             })
             .finally(() => {
                 this.bookingInProgress = false;
             });
-    }
-
-    showToast(title, message, variant) {
-        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 }
