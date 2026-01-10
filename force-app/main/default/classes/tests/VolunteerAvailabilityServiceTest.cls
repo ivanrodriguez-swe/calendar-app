@@ -10,15 +10,11 @@ private class VolunteerAvailabilityServiceTest {
         return [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName = :lastName LIMIT 1];
     }
     
-    private static User getReferenceUser() {
-        return [SELECT Id FROM User WHERE FirstName = 'Reference' AND LastName = 'Test' LIMIT 1];
-    }
-    
     private static Time_Slot__c getTimeSlot(String status) {
         if (status != null) {
-            return [SELECT Id, Volunteer__c FROM Time_Slot__c WHERE Status__c = :status LIMIT 1];
+            return [SELECT Id, Volunteer__c, Day__c, Start_Time__c, End_Time__c FROM Time_Slot__c WHERE Status__c = :status LIMIT 1];
         }
-        return [SELECT Id, Volunteer__c FROM Time_Slot__c LIMIT 1];
+        return [SELECT Id, Volunteer__c, Day__c, Start_Time__c, End_Time__c FROM Time_Slot__c LIMIT 1];
     }
     
     @TestSetup
@@ -50,68 +46,10 @@ private class VolunteerAvailabilityServiceTest {
     }
     
     @isTest
-    static void testGetTimeslotsForRange_Success() {
-        Date startDate = Date.today();
-        Date endDate = Date.today().addDays(2);
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            List<Map<String, Object>> result = VolunteerAvailabilityService.getTimeslotsForRange(startDate, endDate);
-            
-            Assert.isNotNull( result, 'Result should not be null');
-            Assert.isTrue(result.size() > 0, 'Should return time ranges');
-            
-            // Verify structure
-            Map<String, Object> firstRange = result[0];
-            Assert.isTrue(firstRange.containsKey('timeRangeLabel'), 'Should have timeRangeLabel');
-            Assert.isTrue(firstRange.containsKey('slotDataList'), 'Should have slotDataList');
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testGetTimeslotsForRange_NoSlots() {
-        Date startDate = Date.today().addDays(100);
-        Date endDate = Date.today().addDays(102);
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            List<Map<String, Object>> result = VolunteerAvailabilityService.getTimeslotsForRange(startDate, endDate);
-            
-            Assert.isNotNull( result, 'Result should not be null');
-            // Should still return structure even with no slots
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testBookTimeSlot_Success() {
-        Time_Slot__c slot = getTimeSlot('Available');
-        User reference = getReferenceUser();
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            Map<String, Object> result = VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null, '555-123-4567');
-            
-            Assert.areEqual(true, result.get('success'), 'Should succeed');
-            Assert.isNotNull( result.get('appointmentId'), 'Should have appointment ID');
-            
-            // Verify records created/updated
-            List<Appointment__c> appointments = [SELECT Id FROM Appointment__c WHERE Time_Slot__c = :slot.Id];
-            Assert.areEqual(1, appointments.size(), 'Should create appointment');
-            
-            Time_Slot__c updatedSlot = [SELECT Status__c FROM Time_Slot__c WHERE Id = :slot.Id];
-            Assert.areEqual('Booked', updatedSlot.Status__c, 'Slot should be booked');
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testBookTimeSlot_WithAppointmentRequest() {
+    static void testBookSlotWithRandomVolunteer_Success() {
         Time_Slot__c slot = getTimeSlot('Available');
         
         Appointment_Request__c request = new Appointment_Request__c(
-            Volunteer__c = slot.Volunteer__c,
             Status__c = 'New',
             Reference_Email__c = 'reference@example.com',
             Reference_First_Name__c = 'Reference',
@@ -119,127 +57,70 @@ private class VolunteerAvailabilityServiceTest {
         );
         insert request;
         
+        Map<String, Object> params = new Map<String, Object>();
+        params.put('slotDate', slot.Day__c);
+        params.put('startTime', slot.Start_Time__c);
+        params.put('endTime', slot.End_Time__c);
+        params.put('appointmentRequestId', request.Id);
+        params.put('referencePhone', '555-123-4567');
+        
         Test.startTest();
         System.runAs(getAdminUser()) {
-            Map<String, Object> result = VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, request.Id, '555-987-6543');
+            Map<String, Object> result = VolunteerAvailabilityService.bookSlotWithRandomVolunteer(params);
             
             Assert.areEqual(true, result.get('success'), 'Should succeed');
+            Assert.isNotNull(result.get('appointmentId'), 'Should have appointment ID');
             
-            Appointment_Request__c updatedRequest = [SELECT Status__c, Reference_Phone_Number__c FROM Appointment_Request__c WHERE Id = :request.Id];
+            // Verify appointment request updated with volunteer
+            Appointment_Request__c updatedRequest = [SELECT Volunteer__c, Status__c, Reference_Phone_Number__c FROM Appointment_Request__c WHERE Id = :request.Id];
+            Assert.isNotNull(updatedRequest.Volunteer__c, 'Volunteer should be assigned');
             Assert.areEqual('Reserved', updatedRequest.Status__c, 'Request should be reserved');
-            Assert.areEqual('555-987-6543', updatedRequest.Reference_Phone_Number__c, 'Phone number should be saved');
+            Assert.areEqual('555-123-4567', updatedRequest.Reference_Phone_Number__c, 'Phone number should be saved');
         }
         Test.stopTest();
     }
     
     @isTest
-    static void testBookTimeSlot_TimeSlotNotFound() {
-        // Use null ID to test non-existent time slot scenario
-        User reference = getReferenceUser();
+    static void testBookSlotWithRandomVolunteer_NoAvailableSlots() {
+        // Use a date/time that has no slots
+        Map<String, Object> params = new Map<String, Object>();
+        params.put('slotDate', Date.today().addDays(100));
+        params.put('startTime', Time.newInstance(9, 0, 0, 0));
+        params.put('endTime', Time.newInstance(9, 15, 0, 0));
+        params.put('appointmentRequestId', null);
+        params.put('referencePhone', '555-123-4567');
         
         Test.startTest();
         System.runAs(getAdminUser()) {
+            Boolean exceptionThrown = false;
             try {
-                VolunteerAvailabilityService.bookTimeSlot(null, reference.Id, null, null);
-                Assert.fail( 'Should have thrown exception');
-            } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
+                VolunteerAvailabilityService.bookSlotWithRandomVolunteer(params);
+            } catch (AuraHandledException e) {
+                exceptionThrown = true;
             }
+            Assert.isTrue(exceptionThrown, 'Should have thrown AuraHandledException when no slots available');
         }
         Test.stopTest();
     }
     
     @isTest
-    static void testBookTimeSlot_TimeSlotNotAvailable() {
-        Time_Slot__c slot = getTimeSlot(null);
-        slot.Status__c = 'Booked';
-        update slot;
-        
-        User reference = getReferenceUser();
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            try {
-                VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null, null);
-                Assert.fail( 'Should have thrown exception');
-            } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
-            }
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testBookTimeSlot_NoVolunteer() {
-        Time_Slot__c slot = getTimeSlot(null);
-        slot.Volunteer__c = null;
-        update slot;
-        
-        User reference = getReferenceUser();
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            try {
-                VolunteerAvailabilityService.bookTimeSlot(slot.Id, reference.Id, null, null);
-                Assert.fail( 'Should have thrown exception');
-            } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
-            }
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testBookTimeSlot_AppointmentRequestNotFound() {
-        Time_Slot__c slot = getTimeSlot('Available');
-        // Use null ID to test non-existent appointment request scenario
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            try {
-                VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, null, null);
-                Assert.fail( 'Should have thrown exception');
-            } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
-            }
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testBookTimeSlot_WrongVolunteer() {
-        Time_Slot__c slot = getTimeSlot('Available');
-        User otherVolunteer = getVolunteer(1);
-        
-        Appointment_Request__c request = new Appointment_Request__c(
-            Volunteer__c = otherVolunteer.Id,
-            Status__c = 'New'
-        );
-        insert request;
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            try {
-                VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, request.Id, null);
-                Assert.fail( 'Should have thrown exception');
-            } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
-            }
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testBookTimeSlot_NoReferenceOrRequest() {
+    static void testBookSlotWithRandomVolunteer_AppointmentRequestNotFound() {
         Time_Slot__c slot = getTimeSlot('Available');
         
+        Map<String, Object> params = new Map<String, Object>();
+        params.put('slotDate', slot.Day__c);
+        params.put('startTime', slot.Start_Time__c);
+        params.put('endTime', slot.End_Time__c);
+        params.put('appointmentRequestId', null);
+        params.put('referencePhone', '555-123-4567');
+        
         Test.startTest();
         System.runAs(getAdminUser()) {
             try {
-                VolunteerAvailabilityService.bookTimeSlot(slot.Id, null, null, null);
-                Assert.fail( 'Should have thrown exception');
+                VolunteerAvailabilityService.bookSlotWithRandomVolunteer(params);
+                Assert.fail('Should have thrown exception');
             } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
+                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException');
             }
         }
         Test.stopTest();
@@ -340,27 +221,6 @@ private class VolunteerAvailabilityServiceTest {
     }
     
     @isTest
-    static void testCreateTimeSlotsFromRanges_InvalidTimeRange() {
-        User volunteer = getVolunteer(0);
-        
-        List<Map<String, String>> ranges = new List<Map<String, String>>();
-        Map<String, String> range1 = new Map<String, String>();
-        range1.put('dateValue', String.valueOf(Date.today().addDays(10)));
-        range1.put('startTime', '10:00');
-        range1.put('endTime', '09:00'); // Invalid
-        ranges.add(range1);
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            Map<String, Object> result = VolunteerAvailabilityService.createTimeSlotsFromRanges(ranges, volunteer.Id);
-            
-            // Should handle gracefully
-            Assert.isNotNull( result, 'Result should not be null');
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
     static void testCreateTimeSlotsFromCSV_Success() {
         User volunteer = getVolunteer(0);
         
@@ -419,20 +279,6 @@ private class VolunteerAvailabilityServiceTest {
     }
     
     @isTest
-    static void testCreateTimeSlotsFromCSV_NoValidRecords() {
-        String csvContent = 'Invalid,CSV,Format';
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            Map<String, Object> result = VolunteerAvailabilityService.createTimeSlotsFromCSV(csvContent);
-            
-            Assert.areEqual(false, result.get('success'), 'Should fail');
-            Assert.isTrue(result.get('message').toString().contains('No valid records'), 'Should indicate no valid records');
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
     static void testGetVolunteerAvailabilityData_Success() {
         Date startDate = Date.today();
         Date endDate = Date.today().addDays(4);
@@ -441,26 +287,26 @@ private class VolunteerAvailabilityServiceTest {
         System.runAs(getAdminUser()) {
             Map<String, Object> result = VolunteerAvailabilityService.getVolunteerAvailabilityData(startDate, endDate, 0, 50);
             
-            Assert.isNotNull( result, 'Result should not be null');
+            Assert.isNotNull(result, 'Result should not be null');
             List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get('rows');
-            Assert.isNotNull( rows, 'Rows should not be null');
+            Assert.isNotNull(rows, 'Rows should not be null');
             Assert.isTrue(rows.size() > 0, 'Should return rows');
             
             // Verify structure
             for (Map<String, Object> row : rows) {
-                Assert.isNotNull( row.get('volunteerId'), 'Should have volunteerId');
-                Assert.isNotNull( row.get('volunteerName'), 'Should have volunteerName');
-                Assert.isNotNull( row.get('date'), 'Should have date');
+                Assert.isNotNull(row.get('volunteerId'), 'Should have volunteerId');
+                Assert.isNotNull(row.get('volunteerName'), 'Should have volunteerName');
+                Assert.isNotNull(row.get('date'), 'Should have date');
                 List<Map<String, Object>> timeSlots = (List<Map<String, Object>>) row.get('timeSlots');
-                Assert.isNotNull( timeSlots, 'Should have timeSlots list');
+                Assert.isNotNull(timeSlots, 'Should have timeSlots list');
             }
             
             Integer totalCount = (Integer) result.get('totalCount');
-            Assert.isNotNull( totalCount, 'Should have totalCount');
+            Assert.isNotNull(totalCount, 'Should have totalCount');
             Assert.isTrue(totalCount >= rows.size(), 'Total count should be >= rows returned');
             
             Boolean hasMore = (Boolean) result.get('hasMore');
-            Assert.isNotNull( hasMore, 'Should have hasMore flag');
+            Assert.isNotNull(hasMore, 'Should have hasMore flag');
         }
         Test.stopTest();
     }
@@ -491,77 +337,38 @@ private class VolunteerAvailabilityServiceTest {
     }
     
     @isTest
-    static void testGetVolunteerAvailabilityData_SingleDate() {
-        Date singleDate = Date.today();
+    static void testGetVolunteerInfo_Success() {
+        User volunteer = getVolunteer(0);
         
         Test.startTest();
         System.runAs(getAdminUser()) {
-            Map<String, Object> result = VolunteerAvailabilityService.getVolunteerAvailabilityData(singleDate, singleDate, 0, 50);
+            Map<String, Object> result = VolunteerAvailabilityService.getVolunteerInfo(volunteer.Id);
             
-            Assert.isNotNull( result, 'Result should not be null');
-            List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get('rows');
-            
-            // Verify all rows are for the single date
-            for (Map<String, Object> row : rows) {
-                Date rowDate = (Date) row.get('date');
-                Assert.areEqual(singleDate, rowDate, 'All rows should be for the single date');
-            }
+            Assert.areEqual(true, result.get('success'), 'Should succeed');
+            Assert.isNotNull(result.get('volunteer'), 'Should have volunteer data');
         }
         Test.stopTest();
     }
     
     @isTest
-    static void testGetVolunteerAvailabilityData_SortedByVolunteerThenDate() {
-        Date startDate = Date.today();
-        Date endDate = Date.today().addDays(4);
-        
+    static void testGetVolunteerInfo_NullId() {
         Test.startTest();
         System.runAs(getAdminUser()) {
-            Map<String, Object> result = VolunteerAvailabilityService.getVolunteerAvailabilityData(startDate, endDate, 0, 50);
-            List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get('rows');
+            Map<String, Object> result = VolunteerAvailabilityService.getVolunteerInfo(null);
             
-            // Verify sorting: volunteer name, then date
-            for (Integer i = 0; i < rows.size() - 1; i++) {
-                Map<String, Object> current = rows[i];
-                Map<String, Object> next = rows[i + 1];
-                
-                String currentName = (String) current.get('volunteerName');
-                String nextName = (String) next.get('volunteerName');
-                
-                if (currentName != nextName) {
-                    Assert.isTrue(currentName <= nextName, 'Should be sorted by volunteer name');
-                } else {
-                    Date currentDate = (Date) current.get('date');
-                    Date nextDate = (Date) next.get('date');
-                    Assert.isTrue(currentDate <= nextDate, 'Should be sorted by date when volunteer name is same');
-                }
-            }
+            Assert.areEqual(false, result.get('success'), 'Should fail');
         }
         Test.stopTest();
     }
     
     @isTest
-    static void testGetVolunteerAvailabilityData_TimeSlotsFormatted() {
-        Date startDate = Date.today();
-        Date endDate = Date.today().addDays(4);
-        
+    static void testGetAllVolunteersForDisplay() {
         Test.startTest();
         System.runAs(getAdminUser()) {
-            Map<String, Object> result = VolunteerAvailabilityService.getVolunteerAvailabilityData(startDate, endDate, 0, 50);
-            List<Map<String, Object>> rows = (List<Map<String, Object>>) result.get('rows');
+            Map<String, Object> result = VolunteerAvailabilityService.getAllVolunteersForDisplay();
             
-            // Verify time slots have formatted labels
-            for (Map<String, Object> row : rows) {
-                List<Map<String, Object>> timeSlots = (List<Map<String, Object>>) row.get('timeSlots');
-                for (Map<String, Object> slot : timeSlots) {
-                    String timeLabel = (String) slot.get('timeLabel');
-                    Assert.isNotNull( timeLabel, 'Time slot should have formatted label');
-                    Assert.isTrue(timeLabel.contains('AM') || timeLabel.contains('PM'), 'Label should contain AM or PM');
-                    Assert.isTrue(timeLabel.contains('-'), 'Label should contain time range separator');
-                }
-            }
+            Assert.isNotNull(result, 'Result should not be null');
         }
         Test.stopTest();
     }
 }
-

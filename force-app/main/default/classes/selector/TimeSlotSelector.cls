@@ -1,12 +1,5 @@
 public inherited sharing class TimeSlotSelector {
     
-    /**
-     * Get available time slots for a date range, optionally filtered by volunteers
-     * @param startDate Start date (inclusive), null to ignore start date filter
-     * @param endDate End date (inclusive), null to ignore end date filter
-     * @param volunteerIds Optional set of volunteer IDs to filter by (null or empty = all volunteers)
-     * @return Map of volunteer ID to their list of available time slots
-     */
     public static Map<Id, List<Time_Slot__c>> getAvailableTimeSlotsForRange(Date startDate, Date endDate, Set<Id> volunteerIds) {
         String query = 'SELECT Id, Start_Time__c, End_Time__c, Day__c, Status__c, Volunteer__c, Volunteer__r.Name ' +
                        'FROM Time_Slot__c ' +
@@ -23,18 +16,15 @@ public inherited sharing class TimeSlotSelector {
         }
         query += ' ORDER BY Day__c, Start_Time__c';
         
-        // Get current datetime to filter out past time slots (with 15 min buffer)
         DateTime nowDT = DateTime.now().addMinutes(15);
         Date today = Date.today();
         Time currentTime = Time.newInstance(nowDT.hour(), nowDT.minute(), 0, 0);
         
         Map<Id, List<Time_Slot__c>> result = new Map<Id, List<Time_Slot__c>>();
         for (Time_Slot__c slot : Database.query(query)) {
-            // Skip time slots that are in the past
             if (slot.Day__c < today) {
                 continue;
             }
-            // For today, skip time slots where start time has already passed
             if (slot.Day__c == today && slot.Start_Time__c != null && slot.Start_Time__c <= currentTime) {
                 continue;
             }
@@ -47,11 +37,6 @@ public inherited sharing class TimeSlotSelector {
         return result;
     }
     
-    /**
-     * Get a single time slot by ID with volunteer details
-     * @param timeSlotId Time slot record ID
-     * @return Time slot with volunteer email and name
-     */
     public static List<Time_Slot__c> getTimeSlotById(Id timeSlotId) {
         return [
             SELECT Id, Volunteer__c, Volunteer__r.Email, Volunteer__r.Name, 
@@ -62,12 +47,6 @@ public inherited sharing class TimeSlotSelector {
         ];
     }
     
-    /**
-     * Get existing time slots by dates and volunteer IDs
-     * @param dates Set of dates to query
-     * @param volunteerIds Set of volunteer IDs to query
-     * @return List of existing time slots matching the criteria
-     */
     public static List<Time_Slot__c> getExistingTimeSlotsByDatesAndVolunteers(Set<Date> dates, Set<Id> volunteerIds) {
         return [
             SELECT Day__c, Start_Time__c, End_Time__c, Volunteer__c
@@ -77,13 +56,6 @@ public inherited sharing class TimeSlotSelector {
         ];
     }
     
-    /**
-     * Get all time slots (both Available and Booked) for a date range
-     * If startDate and endDate are null, returns all time slots
-     * @param startDate Start date (inclusive), null to get all records
-     * @param endDate End date (inclusive), null to get all records
-     * @return List of all time slots with volunteer information, ordered by volunteer name, date, and start time
-     */
     public static List<Time_Slot__c> getAllTimeSlotsForRange(Date startDate, Date endDate) {
         if (startDate == null && endDate == null) {
             return [
@@ -112,16 +84,25 @@ public inherited sharing class TimeSlotSelector {
             Date normalizedStartDate = Date.newInstance(startDate.year(), startDate.month(), startDate.day());
             Date normalizedEndDate = Date.newInstance(endDate.year(), endDate.month(), endDate.day());
             
-            List<Time_Slot__c> results = [
+            return [
                 SELECT Id, Start_Time__c, End_Time__c, Day__c, Status__c, 
                        Volunteer__c, Volunteer__r.Name, Volunteer__r.Email
                 FROM Time_Slot__c
                 WHERE Day__c >= :normalizedStartDate AND Day__c <= :normalizedEndDate
                 ORDER BY Volunteer__r.Name, Day__c, Start_Time__c
             ];
-            
-            return results;
         }
     }
+    
+    public static List<Time_Slot__c> getAvailableSlotsByDateTime(Date slotDate, Time startTime, Time endTime) {
+        return [
+            SELECT Id, Volunteer__c, Volunteer__r.Email, Volunteer__r.Name, 
+                   Day__c, Start_Time__c, End_Time__c
+            FROM Time_Slot__c
+            WHERE Day__c = :slotDate
+            AND Start_Time__c = :startTime
+            AND End_Time__c = :endTime
+            AND Status__c = 'Available'
+        ];
+    }
 }
-

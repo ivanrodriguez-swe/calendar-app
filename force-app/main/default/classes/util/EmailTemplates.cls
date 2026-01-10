@@ -1,12 +1,5 @@
-/**
- * Email Templates for OHR Scheduler
- * Centralized class for all email content generation
- */
 public class EmailTemplates {
     
-    /**
-     * Email content wrapper class
-     */
     public class EmailContent {
         public String subject { get; set; }
         public String htmlBody { get; set; }
@@ -19,12 +12,6 @@ public class EmailTemplates {
         }
     }
     
-    /**
-     * Generate appointment invite email content
-     * @param recipientName Recipient's first name
-     * @param inviteUrl URL for scheduling appointment
-     * @return EmailContent with subject, HTML body, and plain text body
-     */
     public static EmailContent getAppointmentInviteEmail(String recipientName, String inviteUrl) {
         String firstName = String.isNotBlank(recipientName) ? recipientName : 'Guest';
         
@@ -50,15 +37,6 @@ public class EmailTemplates {
         return new EmailContent(subject, htmlBody, plainTextBody);
     }
     
-    /**
-     * Generate volunteer notification email content
-     * @param volunteerName Volunteer's name
-     * @param customerName Customer's name
-     * @param customerEmail Customer's email
-     * @param appointmentDate Date of the appointment
-     * @param timeRange Time range string (e.g., "9:00 AM - 10:00 AM")
-     * @return EmailContent with subject, HTML body, and plain text body
-     */
     public static EmailContent getVolunteerNotificationEmail(
         String volunteerName, 
         String customerName, 
@@ -94,14 +72,6 @@ public class EmailTemplates {
         return new EmailContent(subject, htmlBody, plainTextBody);
     }
     
-    /**
-     * Generate customer confirmation email content
-     * @param customerName Customer's name
-     * @param volunteerName Volunteer's name
-     * @param appointmentDate Date of the appointment
-     * @param timeRange Time range string (e.g., "9:00 AM - 10:00 AM")
-     * @return EmailContent with subject, HTML body, and plain text body
-     */
     public static EmailContent getCustomerConfirmationEmail(
         String customerName, 
         String volunteerName, 
@@ -136,4 +106,3 @@ public class EmailTemplates {
         return new EmailContent(subject, htmlBody, plainTextBody);
     }
 }
-

@@ -1,10 +1,5 @@
 public inherited sharing class OHRUserSelector {
     
-    /**
-     * Get users by email addresses
-     * @param emails Set of email addresses to query
-     * @return List of active users matching the email addresses
-     */
     public static List<User> getUsersByEmails(Set<String> emails) {
         return [
             SELECT Id, Email, IsActive 
@@ -14,11 +9,6 @@ public inherited sharing class OHRUserSelector {
         ];
     }
     
-    /**
-     * Get user by ID
-     * @param userId User record ID
-     * @return User record with name and email
-     */
     public static List<User> getUserById(Id userId) {
         return [
             SELECT Id, Name, Email 
@@ -28,11 +18,6 @@ public inherited sharing class OHRUserSelector {
         ];
     }
     
-    /**
-     * Get user by ID with full details
-     * @param userId User record ID
-     * @return User record with full details including IsActive and CreatedDate
-     */
     public static List<User> getUserByIdWithDetails(Id userId) {
         return [
             SELECT Id, Name, Email, IsActive, CreatedDate
@@ -43,10 +28,6 @@ public inherited sharing class OHRUserSelector {
         ];
     }
     
-    /**
-     * Get all active users (volunteers)
-     * @return List of all active users ordered by name
-     */
     public static List<User> getAllActiveUsers() {
         return [
             SELECT Id, Name, Email, IsActive, CreatedDate
@@ -55,6 +36,4 @@ public inherited sharing class OHRUserSelector {
             ORDER BY Name
         ];
     }
-    
 }
-

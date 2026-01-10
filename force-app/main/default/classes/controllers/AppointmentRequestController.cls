@@ -1,10 +1,5 @@
 public with sharing class AppointmentRequestController {
     
-    /**
-     * Process file to create Selectees and Appointment Requests
-     * @param fileContent The file content
-     * @return ProcessFileResult with selecteesCreated and requestsCreated
-     */
     @AuraEnabled
     public static ProcessFileResult processFile(String fileContent) {
         Map<String, Object> serviceResult = AppointmentRequestService.processFile(fileContent);
@@ -18,9 +13,6 @@ public with sharing class AppointmentRequestController {
         return result;
     }
     
-    /**
-     * Process file result
-     */
     public class ProcessFileResult {
         @AuraEnabled public Boolean success;
         @AuraEnabled public String message;
@@ -34,11 +26,6 @@ public with sharing class AppointmentRequestController {
         }
     }
     
-    /**
-     * Upload CSV and create appointment requests (legacy method)
-     * @param csvContent CSV content
-     * @return UploadResult
-     */
     @AuraEnabled
     public static UploadResult uploadCSV(String csvContent) {
         Map<String, Object> serviceResult = AppointmentRequestService.uploadCSV(csvContent);
@@ -52,9 +39,6 @@ public with sharing class AppointmentRequestController {
         return result;
     }
     
-    /**
-     * Upload result (legacy)
-     */
     public class UploadResult {
         @AuraEnabled public Boolean success;
         @AuraEnabled public String message;
@@ -68,11 +52,6 @@ public with sharing class AppointmentRequestController {
         }
     }
     
-    /**
-     * Send invite emails to selected Appointment Requests
-     * @param requestIds List of Appointment Request IDs
-     * @return SendInvitesResult with emailsSent and errors
-     */
     @AuraEnabled
     public static SendInvitesResult sendInviteEmails(List<Id> requestIds) {
         Map<String, Object> serviceResult = BookingEmailService.sendInviteEmails(requestIds);
@@ -85,9 +64,6 @@ public with sharing class AppointmentRequestController {
         return result;
     }
     
-    /**
-     * Send invites result
-     */
     public class SendInvitesResult {
         @AuraEnabled public Boolean success;
         @AuraEnabled public Integer emailsSent;
@@ -100,10 +76,6 @@ public with sharing class AppointmentRequestController {
         }
     }
     
-    /**
-     * Get Appointment Requests with New status for the Send Invites datatable
-     * @return List of Appointment Requests with New status
-     */
     @AuraEnabled(cacheable=true)
     public static List<Appointment_Request__c> getNewAppointmentRequests() {
         return [

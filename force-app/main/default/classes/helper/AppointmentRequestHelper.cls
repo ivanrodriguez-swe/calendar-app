@@ -1,14 +1,5 @@
 public without sharing class AppointmentRequestHelper {
     
-    /**
-     * Parse CSV file for Selectee and Appointment Request creation
-     * Expected columns: Selectee Last Name, Selectee First Name, Selectee Email, Expected EOD, Discipline,
-     *                   Reference#1 Name, Reference#1 Email, Reference#1 Relationship,
-     *                   Reference#2 Name, Reference#2 Email, Reference#2 Relationship,
-     *                   Reference#3 Name, Reference#3 Email, Reference#3 Relationship
-     * @param fileContent The CSV file content
-     * @return List of parsed selectee data with their references
-     */
     public static List<Map<String, Object>> parseFile(String fileContent) {
         List<Map<String, Object>> dataList = new List<Map<String, Object>>();
         
@@ -19,7 +10,6 @@ public without sharing class AppointmentRequestHelper {
         String normalizedContent = fileContent.replace('\r\n', '\n').replace('\r', '\n');
         List<String> lines = normalizedContent.split('\n');
         
-        // Skip header row
         Integer startIndex = 0;
         if (lines.size() > 0) {
             String firstLine = lines[0].trim().toLowerCase();
@@ -42,21 +32,17 @@ public without sharing class AppointmentRequestHelper {
             
             List<String> values = parseCSVLine(line);
             
-            // Need at least 5 columns for Selectee info
             if (values.size() >= 5) {
                 Map<String, Object> selecteeData = new Map<String, Object>();
                 
-                // Selectee info
                 selecteeData.put('selecteeLastName', values[0].trim());
                 selecteeData.put('selecteeFirstName', values[1].trim());
                 selecteeData.put('selecteeEmail', values[2].trim());
                 selecteeData.put('expectedEOD', values[3].trim());
                 selecteeData.put('discipline', values[4].trim());
                 
-                // References (up to 3) - valid if both name and email are provided
                 List<Map<String, String>> references = new List<Map<String, String>>();
                 
-                // Reference 1 (columns 5, 6, 7)
                 if (values.size() >= 7 && String.isNotBlank(values[5].trim()) && String.isNotBlank(values[6].trim())) {
                     Map<String, String> ref1 = new Map<String, String>();
                     ref1.put('name', values[5].trim());
@@ -65,7 +51,6 @@ public without sharing class AppointmentRequestHelper {
                     references.add(ref1);
                 }
                 
-                // Reference 2 (columns 8, 9, 10)
                 if (values.size() >= 10 && String.isNotBlank(values[8].trim()) && String.isNotBlank(values[9].trim())) {
                     Map<String, String> ref2 = new Map<String, String>();
                     ref2.put('name', values[8].trim());
@@ -74,7 +59,6 @@ public without sharing class AppointmentRequestHelper {
                     references.add(ref2);
                 }
                 
-                // Reference 3 (columns 11, 12, 13)
                 if (values.size() >= 13 && String.isNotBlank(values[11].trim()) && String.isNotBlank(values[12].trim())) {
                     Map<String, String> ref3 = new Map<String, String>();
                     ref3.put('name', values[11].trim());
@@ -85,7 +69,6 @@ public without sharing class AppointmentRequestHelper {
                 
                 selecteeData.put('references', references);
                 
-                // Only add if we have valid selectee info
                 if (String.isNotBlank((String)selecteeData.get('selecteeLastName')) && 
                     String.isNotBlank((String)selecteeData.get('selecteeFirstName'))) {
                     dataList.add(selecteeData);
@@ -276,4 +259,3 @@ public without sharing class AppointmentRequestHelper {
         }
     }
 }
-

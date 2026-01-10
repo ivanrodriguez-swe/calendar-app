@@ -27,44 +27,34 @@
                     </template>
                     
                     <template if:true={hasAvailableSlots}>
-                    <div class="slots-container">
-                        <template for:each={groupedSlots} for:item="dateGroup">
-                            <div key={dateGroup.date} class="date-row slds-box slds-m-bottom_small">
-                                <div class="slds-text-heading_small slds-m-bottom_x-small">
-                                    <lightning-icon icon-name="utility:event" size="x-small" class="slds-m-right_x-small"></lightning-icon>
-                                    {dateGroup.dateFormatted}
+                        <div class="slots-container">
+                            <template for:each={groupedSlots} for:item="dateGroup">
+                                <div key={dateGroup.date} class="date-row slds-box slds-m-bottom_small">
+                                    <div class="slds-text-heading_small slds-m-bottom_x-small">
+                                        <lightning-icon icon-name="utility:event" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                        {dateGroup.dateFormatted}
+                                    </div>
+                                    <div class="time-slots slds-wrap slds-gutters">
+                                        <template for:each={dateGroup.slots} for:item="slot">
+                                            <lightning-button
+                                                key={slot.key}
+                                                label={slot.timeFormatted}
+                                                variant="neutral"
+                                                data-date={slot.dateFormatted}
+                                                data-time={slot.timeFormatted}
+                                                data-slot-date={slot.date}
+                                                data-start-time={slot.startTime}
+                                                data-end-time={slot.endTime}
+                                                onclick={handleSlotClick}
+                                                class="slds-m-right_x-small slds-m-bottom_x-small">
+                                            </lightning-button>
+                                        </template>
+                                    </div>
                                 </div>
-                                <div class="time-slots slds-wrap slds-gutters">
-                                    <template for:each={dateGroup.slots} for:item="slot">
-                                        <lightning-button
-                                            key={slot.id}
-                                            label={slot.timeFormatted}
-                                            variant="neutral"
-                                            data-slot-id={slot.id}
-                                            data-date={slot.dateFormatted}
-                                            data-time={slot.timeFormatted}
-                                            data-volunteer={slot.volunteerName}
-                                            onclick={handleSlotClick}
-                                            class="slds-m-right_x-small slds-m-bottom_x-small">
-                                        </lightning-button>
-                                    </template>
-                                </div>
-                            </div>
-                        </template>
-                    </div>
-                </template>
-                <template if:false={hasAvailableSlots}>
-                    <template if:true={noVolunteerAssigned}>
-                        <div class="slds-illustration slds-illustration_small slds-p-around_medium slds-align_absolute-center">
-                            <div class="slds-text-longform slds-text-align_center">
-                                <h3 class="slds-text-heading_medium">No Volunteer Assigned</h3>
-                                <p class="slds-text-body_regular slds-text-color_weak">
-                                    A volunteer has not been assigned to this request yet. Please check back later.
-                                </p>
-                            </div>
+                            </template>
                         </div>
                     </template>
-                    <template if:false={noVolunteerAssigned}>
+                    <template if:false={hasAvailableSlots}>
                         <div class="slds-illustration slds-illustration_small slds-p-around_medium slds-align_absolute-center">
                             <div class="slds-text-longform slds-text-align_center">
                                 <h3 class="slds-text-heading_medium">No Available Time Slots</h3>
@@ -74,7 +64,6 @@
                             </div>
                         </div>
                     </template>
-                </template>
                 </template>
             </template>
         </div>
@@ -108,12 +97,6 @@
                                             <dd class="slds-item_detail slds-truncate"><strong>{selectedSlot.time}</strong></dd>
                                         </dl>
                                     </div>
-                                    <div class="slds-col">
-                                        <dl class="slds-list_horizontal slds-wrap">
-                                            <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Volunteer">Volunteer:</dt>
-                                            <dd class="slds-item_detail slds-truncate"><strong>{selectedSlot.volunteerName}</strong></dd>
-                                        </dl>
-                                    </div>
                                 </div>
                             </div>
                             <div class="slds-col slds-size_1-of-2">
@@ -143,4 +126,3 @@
         <div class="slds-backdrop slds-backdrop_open"></div>
     </template>
 </template>
-

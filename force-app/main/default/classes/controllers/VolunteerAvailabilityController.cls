@@ -1,34 +1,73 @@
 public without sharing class VolunteerAvailabilityController {
     
-    @AuraEnabled(cacheable=true)
-    public static List<DayWrapper> getTimeslotsForRange(Date startDate, Date endDate, Id volunteerId) {
-        if (startDate == null || endDate == null) {
-            throw new AuraHandledException('startDate and endDate are required.');
-        }
-        
-        List<Map<String, Object>> organizedData = VolunteerAvailabilityService.getTimeslotsForRange(startDate, endDate, volunteerId);
-        
-        return convertToDayWrappers(organizedData);
-    }
     @AuraEnabled
-    public static BookingResult bookTimeSlot(Id timeSlotId, Id customerId, Id appointmentRequestId, String referencePhone) {
+    public static BookingResult bookSlotWithRandomVolunteer(BookingRequest request) {
         try {
-            Map<String, Object> serviceResult = VolunteerAvailabilityService.bookTimeSlot(timeSlotId, customerId, appointmentRequestId, referencePhone);
+            Date slotDate = Date.valueOf(request.slotDate);
+            Time startTime = convertMillisToTime(request.startTime);
+            Time endTime = convertMillisToTime(request.endTime);
+            
+            Map<String, Object> params = new Map<String, Object>();
+            params.put('slotDate', slotDate);
+            params.put('startTime', startTime);
+            params.put('endTime', endTime);
+            params.put('appointmentRequestId', request.appointmentRequestId);
+            params.put('referencePhone', request.referencePhone);
+            
+            Map<String, Object> serviceResult = VolunteerAvailabilityService.bookSlotWithRandomVolunteer(params);
             return new BookingResult(
                 (Boolean) serviceResult.get('success'),
                 (String) serviceResult.get('message'),
                 (Id) serviceResult.get('appointmentId')
             );
         } catch (Exception e) {
-            throw new AuraHandledException('Error booking time slot: ' + e.getMessage());
+            throw new AuraHandledException(e.getMessage());
         }
+    }
+    
+    private static Time convertMillisToTime(Long millis) {
+        Integer totalSeconds = (Integer) (millis / 1000);
+        Integer hours = totalSeconds / 3600;
+        Integer minutes = Math.mod(totalSeconds / 60, 60);
+        Integer seconds = Math.mod(totalSeconds, 60);
+        return Time.newInstance(hours, minutes, seconds, 0);
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static AppointmentRequestInfo getAppointmentRequestInfo(Id requestId) {
+        if (requestId == null) {
+            return null;
+        }
+        List<Appointment_Request__c> requests = [
+            SELECT Id, Reference_First_Name__c, Status__c 
+            FROM Appointment_Request__c 
+            WHERE Id = :requestId
+            LIMIT 1
+        ];
+        if (requests.isEmpty()) {
+            return null;
+        }
+        return new AppointmentRequestInfo(requests[0]);
+    }
+    
+    @AuraEnabled(cacheable=true)
+    public static List<AvailableSlotWrapper> getAllAvailableSlots() {
+        Map<Id, List<Time_Slot__c>> slotsByVolunteer = TimeSlotSelector.getAvailableTimeSlotsForRange(null, null, null);
+        List<AvailableSlotWrapper> results = new List<AvailableSlotWrapper>();
+        
+        for (Id volId : slotsByVolunteer.keySet()) {
+            for (Time_Slot__c slot : slotsByVolunteer.get(volId)) {
+                results.add(new AvailableSlotWrapper(slot));
+            }
+        }
+        
+        return results;
     }
 
     @AuraEnabled
     public static CreateSlotsResult createTimeSlotsFromRanges(List<AvailabilityRange> ranges) {
         try {
             List<Map<String, String>> serviceRanges = convertToServiceRanges(ranges);
-            
             Map<String, Object> serviceResult = VolunteerAvailabilityService.createTimeSlotsFromRanges(serviceRanges, UserInfo.getUserId());
             
             return new CreateSlotsResult(
@@ -63,25 +102,14 @@ public without sharing class VolunteerAvailabilityController {
         }
     }
     
-    /**
-     * Get all available time slots for a volunteer, organized by date
-     * @param volunteerId Optional volunteer ID to filter by (null = all volunteers)
-     * @return List of available time slot wrappers sorted by date and time
-     */
-    @AuraEnabled(cacheable=true)
-    public static List<AvailableSlotWrapper> getAvailableSlotsByVolunteer(Id volunteerId) {
-        Set<Id> volunteerIds = volunteerId != null ? new Set<Id>{ volunteerId } : null;
-        Map<Id, List<Time_Slot__c>> slotsByVolunteer = TimeSlotSelector.getAvailableTimeSlotsForRange(null, null, volunteerIds);
+    public class AppointmentRequestInfo {
+        @AuraEnabled public String referenceName;
+        @AuraEnabled public String status;
         
-        List<AvailableSlotWrapper> results = new List<AvailableSlotWrapper>();
-        
-        for (Id volId : slotsByVolunteer.keySet()) {
-            for (Time_Slot__c slot : slotsByVolunteer.get(volId)) {
-                results.add(new AvailableSlotWrapper(slot));
-            }
+        public AppointmentRequestInfo(Appointment_Request__c request) {
+            this.referenceName = request.Reference_First_Name__c;
+            this.status = request.Status__c;
         }
-        
-        return results;
     }
     
     public class AvailableSlotWrapper {
@@ -102,45 +130,6 @@ public without sharing class VolunteerAvailabilityController {
         }
     }
     
-    /**
-     * Convert service's organized data structure to DayWrapper list
-     * Service provides pre-organized data, controller just converts format
-     */
-    private static List<DayWrapper> convertToDayWrappers(List<Map<String, Object>> organizedData) {
-        List<DayWrapper> results = new List<DayWrapper>();
-        
-        for (Map<String, Object> timeRangeData : organizedData) {
-            String label = (String) timeRangeData.get('timeRangeLabel');
-            DayWrapper dw = new DayWrapper(label);
-            
-            List<Map<String, Object>> slotDataList = (List<Map<String, Object>>) timeRangeData.get('slotDataList');
-            for (Map<String, Object> slotData : slotDataList) {
-                Boolean isAvailable = (Boolean) slotData.get('isAvailable');
-                Date day = (Date) slotData.get('day');
-                
-                if (isAvailable) {
-                    dw.slots.add(new TimeslotWrapper(
-                        (Id) slotData.get('id'),
-                        (Time) slotData.get('startTime'),
-                        (Time) slotData.get('endTime'),
-                        day,
-                        (Id) slotData.get('volunteerId'),
-                        (String) slotData.get('volunteerName')
-                    ));
-                } else {
-                    dw.slots.add(new TimeslotWrapper(label, day));
-                }
-            }
-            
-            results.add(dw);
-        }
-        
-        return results;
-    }
-    
-    /**
-     * Convert controller AvailabilityRange wrappers to service input format
-     */
     private static List<Map<String, String>> convertToServiceRanges(List<AvailabilityRange> ranges) {
         List<Map<String, String>> serviceRanges = new List<Map<String, String>>();
         for (AvailabilityRange range : ranges) {
@@ -151,52 +140,6 @@ public without sharing class VolunteerAvailabilityController {
             serviceRanges.add(serviceRange);
         }
         return serviceRanges;
-    }
-
-    public class DayWrapper {
-        @AuraEnabled public String label;
-        @AuraEnabled public List<TimeslotWrapper> slots;
-        
-        public DayWrapper(String label) {
-            this.label = label;
-            this.slots = new List<TimeslotWrapper>();
-        }
-    }
-
-    public class TimeslotWrapper {
-        @AuraEnabled public Id id;
-        @AuraEnabled public Time startTime;
-        @AuraEnabled public Time endTime;
-        @AuraEnabled public Date day;
-        @AuraEnabled public String label;
-        @AuraEnabled public Id volunteerId;
-        @AuraEnabled public String volunteerName;
-        @AuraEnabled public Boolean isAvailable;
-        @AuraEnabled public Boolean isUnavailable;
-
-        public TimeslotWrapper(Id id, Time startTime, Time endTime, Date day, Id volunteerId, String volunteerName) {
-            this.id = id;
-            this.startTime = startTime;
-            this.endTime = endTime;
-            this.day = day;
-            this.label = day + '-' + startTime + '-' + endTime;
-            this.volunteerId = volunteerId;
-            this.volunteerName = volunteerName;
-            this.isAvailable = true;
-            this.isUnavailable = false;
-        }
-
-        public TimeslotWrapper(String label, Date day) {
-            this.id = null;
-            this.startTime = null;
-            this.endTime = null;
-            this.day = day;
-            this.label = label;
-            this.volunteerId = null;
-            this.volunteerName = null;
-            this.isAvailable = false;
-            this.isUnavailable = true;
-        }
     }
 
     public class BookingResult {
@@ -215,6 +158,14 @@ public without sharing class VolunteerAvailabilityController {
         @AuraEnabled public String dateValue { get; set; }
         @AuraEnabled public String startTime { get; set; }
         @AuraEnabled public String endTime { get; set; }
+    }
+    
+    public class BookingRequest {
+        @AuraEnabled public String slotDate { get; set; }
+        @AuraEnabled public Long startTime { get; set; }
+        @AuraEnabled public Long endTime { get; set; }
+        @AuraEnabled public Id appointmentRequestId { get; set; }
+        @AuraEnabled public String referencePhone { get; set; }
     }
 
     public class CreateSlotsResult {

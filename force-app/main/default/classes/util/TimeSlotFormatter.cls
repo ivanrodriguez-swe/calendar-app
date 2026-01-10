@@ -1,10 +1,5 @@
 public class TimeSlotFormatter {
     
-    /**
-     * Parse time string to Time object
-     * @param timeStr Time string (HH:mm)
-     * @return Time object or null
-     */
     public static Time parseTime(String timeStr) {
         if (String.isBlank(timeStr)) return null;
         List<String> parts = timeStr.split(':');
@@ -20,11 +15,6 @@ public class TimeSlotFormatter {
         }
     }
     
-    /**
-     * Format Time to string
-     * @param t Time object
-     * @return Formatted time string
-     */
     public static String formatTime(Time t) {
         if (t == null) return '';
         Integer hours = t.hour();
@@ -39,12 +29,6 @@ public class TimeSlotFormatter {
         return String.valueOf(hours) + ':' + minutesStr + ' ' + ampm;
     }
     
-    /**
-     * Validate time range
-     * @param startTime Start time
-     * @param endTime End time
-     * @return True if valid
-     */
     public static Boolean isValidTimeRange(Time startTime, Time endTime) {
         Time minStartTime = Time.newInstance(9, 0, 0, 0);
         Time maxStartTime = Time.newInstance(15, 45, 0, 0);
@@ -55,6 +39,4 @@ public class TimeSlotFormatter {
                endTime >= minEndTime && endTime <= maxEndTime &&
                endTime > startTime;
     }
-    
 }
-

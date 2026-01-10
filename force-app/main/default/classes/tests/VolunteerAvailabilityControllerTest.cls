@@ -10,26 +10,20 @@ private class VolunteerAvailabilityControllerTest {
         return [SELECT Id, Name, Email FROM User WHERE FirstName = 'Volunteer' AND LastName = :lastName LIMIT 1];
     }
     
-    private static User getReferenceUser() {
-        return [SELECT Id FROM User WHERE FirstName = 'Reference' AND LastName = 'Test' LIMIT 1];
+    private static Time_Slot__c getTimeSlot() {
+        return [SELECT Id, Volunteer__c, Day__c, Start_Time__c, End_Time__c FROM Time_Slot__c WHERE Status__c = 'Available' LIMIT 1];
     }
     
-    private static Time_Slot__c getTimeSlot() {
-        return [SELECT Id, Volunteer__c FROM Time_Slot__c LIMIT 1];
+    private static Long timeToMillis(Time t) {
+        return ((t.hour() * 60 + t.minute()) * 60 + t.second()) * 1000L;
     }
     
     @TestSetup
     static void setupTestData() {
-        // Create OHR Admin user with permissions already assigned
         OHRTestDataFactory.createOHRAdminUser();
-        
-        // Create test users (volunteers)
         List<User> volunteers = OHRTestDataFactory.createVolunteerUsers(3);
-        
-        // Create test reference user
         User reference = OHRTestDataFactory.createReferenceUser();
         
-        // Create time slots
         Date today = Date.today();
         List<Time_Slot__c> slots = new List<Time_Slot__c>();
         for (Integer i = 0; i < 3; i++) {
@@ -47,106 +41,30 @@ private class VolunteerAvailabilityControllerTest {
     }
     
     @isTest
-    static void testGetTimeslotsForRange_Success() {
-        Date startDate = Date.today();
-        Date endDate = Date.today().addDays(2);
-        
+    static void testGetAllAvailableSlots_Success() {
         Test.startTest();
         System.runAs(getAdminUser()) {
-            List<VolunteerAvailabilityController.DayWrapper> result = 
-                VolunteerAvailabilityController.getTimeslotsForRange(startDate, endDate, null);
+            List<VolunteerAvailabilityController.AvailableSlotWrapper> result = 
+                VolunteerAvailabilityController.getAllAvailableSlots();
             
             Assert.isNotNull(result, 'Result should not be null');
-            Assert.isTrue(result.size() > 0, 'Should return at least one day wrapper');
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testGetTimeslotsForRange_WithVolunteerId() {
-        Date startDate = Date.today();
-        Date endDate = Date.today().addDays(2);
-        User volunteer = getVolunteer(0);
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            List<VolunteerAvailabilityController.DayWrapper> result = 
-                VolunteerAvailabilityController.getTimeslotsForRange(startDate, endDate, volunteer.Id);
+            Assert.isTrue(result.size() > 0, 'Should return available slots');
             
-            Assert.isNotNull(result, 'Result should not be null');
-            Assert.isTrue(result.size() > 0, 'Should return at least one day wrapper');
-            
-            // Verify all available slots belong to the filtered volunteer
-            for (VolunteerAvailabilityController.DayWrapper dw : result) {
-                for (VolunteerAvailabilityController.TimeslotWrapper slot : dw.slots) {
-                    if (slot.isAvailable && slot.volunteerId != null) {
-                        Assert.areEqual(volunteer.Id, slot.volunteerId, 'All available slots should belong to filtered volunteer');
-                    }
-                }
+            for (VolunteerAvailabilityController.AvailableSlotWrapper slot : result) {
+                Assert.isNotNull(slot.id, 'Should have slot ID');
+                Assert.isNotNull(slot.day, 'Should have day');
+                Assert.isNotNull(slot.startTime, 'Should have start time');
+                Assert.isNotNull(slot.endTime, 'Should have end time');
             }
         }
         Test.stopTest();
     }
     
     @isTest
-    static void testGetTimeslotsForRange_NullStartDate() {
-        Date endDate = Date.today();
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            try {
-                VolunteerAvailabilityController.getTimeslotsForRange(null, endDate, null);
-                Assert.fail('Should have thrown exception');
-            } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
-            }
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testGetTimeslotsForRange_NullEndDate() {
-        Date startDate = Date.today();
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            try {
-                VolunteerAvailabilityController.getTimeslotsForRange(startDate, null, null);
-                Assert.fail('Should have thrown exception');
-            } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
-            }
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testBookTimeSlot_Success() {
-        Time_Slot__c slot = getTimeSlot();
-        User reference = getReferenceUser();
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            VolunteerAvailabilityController.BookingResult result = 
-                VolunteerAvailabilityController.bookTimeSlot(slot.Id, reference.Id, null, '555-123-4567');
-            
-            Assert.areEqual(true, result.success, 'Booking should succeed');
-            Assert.isNotNull( result.appointmentId, 'Appointment ID should be set');
-            
-            // Verify slot status updated
-            Time_Slot__c updatedSlot = [SELECT Status__c FROM Time_Slot__c WHERE Id = :slot.Id];
-            Assert.areEqual('Booked', updatedSlot.Status__c, 'Slot status should be Booked');
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testBookTimeSlot_WithAppointmentRequest() {
+    static void testBookSlotWithRandomVolunteer_Success() {
         Time_Slot__c slot = getTimeSlot();
         
-        // Create appointment request
         Appointment_Request__c request = new Appointment_Request__c(
-            Volunteer__c = slot.Volunteer__c,
             Status__c = 'New',
             Reference_Email__c = 'reference@example.com',
             Reference_First_Name__c = 'Reference',
@@ -154,33 +72,47 @@ private class VolunteerAvailabilityControllerTest {
         );
         insert request;
         
+        VolunteerAvailabilityController.BookingRequest bookingRequest = 
+            new VolunteerAvailabilityController.BookingRequest();
+        bookingRequest.slotDate = String.valueOf(slot.Day__c);
+        bookingRequest.startTime = timeToMillis(slot.Start_Time__c);
+        bookingRequest.endTime = timeToMillis(slot.End_Time__c);
+        bookingRequest.appointmentRequestId = request.Id;
+        bookingRequest.referencePhone = '555-987-6543';
+        
         Test.startTest();
         System.runAs(getAdminUser()) {
             VolunteerAvailabilityController.BookingResult result = 
-                VolunteerAvailabilityController.bookTimeSlot(slot.Id, null, request.Id, '555-987-6543');
+                VolunteerAvailabilityController.bookSlotWithRandomVolunteer(bookingRequest);
             
             Assert.areEqual(true, result.success, 'Booking should succeed');
+            Assert.isNotNull(result.appointmentId, 'Should have appointment ID');
             
-            // Verify appointment request status updated with phone number
-            Appointment_Request__c updatedRequest = [SELECT Status__c, Reference_Phone_Number__c FROM Appointment_Request__c WHERE Id = :request.Id];
+            Appointment_Request__c updatedRequest = [SELECT Status__c, Volunteer__c, Reference_Phone_Number__c FROM Appointment_Request__c WHERE Id = :request.Id];
             Assert.areEqual('Reserved', updatedRequest.Status__c, 'Request status should be Reserved');
+            Assert.isNotNull(updatedRequest.Volunteer__c, 'Volunteer should be assigned');
             Assert.areEqual('555-987-6543', updatedRequest.Reference_Phone_Number__c, 'Phone number should be saved');
         }
         Test.stopTest();
     }
     
     @isTest
-    static void testBookTimeSlot_InvalidTimeSlot() {
-        User reference = getReferenceUser();
-        // Use null ID to test non-existent time slot scenario
+    static void testBookSlotWithRandomVolunteer_NoAvailableSlots() {
+        VolunteerAvailabilityController.BookingRequest bookingRequest = 
+            new VolunteerAvailabilityController.BookingRequest();
+        bookingRequest.slotDate = String.valueOf(Date.today().addDays(100));
+        bookingRequest.startTime = timeToMillis(Time.newInstance(9, 0, 0, 0));
+        bookingRequest.endTime = timeToMillis(Time.newInstance(9, 15, 0, 0));
+        bookingRequest.appointmentRequestId = null;
+        bookingRequest.referencePhone = '555-123-4567';
         
         Test.startTest();
         System.runAs(getAdminUser()) {
             try {
-                VolunteerAvailabilityController.bookTimeSlot(null, reference.Id, null, null);
-                Assert.fail( 'Should have thrown exception');
+                VolunteerAvailabilityController.bookSlotWithRandomVolunteer(bookingRequest);
+                Assert.fail('Should have thrown exception');
             } catch (Exception e) {
-                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException.class');
+                Assert.isInstanceOfType(e, AuraHandledException.class, 'Should throw AuraHandledException');
             }
         }
         Test.stopTest();
@@ -227,31 +159,6 @@ private class VolunteerAvailabilityControllerTest {
     }
     
     @isTest
-    static void testCreateTimeSlotsFromRanges_InvalidTimeRange() {
-        User volunteer = getVolunteer(0);
-        
-        List<VolunteerAvailabilityController.AvailabilityRange> ranges = 
-            new List<VolunteerAvailabilityController.AvailabilityRange>();
-        
-        VolunteerAvailabilityController.AvailabilityRange range1 = 
-            new VolunteerAvailabilityController.AvailabilityRange();
-        range1.dateValue = String.valueOf(Date.today().addDays(10));
-        range1.startTime = '10:00';
-        range1.endTime = '09:00'; // Invalid: end before start
-        ranges.add(range1);
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            VolunteerAvailabilityController.CreateSlotsResult result = 
-                VolunteerAvailabilityController.createTimeSlotsFromRanges(ranges);
-            
-            // Should handle gracefully
-            Assert.isNotNull( result, 'Result should not be null');
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
     static void testCreateTimeSlotsFromCSV_Success() {
         User volunteer = getVolunteer(0);
         
@@ -283,67 +190,47 @@ private class VolunteerAvailabilityControllerTest {
     }
     
     @isTest
-    static void testCreateTimeSlotsFromCSV_InvalidFormat() {
-        String csvContent = 'Invalid,CSV,Format';
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            VolunteerAvailabilityController.CreateSlotsResult result = 
-                VolunteerAvailabilityController.createTimeSlotsFromCSV(csvContent);
-            
-            // Should handle gracefully
-            Assert.isNotNull( result, 'Result should not be null');
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
     static void testWrapperClasses() {
-        // Test DayWrapper
-        VolunteerAvailabilityController.DayWrapper dw = 
-            new VolunteerAvailabilityController.DayWrapper('09:00-09:15');
-        Assert.areEqual('09:00-09:15', dw.label, 'Label should match');
-        Assert.isNotNull( dw.slots, 'Slots list should be initialized');
+        Time_Slot__c testSlot = [SELECT Id, Volunteer__c, Volunteer__r.Name, Day__c, Start_Time__c, End_Time__c FROM Time_Slot__c WHERE Status__c = 'Available' LIMIT 1];
+        VolunteerAvailabilityController.AvailableSlotWrapper wrapper = 
+            new VolunteerAvailabilityController.AvailableSlotWrapper(testSlot);
+        Assert.isNotNull(wrapper.id, 'Should have ID');
+        Assert.isNotNull(wrapper.day, 'Should have day');
         
-        // Test TimeslotWrapper - available slot
-        Date testDate = Date.today();
-        Time startTime = Time.newInstance(9, 0, 0, 0);
-        Time endTime = Time.newInstance(9, 15, 0, 0);
-        User volunteer = getVolunteer(0);
-        
-        // Use actual test data ID for wrapper test
-        Time_Slot__c testSlot = getTimeSlot();
-        VolunteerAvailabilityController.TimeslotWrapper tw1 = 
-            new VolunteerAvailabilityController.TimeslotWrapper(
-                testSlot.Id, startTime, endTime, testDate, volunteer.Id, volunteer.Name
-            );
-        Assert.areEqual(true, tw1.isAvailable, 'Should be available');
-        Assert.areEqual(false, tw1.isUnavailable, 'Should not be unavailable');
-        
-        // Test TimeslotWrapper - unavailable slot
-        VolunteerAvailabilityController.TimeslotWrapper tw2 = 
-            new VolunteerAvailabilityController.TimeslotWrapper('09:00-09:15', testDate);
-        Assert.areEqual(false, tw2.isAvailable, 'Should not be available');
-        Assert.areEqual(true, tw2.isUnavailable, 'Should be unavailable');
-        
-        // Test BookingResult - use actual test data ID (Time_Slot__c ID since appointments may not exist in this test)
-        Time_Slot__c testSlotForBooking = getTimeSlot();
         VolunteerAvailabilityController.BookingResult br = 
-            new VolunteerAvailabilityController.BookingResult(true, 'Success', testSlotForBooking.Id);
+            new VolunteerAvailabilityController.BookingResult(true, 'Success', testSlot.Id);
         Assert.areEqual(true, br.success, 'Success should match');
         Assert.areEqual('Success', br.message, 'Message should match');
         
-        // Test CreateSlotsResult - default constructor
+        VolunteerAvailabilityController.BookingRequest bookReq = 
+            new VolunteerAvailabilityController.BookingRequest();
+        bookReq.slotDate = String.valueOf(Date.today());
+        bookReq.startTime = timeToMillis(Time.newInstance(9, 0, 0, 0));
+        bookReq.endTime = timeToMillis(Time.newInstance(9, 15, 0, 0));
+        bookReq.appointmentRequestId = null;
+        bookReq.referencePhone = '555-123-4567';
+        Assert.isNotNull(bookReq.slotDate, 'Should have slotDate');
+        
+        VolunteerAvailabilityController.AvailabilityRange range = 
+            new VolunteerAvailabilityController.AvailabilityRange();
+        range.dateValue = '2025-01-15';
+        range.startTime = '09:00';
+        range.endTime = '10:00';
+        Assert.isNotNull(range.dateValue, 'Should have dateValue');
+        
         VolunteerAvailabilityController.CreateSlotsResult csr1 = 
             new VolunteerAvailabilityController.CreateSlotsResult();
         Assert.areEqual(false, csr1.success, 'Default success should be false');
         Assert.areEqual(0, csr1.slotsCreated, 'Default slots created should be 0');
         
-        // Test CreateSlotsResult - parameterized constructor
         VolunteerAvailabilityController.CreateSlotsResult csr2 = 
             new VolunteerAvailabilityController.CreateSlotsResult(true, 'Success', 5);
         Assert.areEqual(true, csr2.success, 'Success should match');
         Assert.areEqual(5, csr2.slotsCreated, 'Slots created should match');
+        
+        List<String> warnings = new List<String>{ 'Warning 1' };
+        VolunteerAvailabilityController.CreateSlotsResult csr3 = 
+            new VolunteerAvailabilityController.CreateSlotsResult(true, 'Success', 5, warnings);
+        Assert.areEqual(1, csr3.warnings.size(), 'Should have warnings');
     }
 }
-

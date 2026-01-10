@@ -1,11 +1,8 @@
-import { LightningElement, track, wire, api } from 'lwc';
+import { LightningElement, track, api } from 'lwc';
 import { ShowToastEvent } from 'lightning/platformShowToastEvent';
-import { getRecord, getFieldValue } from 'lightning/uiRecordApi';
-import APPOINTMENT_REQUEST_VOLUNTEER from '@salesforce/schema/Appointment_Request__c.Volunteer__c';
-import APPOINTMENT_REQUEST_REF_FIRST_NAME from '@salesforce/schema/Appointment_Request__c.Reference_First_Name__c';
-import APPOINTMENT_REQUEST_STATUS from '@salesforce/schema/Appointment_Request__c.Status__c';
-import getAvailableSlotsByVolunteer from '@salesforce/apex/VolunteerAvailabilityController.getAvailableSlotsByVolunteer';
-import bookTimeSlot from '@salesforce/apex/VolunteerAvailabilityController.bookTimeSlot';
+import getAppointmentRequestInfo from '@salesforce/apex/VolunteerAvailabilityController.getAppointmentRequestInfo';
+import getAllAvailableSlots from '@salesforce/apex/VolunteerAvailabilityController.getAllAvailableSlots';
+import bookSlotWithRandomVolunteer from '@salesforce/apex/VolunteerAvailabilityController.bookSlotWithRandomVolunteer';
 
 export default class AppointmentScheduler extends LightningElement {
     @track loading = true;
@@ -14,13 +11,10 @@ export default class AppointmentScheduler extends LightningElement {
     @track bookingInProgress = false;
     @track groupedSlots = [];
     @track referenceName = '';
-    @track noVolunteerAssigned = false;
     @track appointmentBooked = false;
     @track referencePhone = '';
     
     @api appointmentRequestId = null;
-    volunteerId = null;
-    _appointmentRequestIdForWire = null;
     
     get hasAvailableSlots() {
         return this.groupedSlots && this.groupedSlots.length > 0;
@@ -30,71 +24,55 @@ export default class AppointmentScheduler extends LightningElement {
         return this.referenceName && this.referenceName.trim().length > 0;
     }
 
-    @wire(getRecord, { 
-        recordId: '$_appointmentRequestIdForWire', 
-        fields: [APPOINTMENT_REQUEST_VOLUNTEER, APPOINTMENT_REQUEST_REF_FIRST_NAME, APPOINTMENT_REQUEST_STATUS]
-    })
-    wiredAppointmentRequest({ error, data }) {
-        if (data) {
-            this.volunteerId = getFieldValue(data, APPOINTMENT_REQUEST_VOLUNTEER);
-            this.referenceName = getFieldValue(data, APPOINTMENT_REQUEST_REF_FIRST_NAME) || '';
-            const status = getFieldValue(data, APPOINTMENT_REQUEST_STATUS);
-            
-            // Check if appointment is already booked (status = Reserved or Completed)
-            if (status === 'Reserved' || status === 'Completed') {
-                this.appointmentBooked = true;
-                this.loading = false;
-                this.groupedSlots = [];
-                return;
-            }
-            
-            // Only fetch slots if we have a valid volunteer ID
-            if (this.volunteerId) {
-                this.noVolunteerAssigned = false;
-                this.fetchAvailableSlots();
-            } else {
-                this.noVolunteerAssigned = true;
-                this.loading = false;
-                this.groupedSlots = [];
-            }
-        } else if (error) {
-            console.error('Error fetching Appointment Request:', error);
-            this.volunteerId = null;
-            this.referenceName = '';
-            this.noVolunteerAssigned = false;
+    connectedCallback() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const urlRequestId = urlParams.get('requestId');
+        const effectiveRequestId = urlRequestId || this.appointmentRequestId;
+        
+        if (effectiveRequestId) {
+            this.appointmentRequestId = effectiveRequestId;
+            this.fetchAppointmentRequestInfo();
+        } else {
             this.loading = false;
             this.groupedSlots = [];
         }
     }
-
-    connectedCallback() {
-        // First, check URL for requestId parameter
-        const urlParams = new URLSearchParams(window.location.search);
-        const urlRequestId = urlParams.get('requestId');
-        
-        // Use URL parameter if available, otherwise fall back to LWC property
-        const effectiveRequestId = urlRequestId || this.appointmentRequestId;
-        
-        // Set the wire variable to trigger the wire adapter only if we have a valid ID
-        if (effectiveRequestId) {
-            this.appointmentRequestId = effectiveRequestId;
-            this._appointmentRequestIdForWire = effectiveRequestId;
-        } else {
-            // No appointment request ID provided - don't fetch any slots
-            this.loading = false;
-            this.groupedSlots = [];
-        }
+    
+    fetchAppointmentRequestInfo() {
+        getAppointmentRequestInfo({ requestId: this.appointmentRequestId })
+            .then(result => {
+                if (result) {
+                    this.referenceName = result.referenceName || '';
+                    
+                    if (result.status === 'Reserved' || result.status === 'Completed') {
+                        this.appointmentBooked = true;
+                        this.loading = false;
+                        this.groupedSlots = [];
+                        return;
+                    }
+                    
+                    this.fetchAvailableSlots();
+                } else {
+                    this.referenceName = '';
+                    this.loading = false;
+                    this.groupedSlots = [];
+                }
+            })
+            .catch(() => {
+                this.referenceName = '';
+                this.loading = false;
+                this.groupedSlots = [];
+            });
     }
 
     fetchAvailableSlots() {
         this.loading = true;
         
-        getAvailableSlotsByVolunteer({ volunteerId: this.volunteerId })
+        getAllAvailableSlots()
             .then(result => {
                 this.processTimeslots(result);
             })
-            .catch(error => {
-                console.error('Error fetching timeslots:', error);
+            .catch(() => {
                 this.groupedSlots = [];
             })
             .finally(() => {
@@ -104,19 +82,25 @@ export default class AppointmentScheduler extends LightningElement {
 
     processTimeslots(result) {
         const dateMap = new Map();
+        const seenSlots = new Set();
         
         if (Array.isArray(result)) {
             result.forEach(slot => {
                 const dateKey = slot.day;
+                const slotKey = `${slot.day}-${slot.startTime}-${slot.endTime}`;
+                
+                if (seenSlots.has(slotKey)) {
+                    return;
+                }
+                seenSlots.add(slotKey);
+                
                 const slotData = {
-                    id: slot.id,
+                    key: slotKey,
                     date: slot.day,
                     dateFormatted: this.formatDate(slot.day),
                     timeFormatted: this.formatTimeRange(slot.startTime, slot.endTime),
-                    startTime: slot.startTime,
-                    endTime: slot.endTime,
-                    volunteerId: slot.volunteerId,
-                    volunteerName: slot.volunteerName
+                    startTime: String(slot.startTime),
+                    endTime: String(slot.endTime)
                 };
                 
                 if (!dateMap.has(dateKey)) {
@@ -130,11 +114,9 @@ export default class AppointmentScheduler extends LightningElement {
             });
         }
         
-        // Convert map to array and sort by date
         const grouped = Array.from(dateMap.values());
         grouped.sort((a, b) => a.date < b.date ? -1 : 1);
         
-        // Sort slots within each date by time
         grouped.forEach(dateGroup => {
             dateGroup.slots.sort((a, b) => a.startTime < b.startTime ? -1 : 1);
         });
@@ -145,10 +127,8 @@ export default class AppointmentScheduler extends LightningElement {
     formatDate(dateValue) {
         if (!dateValue) return '';
         
-        // Handle both string and Date formats
         let date;
         if (typeof dateValue === 'string') {
-            // Parse YYYY-MM-DD format
             const parts = dateValue.split('-');
             date = new Date(parts[0], parts[1] - 1, parts[2]);
         } else {
@@ -167,16 +147,13 @@ export default class AppointmentScheduler extends LightningElement {
         const formatTime = (time) => {
             if (!time) return '';
             
-            // Handle Time object from Apex (comes as milliseconds or time string)
             let hours, minutes;
             
             if (typeof time === 'number') {
-                // Milliseconds since midnight
                 const totalMinutes = Math.floor(time / 60000);
                 hours = Math.floor(totalMinutes / 60);
                 minutes = totalMinutes % 60;
             } else if (typeof time === 'string') {
-                // Format: "HH:MM:SS.000Z"
                 const parts = time.split(':');
                 hours = parseInt(parts[0], 10);
                 minutes = parseInt(parts[1], 10);
@@ -192,24 +169,15 @@ export default class AppointmentScheduler extends LightningElement {
         return `${formatTime(startTime)} - ${formatTime(endTime)}`;
     }
 
-    toISODate(dateObj) {
-        const yyyy = dateObj.getFullYear();
-        const mm = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const dd = String(dateObj.getDate()).padStart(2, '0');
-        return `${yyyy}-${mm}-${dd}`;
-    }
-
     handleSlotClick(event) {
-        const slotId = event.target.dataset.slotId;
-        const dateFormatted = event.target.dataset.date;
-        const timeFormatted = event.target.dataset.time;
-        const volunteerName = event.target.dataset.volunteer;
+        const button = event.currentTarget;
         
         this.selectedSlot = {
-            id: slotId,
-            dayLabel: dateFormatted,
-            time: timeFormatted,
-            volunteerName: volunteerName || 'Assigned Volunteer'
+            dayLabel: button.dataset.date,
+            time: button.dataset.time,
+            slotDate: button.dataset.slotDate,
+            startTime: button.dataset.startTime,
+            endTime: button.dataset.endTime
         };
         this.showBookingModal = true;
     }
@@ -227,6 +195,22 @@ export default class AppointmentScheduler extends LightningElement {
         return this.referencePhone && this.referencePhone.trim().length >= 10;
     }
 
+    parseTimeToMillis(timeStr) {
+        if (!timeStr) return null;
+        if (typeof timeStr === 'number') return timeStr;
+        
+        if (!timeStr.includes(':')) {
+            return parseInt(timeStr, 10);
+        }
+        
+        const parts = timeStr.split(':');
+        const hours = parseInt(parts[0], 10);
+        const minutes = parseInt(parts[1], 10);
+        const seconds = parts[2] ? parseInt(parts[2], 10) : 0;
+        
+        return ((hours * 60 + minutes) * 60 + seconds) * 1000;
+    }
+
     handleConfirmBooking() {
         if (!this.selectedSlot) {
             this.showToast('Error', 'Unable to process booking. Please try again.', 'error');
@@ -239,36 +223,35 @@ export default class AppointmentScheduler extends LightningElement {
         }
 
         this.bookingInProgress = true;
-        bookTimeSlot({ 
-            timeSlotId: this.selectedSlot.id, 
-            customerId: null,
+        
+        const request = {
+            slotDate: this.selectedSlot.slotDate,
+            startTime: this.parseTimeToMillis(this.selectedSlot.startTime),
+            endTime: this.parseTimeToMillis(this.selectedSlot.endTime),
             appointmentRequestId: this.appointmentRequestId,
             referencePhone: this.referencePhone.trim()
-        })
-        .then(result => {
-            if (result.success) {
-                this.showToast('Success', 'Appointment successfully booked!', 'success');
-                this.handleCloseModal();
-                this.appointmentBooked = true;
-                this.groupedSlots = [];
-            } else {
-                this.showToast('Error', result.message, 'error');
-            }
-        })
-        .catch(error => {
-            this.showToast('Error', error.body?.message || 'An error occurred while booking the time slot', 'error');
-        })
-        .finally(() => {
-            this.bookingInProgress = false;
-        });
+        };
+        
+        bookSlotWithRandomVolunteer({ request })
+            .then(result => {
+                if (result.success) {
+                    this.showToast('Success', 'Appointment successfully booked!', 'success');
+                    this.handleCloseModal();
+                    this.appointmentBooked = true;
+                    this.groupedSlots = [];
+                } else {
+                    this.showToast('Error', result.message, 'error');
+                }
+            })
+            .catch(error => {
+                this.showToast('Error', error.body?.message || 'An error occurred while booking the time slot', 'error');
+            })
+            .finally(() => {
+                this.bookingInProgress = false;
+            });
     }
 
     showToast(title, message, variant) {
-        const evt = new ShowToastEvent({
-            title: title,
-            message: message,
-            variant: variant,
-        });
-        this.dispatchEvent(evt);
+        this.dispatchEvent(new ShowToastEvent({ title, message, variant }));
     }
 }

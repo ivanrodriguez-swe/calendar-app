@@ -1,13 +1,5 @@
 public without sharing class VolunteerAvailabilityDisplayController {
     
-    /**
-     * Get volunteer availability data
-     * @param startDate Start date (YYYY-MM-DD) or null
-     * @param endDate End date (YYYY-MM-DD) or null
-     * @param offset Pagination offset
-     * @param pageSize Page size
-     * @return VolunteerAvailabilityResult
-     */
     @AuraEnabled
     public static VolunteerAvailabilityResult getVolunteerAvailabilityData(String startDate, String endDate, Integer offset, Integer pageSize) {
         try {
@@ -66,11 +58,6 @@ public without sharing class VolunteerAvailabilityDisplayController {
         }
     }
     
-    /**
-     * Get volunteer information
-     * @param volunteerId Volunteer ID
-     * @return VolunteerInfoResult
-     */
     @AuraEnabled(cacheable=true)
     public static VolunteerInfoResult getVolunteerInfo(Id volunteerId) {
         if (volunteerId == null) {
@@ -101,10 +88,6 @@ public without sharing class VolunteerAvailabilityDisplayController {
         return result;
     }
     
-    /**
-     * Get all volunteers
-     * @return VolunteerListResult
-     */
     @AuraEnabled(cacheable=true)
     public static VolunteerListResult getAllVolunteersForDisplay() {
         Map<String, Object> serviceResult = VolunteerAvailabilityService.getAllVolunteersForDisplay();
@@ -198,5 +181,3 @@ public without sharing class VolunteerAvailabilityDisplayController {
         @AuraEnabled public DateTime createdDate;
     }
 }
-
-

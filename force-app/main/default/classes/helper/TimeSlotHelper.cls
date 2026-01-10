@@ -122,15 +122,13 @@ public with sharing class TimeSlotHelper {
             if (dateParts.size() != 3) {
                 return null;
             }
-            Date result = Date.newInstance(
+            return Date.newInstance(
                 Integer.valueOf(dateParts[0]), 
                 Integer.valueOf(dateParts[1]), 
                 Integer.valueOf(dateParts[2])
             );
-            return result;
         } catch (Exception e) {
             return null;
         }
     }
 }
-

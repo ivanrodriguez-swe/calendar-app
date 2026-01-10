@@ -1,84 +1,50 @@
-public with sharing class VolunteerAvailabilityService {
+public without sharing class VolunteerAvailabilityService {
     
-    /**
-     * Get time slots for date range (all volunteers)
-     */
-    public static List<Map<String, Object>> getTimeslotsForRange(Date startDate, Date endDate) {
-        return getTimeslotsForRange(startDate, endDate, null);
-    }
-    
-    /**
-     * Get time slots for date range, optionally filtered by volunteer
-     * @param startDate Start date (inclusive)
-     * @param endDate End date (inclusive)
-     * @param volunteerId Optional volunteer ID to filter by (null = all volunteers)
-     * @return List of organized time slot data
-     */
-    public static List<Map<String, Object>> getTimeslotsForRange(Date startDate, Date endDate, Id volunteerId) {
-        Set<Id> volunteerIds = volunteerId != null ? new Set<Id>{ volunteerId } : null;
-        Map<Id, List<Time_Slot__c>> slotsByVolunteer = TimeSlotSelector.getAvailableTimeSlotsForRange(startDate, endDate, volunteerIds);
+    public static Map<String, Object> bookSlotWithRandomVolunteer(Map<String, Object> bookingParams) {
+        Date slotDate = (Date) bookingParams.get('slotDate');
+        Time startTime = (Time) bookingParams.get('startTime');
+        Time endTime = (Time) bookingParams.get('endTime');
+        Id appointmentRequestId = (Id) bookingParams.get('appointmentRequestId');
+        String referencePhone = (String) bookingParams.get('referencePhone');
         
-        // Flatten the map to a single list
-        List<Time_Slot__c> slots = new List<Time_Slot__c>();
-        for (List<Time_Slot__c> volunteerSlots : slotsByVolunteer.values()) {
-            slots.addAll(volunteerSlots);
+        List<Time_Slot__c> availableSlots = TimeSlotSelector.getAvailableSlotsByDateTime(slotDate, startTime, endTime);
+        
+        if (availableSlots.isEmpty()) {
+            throw new AuraHandledException('This time slot is no longer available. Please refresh and select another.');
         }
         
-        List<Date> dates = DateRangeHelper.getDatesBetween(startDate, endDate, true);
-        List<String> timeRangeLabels = TimeSlotHelper.getTimeSlotStructureLabels();
+        Integer randomIndex = Math.mod(Math.abs(Crypto.getRandomInteger()), availableSlots.size());
+        Time_Slot__c selectedSlot = availableSlots[randomIndex];
         
-        Map<String, Time_Slot__c> slotMap = buildSlotMap(slots);
-        
-        List<Map<String, Object>> result = new List<Map<String, Object>>();
-        for (String label : timeRangeLabels) {
-            Map<String, Object> timeRangeData = new Map<String, Object>();
-            timeRangeData.put('timeRangeLabel', label);
-            
-            List<Map<String, Object>> slotDataList = new List<Map<String, Object>>();
-            for (Date day : dates) {
-                String key = String.valueOf(day) + '-' + label;
-                Time_Slot__c slot = slotMap.get(key);
-                slotDataList.add(buildSlotData(slot, day));
-            }
-            
-            timeRangeData.put('slotDataList', slotDataList);
-            result.add(timeRangeData);
+        List<Appointment_Request__c> requests = AppointmentRequestSelector.getAppointmentRequestById(appointmentRequestId);
+        if (requests.isEmpty()) {
+            throw new AuraHandledException('Appointment Request not found.');
         }
-        
-        return result;
-    }
-    
-    /**
-     * Book time slot
-     */
-    public static Map<String, Object> bookTimeSlot(Id timeSlotId, Id customerId, Id appointmentRequestId, String referencePhone) {
-        Time_Slot__c slot = getAndValidateTimeSlot(timeSlotId);
-        Appointment_Request__c appointmentRequest = getOrCreateAppointmentRequest(slot, customerId, appointmentRequestId);
-        Map<String, String> customerInfo = getCustomerInfo(appointmentRequest, customerId);
+        Appointment_Request__c appointmentRequest = requests[0];
         
         Appointment__c appointment = new Appointment__c(
             Appointment_Request__c = appointmentRequest.Id,
-            Time_Slot__c = timeSlotId,
+            Time_Slot__c = selectedSlot.Id,
             Status__c = 'Confirmed'
         );
         insert appointment;
-
+        
+        appointmentRequest.Volunteer__c = selectedSlot.Volunteer__c;
         appointmentRequest.Status__c = 'Reserved';
         if (String.isNotBlank(referencePhone)) {
             appointmentRequest.Reference_Phone_Number__c = referencePhone;
         }
         update appointmentRequest;
-        slot.Status__c = 'Booked';
-        update slot;
-
-        BookingEmailService.sendBookingEmails(slot, customerInfo.get('name'), customerInfo.get('email'), appointment, appointmentRequest);
-
+        
+        selectedSlot.Status__c = 'Booked';
+        update selectedSlot;
+        
+        Map<String, String> customerInfo = getCustomerInfo(appointmentRequest);
+        BookingEmailService.sendBookingEmails(selectedSlot, customerInfo.get('name'), customerInfo.get('email'), appointment, appointmentRequest);
+        
         return buildResult(true, 'Time slot booked successfully!', appointment.Id);
     }
     
-    /**
-     * Create time slots from ranges
-     */
     public static Map<String, Object> createTimeSlotsFromRanges(List<Map<String, String>> ranges, Id volunteerId) {
         if (ranges == null || ranges.isEmpty()) {
             return buildResult(false, 'No availability ranges provided', 0);
@@ -95,9 +61,6 @@ public with sharing class VolunteerAvailabilityService {
         return buildResult(false, 'Availability for this time range was already set.', 0);
     }
     
-    /**
-     * Create time slots from CSV
-     */
     public static Map<String, Object> createTimeSlotsFromCSV(String csvContent) {
         if (String.isBlank(csvContent)) {
             return buildResult(false, 'CSV content is empty', 0);
@@ -110,7 +73,6 @@ public with sharing class VolunteerAvailabilityService {
         
         Map<String, Id> emailToUserIdMap = buildEmailToUserIdMap(csvRows);
         
-        // Track volunteers not found (just the emails, not the full message)
         List<String> warnings = new List<String>();
         Set<String> notFoundEmails = new Set<String>();
         for (AvailabilityCSVParser.AvailabilityCSVRow row : csvRows) {
@@ -133,14 +95,6 @@ public with sharing class VolunteerAvailabilityService {
         return result;
     }
     
-    /**
-     * Get volunteer availability data
-     * @param startDate Start date or null
-     * @param endDate End date or null
-     * @param offset Pagination offset
-     * @param pageSize Page size
-     * @return Map with rows, totalCount, hasMore
-     */
     public static Map<String, Object> getVolunteerAvailabilityData(Date startDate, Date endDate, Integer offset, Integer pageSize) {
         List<Time_Slot__c> slots = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
         
@@ -162,9 +116,7 @@ public with sharing class VolunteerAvailabilityService {
             Map<String, Object> rowData = volunteerDateMap.get(key);
             List<Map<String, Object>> timeSlots = (List<Map<String, Object>>) rowData.get('timeSlots');
             
-            String timeLabel = TimeSlotFormatter.formatTime(slot.Start_Time__c) + 
-                              ' - ' + 
-                              TimeSlotFormatter.formatTime(slot.End_Time__c);
+            String timeLabel = TimeSlotFormatter.formatTime(slot.Start_Time__c) + ' - ' + TimeSlotFormatter.formatTime(slot.End_Time__c);
             
             Map<String, Object> slotData = new Map<String, Object>();
             slotData.put('id', slot.Id);
@@ -180,8 +132,7 @@ public with sharing class VolunteerAvailabilityService {
         
         Integer totalCount = allRows.size();
         Integer startIndex = offset != null ? offset : 0;
-        Integer endIndex = (pageSize != null && pageSize > 0) ? 
-                           Math.min(startIndex + pageSize, totalCount) : totalCount;
+        Integer endIndex = (pageSize != null && pageSize > 0) ? Math.min(startIndex + pageSize, totalCount) : totalCount;
         
         List<Map<String, Object>> paginatedRows = new List<Map<String, Object>>();
         for (Integer i = startIndex; i < endIndex; i++) {
@@ -196,9 +147,6 @@ public with sharing class VolunteerAvailabilityService {
         return result;
     }
     
-    /**
-     * Sort by volunteer name, then date
-     */
     private class VolunteerDateComparator implements Comparator<Map<String, Object>> {
         public Integer compare(Map<String, Object> m1, Map<String, Object> m2) {
             String name1 = (String) m1.get('volunteerName');
@@ -211,116 +159,21 @@ public with sharing class VolunteerAvailabilityService {
             }
             Date date1 = (Date) m1.get('date');
             Date date2 = (Date) m2.get('date');
-            if (date1 == null && date2 == null) {
-                return 0;
-            }
-            if (date1 == null) {
-                return -1;
-            }
-            if (date2 == null) {
-                return 1;
-            }
-            if (date1 < date2) {
-                return -1;
-            } else if (date1 > date2) {
-                return 1;
-            } else {
-                return 0;
-            }
+            if (date1 == null && date2 == null) return 0;
+            if (date1 == null) return -1;
+            if (date2 == null) return 1;
+            if (date1 < date2) return -1;
+            if (date1 > date2) return 1;
+            return 0;
         }
     }
     
-    
-    private static Map<String, Time_Slot__c> buildSlotMap(List<Time_Slot__c> slots) {
-        Map<String, Time_Slot__c> slotMap = new Map<String, Time_Slot__c>();
-        for (Time_Slot__c slot : slots) {
-            String key = String.valueOf(slot.Day__c) + '-' + String.valueOf(slot.Start_Time__c) + '-' + String.valueOf(slot.End_Time__c);
-            slotMap.put(key, slot);
-        }
-        return slotMap;
-    }
-    
-    private static Map<String, Object> buildSlotData(Time_Slot__c slot, Date day) {
-        Map<String, Object> slotData = new Map<String, Object>();
-        if (slot != null) {
-            slotData.put('id', slot.Id);
-            slotData.put('startTime', slot.Start_Time__c);
-            slotData.put('endTime', slot.End_Time__c);
-            slotData.put('day', slot.Day__c);
-            slotData.put('volunteerId', slot.Volunteer__c);
-            slotData.put('volunteerName', slot.Volunteer__r != null ? slot.Volunteer__r.Name : null);
-            slotData.put('isAvailable', true);
-        } else {
-            slotData.put('id', null);
-            slotData.put('startTime', null);
-            slotData.put('endTime', null);
-            slotData.put('day', day);
-            slotData.put('volunteerId', null);
-            slotData.put('volunteerName', null);
-            slotData.put('isAvailable', false);
-        }
-        return slotData;
-    }
-    
-    private static Time_Slot__c getAndValidateTimeSlot(Id timeSlotId) {
-        List<Time_Slot__c> slots = TimeSlotSelector.getTimeSlotById(timeSlotId);
-        if (slots.isEmpty()) {
-            throw new AuraHandledException('Time slot not found.');
-        }
-        
-        Time_Slot__c slot = slots[0];
-        if (slot.Status__c != 'Available') {
-            throw new AuraHandledException('This time slot is no longer available.');
-        }
-        if (slot.Volunteer__c == null) {
-            throw new AuraHandledException('No volunteer assigned to this time slot.');
-        }
-        return slot;
-    }
-    
-    private static Appointment_Request__c getOrCreateAppointmentRequest(Time_Slot__c slot, Id customerId, Id appointmentRequestId) {
-        if (appointmentRequestId != null) {
-            List<Appointment_Request__c> requests = AppointmentRequestSelector.getAppointmentRequestById(appointmentRequestId);
-            if (requests.isEmpty()) {
-                throw new AuraHandledException('Appointment Request not found.');
-            }
-            
-            Appointment_Request__c request = requests[0];
-            if (request.Volunteer__c != slot.Volunteer__c) {
-                throw new AuraHandledException('The selected time slot is not available for this appointment request.');
-            }
-            return request;
-        }
-        
-        if (customerId == null) {
-            throw new AuraHandledException('Appointment request information is required. Please use the link provided in your email.');
-        }
-        
-        Appointment_Request__c request = new Appointment_Request__c(
-            Volunteer__c = slot.Volunteer__c,
-            Status__c = 'New'
-        );
-        insert request;
-        return request;
-    }
-    
-    private static Map<String, String> getCustomerInfo(Appointment_Request__c appointmentRequest, Id customerId) {
+    private static Map<String, String> getCustomerInfo(Appointment_Request__c appointmentRequest) {
         Map<String, String> customerInfo = new Map<String, String>();
-        
-        if (appointmentRequest.Reference_Email__c != null) {
-            String firstName = appointmentRequest.Reference_First_Name__c != null ? appointmentRequest.Reference_First_Name__c : '';
-            String lastName = appointmentRequest.Reference_Last_Name__c != null ? appointmentRequest.Reference_Last_Name__c : '';
-            customerInfo.put('name', (firstName + ' ' + lastName).trim());
-            customerInfo.put('email', appointmentRequest.Reference_Email__c);
-        } else {
-            List<User> users = OHRUserSelector.getUserById(customerId);
-            if (users.isEmpty()) {
-                throw new AuraHandledException('Customer not found.');
-            }
-            customerInfo.put('name', users[0].Name);
-            customerInfo.put('email', users[0].Email);
-        }
-        
+        String firstName = appointmentRequest.Reference_First_Name__c != null ? appointmentRequest.Reference_First_Name__c : '';
+        String lastName = appointmentRequest.Reference_Last_Name__c != null ? appointmentRequest.Reference_Last_Name__c : '';
+        customerInfo.put('name', (firstName + ' ' + lastName).trim());
+        customerInfo.put('email', appointmentRequest.Reference_Email__c);
         return customerInfo;
     }
     
@@ -340,8 +193,7 @@ public with sharing class VolunteerAvailabilityService {
             Time startTime = TimeSlotFormatter.parseTime(startTimeStr);
             Time endTime = TimeSlotFormatter.parseTime(endTimeStr);
             
-            if (slotDate != null && startTime != null && endTime != null && 
-                TimeSlotFormatter.isValidTimeRange(startTime, endTime)) {
+            if (slotDate != null && startTime != null && endTime != null && TimeSlotFormatter.isValidTimeRange(startTime, endTime)) {
                 slots.addAll(TimeSlotHelper.generateTimeSlotsFromRange(slotDate, startTime, endTime, volunteerId));
             }
         }
@@ -379,16 +231,13 @@ public with sharing class VolunteerAvailabilityService {
             Time startTime = TimeSlotFormatter.parseTime(row.startTime);
             Time endTime = TimeSlotFormatter.parseTime(row.endTime);
             
-            if (slotDate != null && startTime != null && endTime != null && 
-                TimeSlotFormatter.isValidTimeRange(startTime, endTime)) {
-                List<Time_Slot__c> generatedSlots = TimeSlotHelper.generateTimeSlotsFromRange(slotDate, startTime, endTime, volunteerId);
-                slots.addAll(generatedSlots);
+            if (slotDate != null && startTime != null && endTime != null && TimeSlotFormatter.isValidTimeRange(startTime, endTime)) {
+                slots.addAll(TimeSlotHelper.generateTimeSlotsFromRange(slotDate, startTime, endTime, volunteerId));
             }
         }
         
         return slots;
     }
-    
     
     private static Map<String, Object> buildResult(Boolean success, String message, Integer slotsCreated) {
         Map<String, Object> result = new Map<String, Object>();
@@ -406,13 +255,6 @@ public with sharing class VolunteerAvailabilityService {
         return result;
     }
     
-    /**
-     * Get volunteer information for display
-     * This service calls VolunteerDisplayService to get volunteer details
-     * Services can call other services for business logic
-     * @param volunteerId Volunteer (User) ID
-     * @return Map containing success flag, message, and volunteer information
-     */
     public static Map<String, Object> getVolunteerInfo(Id volunteerId) {
         if (volunteerId == null) {
             Map<String, Object> result = new Map<String, Object>();
@@ -436,12 +278,6 @@ public with sharing class VolunteerAvailabilityService {
         return result;
     }
     
-    /**
-     * Get all volunteers for selection/filtering
-     * This service calls VolunteerDisplayService to get all volunteers
-     * Services can call other services for business logic
-     * @return Map containing list of volunteers and total count
-     */
     public static Map<String, Object> getAllVolunteersForDisplay() {
         return VolunteerDisplayService.getAllVolunteers();
     }

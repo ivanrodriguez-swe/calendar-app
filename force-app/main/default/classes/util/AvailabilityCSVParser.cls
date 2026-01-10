@@ -7,12 +7,6 @@ public class AvailabilityCSVParser {
         public String endTime;
     }
     
-    /**
-     * Parse CSV content for availability upload
-     * Expected format: Volunteer Email, Day (YYYY-MM-DD), Start Time (HH:mm), End Time (HH:mm)
-     * @param csvContent CSV content as string
-     * @return List of parsed CSV rows
-     */
     public static List<AvailabilityCSVRow> parseAvailabilityCSV(String csvContent) {
         List<AvailabilityCSVRow> rows = new List<AvailabilityCSVRow>();
         
@@ -66,11 +60,6 @@ public class AvailabilityCSVParser {
         return rows;
     }
     
-    /**
-     * Parse a single CSV line handling quoted values
-     * @param line CSV line to parse
-     * @return List of values from the CSV line
-     */
     public static List<String> parseCSVLine(String line) {
         List<String> values = new List<String>();
         Boolean inQuotes = false;
@@ -94,4 +83,3 @@ public class AvailabilityCSVParser {
         return values;
     }
 }
-

@@ -1,28 +1,14 @@
 public class BookingEmailService {
     
-    /**
-     * Validate email format
-     * @param email Email address
-     * @return True if valid
-     */
     public static Boolean isValidEmail(String email) {
         if (String.isBlank(email)) return false;
         return email.contains('@') && email.contains('.');
     }
     
-    /**
-     * Send booking confirmation emails
-     * @param slot Time slot
-     * @param customerName Customer name
-     * @param customerEmail Customer email
-     * @param appointment Appointment record
-     * @param appointmentRequest Appointment request record
-     */
     public static void sendBookingEmails(Time_Slot__c slot, String customerName, String customerEmail, Appointment__c appointment, Appointment_Request__c appointmentRequest) {
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
         String timeRange = TimeSlotFormatter.formatTime(slot.Start_Time__c) + ' - ' + TimeSlotFormatter.formatTime(slot.End_Time__c);
 
-        // Volunteer notification email
         if (slot.Volunteer__r != null && slot.Volunteer__r.Email != null) {
             EmailTemplates.EmailContent content = EmailTemplates.getVolunteerNotificationEmail(
                 slot.Volunteer__r.Name,
@@ -40,7 +26,6 @@ public class BookingEmailService {
             emails.add(volunteerEmail);
         }
 
-        // Customer confirmation email
         if (String.isNotBlank(customerEmail)) {
             String volunteerName = slot.Volunteer__r != null ? slot.Volunteer__r.Name : null;
             EmailTemplates.EmailContent content = EmailTemplates.getCustomerConfirmationEmail(
@@ -66,12 +51,6 @@ public class BookingEmailService {
         }
     }
     
-    /**
-     * Send invite emails to references for selected Appointment Requests
-     * Updates status to 'Sent' for successfully emailed requests
-     * @param requestIds List of Appointment Request IDs
-     * @return Map with success, emailsSent, errors
-     */
     public static Map<String, Object> sendInviteEmails(List<Id> requestIds) {
         Map<String, Object> result = new Map<String, Object>();
         result.put('success', false);
@@ -83,14 +62,12 @@ public class BookingEmailService {
             return result;
         }
         
-        // Query Appointment Requests with required fields - only process 'New' status
         List<Appointment_Request__c> requests = [
             SELECT Id, Reference_Email__c, Reference_First_Name__c, URL_Invite__c, Status__c
             FROM Appointment_Request__c
             WHERE Id IN :requestIds AND Status__c = 'New'
         ];
         
-        // Check how many were skipped due to non-New status
         Integer skippedCount = requestIds.size() - requests.size();
         
         if (requests.isEmpty()) {
@@ -101,7 +78,6 @@ public class BookingEmailService {
             return result;
         }
         
-        // Get the base URL from custom label
         String baseUrl = System.Label.OHRS_Site_Base_URL;
         
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
@@ -111,7 +87,6 @@ public class BookingEmailService {
         
         Integer emailIndex = 0;
         for (Appointment_Request__c request : requests) {
-            // Validate email
             if (!isValidEmail(request.Reference_Email__c)) {
                 String referenceName = String.isNotBlank(request.Reference_First_Name__c) 
                     ? request.Reference_First_Name__c 
@@ -123,10 +98,8 @@ public class BookingEmailService {
                 continue;
             }
             
-            // Build the invite URL (formula field returns HYPERLINK, we need just the URL)
             String inviteUrl = baseUrl + request.Id;
             
-            // Build email using template
             EmailTemplates.EmailContent content = EmailTemplates.getAppointmentInviteEmail(
                 request.Reference_First_Name__c,
                 inviteUrl
@@ -147,18 +120,15 @@ public class BookingEmailService {
             return result;
         }
         
-        // Check Salesforce governor limit (max 100 single emails per sendEmail call)
         if (emails.size() > 100) {
             result.put('errors', new List<String>{ 'Cannot send more than 100 emails at once. Please select fewer records.' });
             return result;
         }
         
-        // Send emails
         Integer emailsSent = 0;
         try {
             List<Messaging.SendEmailResult> sendResults = Messaging.sendEmail(emails, false);
             
-            // Process results and update status for successful sends
             for (Integer i = 0; i < sendResults.size(); i++) {
                 if (sendResults[i].isSuccess()) {
                     emailsSent++;
@@ -175,7 +145,6 @@ public class BookingEmailService {
                 }
             }
             
-            // Update successfully emailed requests to 'Sent' status
             if (!requestsToUpdate.isEmpty()) {
                 update requestsToUpdate;
             }
@@ -184,7 +153,6 @@ public class BookingEmailService {
             errors.add('Error sending emails: ' + e.getMessage());
         }
         
-        // Add info about skipped non-New records
         if (skippedCount > 0) {
             errors.add(skippedCount + ' record(s) already sent or processed');
         }
@@ -196,4 +164,3 @@ public class BookingEmailService {
         return result;
     }
 }
-

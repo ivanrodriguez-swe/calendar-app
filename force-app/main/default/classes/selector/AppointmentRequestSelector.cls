@@ -1,10 +1,5 @@
 public inherited sharing class AppointmentRequestSelector {
     
-    /**
-     * Get appointment request by ID with all necessary fields
-     * @param requestId Appointment request record ID
-     * @return Appointment request with volunteer and reference information
-     */
     public static List<Appointment_Request__c> getAppointmentRequestById(Id requestId) {
         return [
             SELECT Id, Name, Volunteer__c, Status__c, Reference_First_Name__c, 
@@ -15,4 +10,3 @@ public inherited sharing class AppointmentRequestSelector {
         ];
     }
 }
-

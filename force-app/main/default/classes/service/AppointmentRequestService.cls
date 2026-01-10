@@ -1,11 +1,5 @@
 public without sharing class AppointmentRequestService {
     
-    /**
-     * Process file to create Selectees and their Appointment Requests
-     * If a Selectee already exists (matched by email), reuse the existing record
-     * @param fileContent The CSV file content
-     * @return Map with success, message, selecteesCreated, requestsCreated
-     */
     public static Map<String, Object> processFile(String fileContent) {
         Map<String, Object> result = new Map<String, Object>();
         result.put('success', false);
@@ -25,14 +19,12 @@ public without sharing class AppointmentRequestService {
                 return result;
             }
             
-            // Filter out rows with no references and collect Selectee emails
             List<Map<String, Object>> validData = new List<Map<String, Object>>();
             Set<String> selecteeEmails = new Set<String>();
             
             for (Map<String, Object> data : parsedData) {
                 List<Map<String, String>> references = (List<Map<String, String>>)data.get('references');
                 
-                // Skip rows with no references
                 if (references == null || references.isEmpty()) {
                     continue;
                 }
@@ -49,10 +41,8 @@ public without sharing class AppointmentRequestService {
                 return result;
             }
             
-            // Replace parsedData with validData for the rest of the processing
             parsedData = validData;
             
-            // Query existing Selectees by email
             Map<String, Selectee__c> existingSelecteesByEmail = new Map<String, Selectee__c>();
             for (Selectee__c s : [SELECT Id, Email__c FROM Selectee__c WHERE Email__c IN :selecteeEmails]) {
                 if (String.isNotBlank(s.Email__c)) {
@@ -60,11 +50,8 @@ public without sharing class AppointmentRequestService {
                 }
             }
             
-            // Create new Selectee records only for those that don't exist
             List<Selectee__c> newSelectees = new List<Selectee__c>();
             List<Integer> newSelecteeIndices = new List<Integer>();
-            
-            // Map to track which Selectee (new or existing) to use for each parsed row
             Map<Integer, Id> rowToSelecteeId = new Map<Integer, Id>();
             
             for (Integer i = 0; i < parsedData.size(); i++) {
@@ -72,12 +59,9 @@ public without sharing class AppointmentRequestService {
                 String email = (String)data.get('selecteeEmail');
                 String emailKey = String.isNotBlank(email) ? email.toLowerCase() : null;
                 
-                // Check if Selectee already exists
                 if (emailKey != null && existingSelecteesByEmail.containsKey(emailKey)) {
-                    // Use existing Selectee
                     rowToSelecteeId.put(i, existingSelecteesByEmail.get(emailKey).Id);
                 } else {
-                    // Create new Selectee
                     Selectee__c selectee = new Selectee__c();
                     selectee.Name = (String)data.get('selecteeFirstName') + ' ' + (String)data.get('selecteeLastName');
                     selectee.Email__c = (String)data.get('selecteeEmail');
@@ -88,7 +72,6 @@ public without sharing class AppointmentRequestService {
                         try {
                             selectee.Expected_EOD__c = Date.valueOf(eodString);
                         } catch (Exception e) {
-                            // If date parsing fails, leave it null
                         }
                     }
                     
@@ -97,18 +80,15 @@ public without sharing class AppointmentRequestService {
                 }
             }
             
-            // Insert new Selectees
             if (!newSelectees.isEmpty()) {
                 insert newSelectees;
                 
-                // Map newly created Selectees to their row indices
                 for (Integer j = 0; j < newSelectees.size(); j++) {
                     Integer rowIndex = newSelecteeIndices[j];
                     rowToSelecteeId.put(rowIndex, newSelectees[j].Id);
                 }
             }
             
-            // Create Appointment Request records for each reference
             List<Appointment_Request__c> appointmentRequests = new List<Appointment_Request__c>();
             
             for (Integer i = 0; i < parsedData.size(); i++) {
@@ -123,7 +103,6 @@ public without sharing class AppointmentRequestService {
                         request.Selectee__c = selecteeId;
                         request.Status__c = 'New';
                         
-                        // Parse reference name into first and last name
                         String refName = ref.get('name');
                         if (String.isNotBlank(refName)) {
                             List<String> nameParts = refName.split(' ', 2);
@@ -163,11 +142,6 @@ public without sharing class AppointmentRequestService {
         return result;
     }
     
-    /**
-     * Process CSV and create appointment requests
-     * @param csvContent CSV content
-     * @return Map with success, message, recordsCreated, emailsSent, skippedRecords
-     */
     public static Map<String, Object> uploadCSV(String csvContent) {
         Map<String, Object> result = new Map<String, Object>();
         result.put('success', false);
@@ -260,13 +234,10 @@ public without sharing class AppointmentRequestService {
             }
             result.put('message', successMsg);
             
-                    } catch (Exception e) {
-                        result.put('message', 'Error: ' + e.getMessage());
-                    }
+        } catch (Exception e) {
+            result.put('message', 'Error: ' + e.getMessage());
+        }
         
         return result;
     }
-    
 }
-
-
