@@ -1,5 +1,11 @@
+/**
+ * @description Utility class for generating email content templates
+ */
 public class EmailTemplates {
     
+    /**
+     * @description Wrapper class for email content
+     */
     public class EmailContent {
         public String subject { get; set; }
         public String htmlBody { get; set; }
@@ -12,6 +18,12 @@ public class EmailTemplates {
         }
     }
     
+    /**
+     * @description Generates invite email content for appointment scheduling
+     * @param recipientName The recipient's first name
+     * @param inviteUrl The URL to the appointment scheduler
+     * @return EmailContent with subject and body
+     */
     public static EmailContent getAppointmentInviteEmail(String recipientName, String inviteUrl) {
         String firstName = String.isNotBlank(recipientName) ? recipientName : 'Guest';
         
@@ -37,6 +49,15 @@ public class EmailTemplates {
         return new EmailContent(subject, htmlBody, plainTextBody);
     }
     
+    /**
+     * @description Generates confirmation email content for volunteers
+     * @param volunteerName The volunteer's name
+     * @param customerName The customer/reference name
+     * @param customerEmail The customer/reference email
+     * @param appointmentDate The appointment date
+     * @param timeRange The formatted time range string
+     * @return EmailContent with subject and body
+     */
     public static EmailContent getVolunteerConfirmationEmail(
         String volunteerName, 
         String customerName, 
@@ -75,6 +96,14 @@ public class EmailTemplates {
         return new EmailContent(subject, htmlBody, plainTextBody);
     }
     
+    /**
+     * @description Generates confirmation email content for customers/references
+     * @param customerName The customer/reference name
+     * @param volunteerName The volunteer's name
+     * @param appointmentDate The appointment date
+     * @param timeRange The formatted time range string
+     * @return EmailContent with subject and body
+     */
     public static EmailContent getCustomerConfirmationEmail(
         String customerName, 
         String volunteerName, 

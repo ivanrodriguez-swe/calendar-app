@@ -1,11 +1,23 @@
+/**
+ * @description Service class for retrieving volunteer display data
+ */
 public with sharing class VolunteerDisplayService {
     
+    /**
+     * @description Retrieves all active volunteers
+     * @return Map with volunteers list and total count
+     */
     public static Map<String, Object> getAllVolunteers() {
         List<User> users = OHRUserSelector.getAllActiveUsers();
         List<Map<String, Object>> volunteerData = convertUsersToMaps(users);
         return buildResult(volunteerData);
     }
     
+    /**
+     * @description Retrieves a single volunteer by Id
+     * @param volunteerId The volunteer's User Id
+     * @return Map with volunteer data or null if not found
+     */
     public static Map<String, Object> getVolunteerById(Id volunteerId) {
         if (volunteerId == null) {
             return null;

@@ -1,10 +1,22 @@
+/**
+ * @description Service class for handling booking and invite email operations
+ */
 public without sharing class BookingEmailService {
     
+    /**
+     * @description Validates if the provided string is a valid email format
+     * @param email The email address to validate
+     * @return Boolean indicating if the email is valid
+     */
     public static Boolean isValidEmail(String email) {
         if (String.isBlank(email)) return false;
         return email.contains('@') && email.contains('.');
     }
     
+    /**
+     * @description Retrieves the first verified Org-Wide Email Address Id
+     * @return The OWA Id or null if none exists
+     */
     private static Id getOrgWideEmailAddressId() {
         List<OrgWideEmailAddress> owas = [
             SELECT Id FROM OrgWideEmailAddress WHERE IsVerified = true LIMIT 1
@@ -12,6 +24,13 @@ public without sharing class BookingEmailService {
         return owas.isEmpty() ? null : owas[0].Id;
     }
     
+    /**
+     * @description Creates a SingleEmailMessage with the provided parameters
+     * @param toAddress The recipient email address
+     * @param content The email content (subject, htmlBody, plainTextBody)
+     * @param owaId The Org-Wide Email Address Id to use as sender
+     * @return Configured SingleEmailMessage
+     */
     private static Messaging.SingleEmailMessage createEmail(String toAddress, EmailTemplates.EmailContent content, Id owaId) {
         Messaging.SingleEmailMessage email = new Messaging.SingleEmailMessage();
         email.setToAddresses(new List<String>{ toAddress });
@@ -24,6 +43,12 @@ public without sharing class BookingEmailService {
         return email;
     }
     
+    /**
+     * @description Sends booking confirmation emails to both volunteer and customer
+     * @param slot The booked time slot with volunteer relationship
+     * @param customerName The customer's full name
+     * @param customerEmail The customer's email address
+     */
     public static void sendBookingEmails(Time_Slot__c slot, String customerName, String customerEmail) {
         List<Messaging.SingleEmailMessage> emails = new List<Messaging.SingleEmailMessage>();
         String timeRange = TimeSlotFormatter.formatTime(slot.Start_Time__c) + ' - ' + TimeSlotFormatter.formatTime(slot.End_Time__c);
@@ -55,11 +80,15 @@ public without sharing class BookingEmailService {
             try {
                 Messaging.sendEmail(emails, false);
             } catch (Exception e) {
-                // Email sending failed but don't break the booking transaction
             }
         }
     }
     
+    /**
+     * @description Sends invite emails to appointment requests with New status
+     * @param requestIds List of Appointment Request record Ids to send invites to
+     * @return Map containing success status, emailsSent count, and any errors
+     */
     public static Map<String, Object> sendInviteEmails(List<Id> requestIds) {
         Map<String, Object> result = new Map<String, Object>();
         result.put('success', false);

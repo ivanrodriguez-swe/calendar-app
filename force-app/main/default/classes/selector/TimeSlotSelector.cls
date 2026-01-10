@@ -1,5 +1,15 @@
+/**
+ * @description Selector class for Time_Slot__c queries
+ */
 public inherited sharing class TimeSlotSelector {
     
+    /**
+     * @description Retrieves available time slots grouped by volunteer
+     * @param startDate Start of date range filter (optional)
+     * @param endDate End of date range filter (optional)
+     * @param volunteerIds Set of volunteer Ids to filter by (optional)
+     * @return Map of volunteer Id to list of available time slots
+     */
     public static Map<Id, List<Time_Slot__c>> getAvailableTimeSlotsForRange(Date startDate, Date endDate, Set<Id> volunteerIds) {
         String query = 'SELECT Id, Start_Time__c, End_Time__c, Day__c, Status__c, Volunteer__c, Volunteer__r.Name ' +
                        'FROM Time_Slot__c ' +
@@ -37,6 +47,11 @@ public inherited sharing class TimeSlotSelector {
         return result;
     }
     
+    /**
+     * @description Retrieves a time slot by Id with volunteer relationship
+     * @param timeSlotId The Time Slot record Id
+     * @return List containing the time slot or empty if not found
+     */
     public static List<Time_Slot__c> getTimeSlotById(Id timeSlotId) {
         return [
             SELECT Id, Volunteer__c, Volunteer__r.Email, Volunteer__r.Name, 
@@ -47,6 +62,12 @@ public inherited sharing class TimeSlotSelector {
         ];
     }
     
+    /**
+     * @description Retrieves existing time slots for given dates and volunteers
+     * @param dates Set of dates to filter by
+     * @param volunteerIds Set of volunteer Ids to filter by
+     * @return List of matching time slots
+     */
     public static List<Time_Slot__c> getExistingTimeSlotsByDatesAndVolunteers(Set<Date> dates, Set<Id> volunteerIds) {
         return [
             SELECT Day__c, Start_Time__c, End_Time__c, Volunteer__c
@@ -56,6 +77,12 @@ public inherited sharing class TimeSlotSelector {
         ];
     }
     
+    /**
+     * @description Retrieves all time slots for a date range
+     * @param startDate Start of date range (optional)
+     * @param endDate End of date range (optional)
+     * @return List of time slots ordered by volunteer name, date, and time
+     */
     public static List<Time_Slot__c> getAllTimeSlotsForRange(Date startDate, Date endDate) {
         if (startDate == null && endDate == null) {
             return [
@@ -94,6 +121,13 @@ public inherited sharing class TimeSlotSelector {
         }
     }
     
+    /**
+     * @description Retrieves available slots matching specific date and time
+     * @param slotDate The slot date
+     * @param startTime The slot start time
+     * @param endTime The slot end time
+     * @return List of available time slots matching the criteria
+     */
     public static List<Time_Slot__c> getAvailableSlotsByDateTime(Date slotDate, Time startTime, Time endTime) {
         return [
             SELECT Id, Volunteer__c, Volunteer__r.Email, Volunteer__r.Name, 

@@ -1,5 +1,16 @@
+/**
+ * @description Controller for volunteer availability display exposed to LWC
+ */
 public without sharing class VolunteerAvailabilityDisplayController {
     
+    /**
+     * @description Retrieves volunteer availability data with pagination
+     * @param startDate Start date filter (YYYY-MM-DD format)
+     * @param endDate End date filter (YYYY-MM-DD format)
+     * @param offset Pagination offset
+     * @param pageSize Number of records per page
+     * @return VolunteerAvailabilityResult with rows and pagination info
+     */
     @AuraEnabled
     public static VolunteerAvailabilityResult getVolunteerAvailabilityData(String startDate, String endDate, Integer offset, Integer pageSize) {
         try {
@@ -58,6 +69,11 @@ public without sharing class VolunteerAvailabilityDisplayController {
         }
     }
     
+    /**
+     * @description Retrieves volunteer info by Id
+     * @param volunteerId The volunteer's User Id
+     * @return VolunteerInfoResult with volunteer data
+     */
     @AuraEnabled(cacheable=true)
     public static VolunteerInfoResult getVolunteerInfo(Id volunteerId) {
         if (volunteerId == null) {
@@ -88,6 +104,10 @@ public without sharing class VolunteerAvailabilityDisplayController {
         return result;
     }
     
+    /**
+     * @description Retrieves all volunteers for display
+     * @return VolunteerListResult with all volunteers
+     */
     @AuraEnabled(cacheable=true)
     public static VolunteerListResult getAllVolunteersForDisplay() {
         Map<String, Object> serviceResult = VolunteerAvailabilityService.getAllVolunteersForDisplay();

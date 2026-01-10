@@ -1,5 +1,13 @@
+/**
+ * @description Controller for appointment request operations exposed to LWC
+ */
 public with sharing class AppointmentRequestController {
     
+    /**
+     * @description Processes uploaded file content to create selectees and appointment requests
+     * @param fileContent The file content as a string
+     * @return ProcessFileResult with counts of created records
+     */
     @AuraEnabled
     public static ProcessFileResult processFile(String fileContent) {
         Map<String, Object> serviceResult = AppointmentRequestService.processFile(fileContent);
@@ -26,6 +34,11 @@ public with sharing class AppointmentRequestController {
         }
     }
     
+    /**
+     * @description Uploads CSV content to create appointment requests
+     * @param csvContent The CSV file content as a string
+     * @return UploadResult with counts of created records and emails sent
+     */
     @AuraEnabled
     public static UploadResult uploadCSV(String csvContent) {
         Map<String, Object> serviceResult = AppointmentRequestService.uploadCSV(csvContent);
@@ -52,6 +65,11 @@ public with sharing class AppointmentRequestController {
         }
     }
     
+    /**
+     * @description Sends invite emails to selected appointment requests
+     * @param requestIds List of Appointment Request record Ids
+     * @return SendInvitesResult with success status and email counts
+     */
     @AuraEnabled
     public static SendInvitesResult sendInviteEmails(List<Id> requestIds) {
         Map<String, Object> serviceResult = BookingEmailService.sendInviteEmails(requestIds);
@@ -76,6 +94,10 @@ public with sharing class AppointmentRequestController {
         }
     }
     
+    /**
+     * @description Retrieves all appointment requests with New status
+     * @return List of Appointment_Request__c records
+     */
     @AuraEnabled(cacheable=true)
     public static List<Appointment_Request__c> getNewAppointmentRequests() {
         return [

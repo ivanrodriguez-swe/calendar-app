@@ -1,5 +1,13 @@
+/**
+ * @description Service class for processing appointment requests from file uploads
+ */
 public without sharing class AppointmentRequestService {
     
+    /**
+     * @description Processes file content to create selectees and appointment requests
+     * @param fileContent The file content as a string
+     * @return Map with success status, counts, and message
+     */
     public static Map<String, Object> processFile(String fileContent) {
         Map<String, Object> result = new Map<String, Object>();
         result.put('success', false);
@@ -142,6 +150,11 @@ public without sharing class AppointmentRequestService {
         return result;
     }
     
+    /**
+     * @description Processes CSV content to create appointment requests
+     * @param csvContent The CSV file content as a string
+     * @return Map with success status, counts, and message
+     */
     public static Map<String, Object> uploadCSV(String csvContent) {
         Map<String, Object> result = new Map<String, Object>();
         result.put('success', false);

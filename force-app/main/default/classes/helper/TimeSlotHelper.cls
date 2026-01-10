@@ -1,5 +1,16 @@
+/**
+ * @description Helper class for time slot generation and processing
+ */
 public with sharing class TimeSlotHelper {
     
+    /**
+     * @description Generates 15-minute time slots from a time range
+     * @param slotDate The date for the slots
+     * @param startTime The start time of the range
+     * @param endTime The end time of the range
+     * @param volunteerId The volunteer's User Id
+     * @return List of generated Time_Slot__c records
+     */
     public static List<Time_Slot__c> generateTimeSlotsFromRange(Date slotDate, Time startTime, Time endTime, Id volunteerId) {
         List<Time_Slot__c> slots = new List<Time_Slot__c>();
         Integer slotMinutes = 15;
@@ -39,6 +50,11 @@ public with sharing class TimeSlotHelper {
         return slots;
     }
     
+    /**
+     * @description Processes potential slots for insert by removing duplicates
+     * @param potentialSlots List of slots to process
+     * @return List of unique slots that don't already exist
+     */
     public static List<Time_Slot__c> processTimeSlotsForInsert(List<Time_Slot__c> potentialSlots) {
         Set<String> submissionKeys = new Set<String>();
         List<Time_Slot__c> deduplicated = new List<Time_Slot__c>();
@@ -86,6 +102,14 @@ public with sharing class TimeSlotHelper {
         return toInsert;
     }
     
+    /**
+     * @description Builds a unique key for a time slot
+     * @param day The slot date
+     * @param startTime The slot start time
+     * @param endTime The slot end time
+     * @param volunteerId The volunteer Id
+     * @return String key for the slot
+     */
     public static String buildTimeSlotKey(Date day, Time startTime, Time endTime, Id volunteerId) {
         String dayStr = day != null ? String.valueOf(day) : '';
         String startStr = startTime != null ? String.valueOf(startTime) : '';
@@ -94,6 +118,10 @@ public with sharing class TimeSlotHelper {
         return dayStr + '|' + startStr + '|' + endStr + '|' + volunteerStr;
     }
     
+    /**
+     * @description Gets time slot structure labels for business hours
+     * @return List of time range labels
+     */
     public static List<String> getTimeSlotStructureLabels() {
         List<String> labels = new List<String>();
         Time businessStart = Time.newInstance(9, 0, 0, 0);
@@ -113,6 +141,11 @@ public with sharing class TimeSlotHelper {
         return labels;
     }
     
+    /**
+     * @description Parses a date string in YYYY-MM-DD format
+     * @param dateValue The date string to parse
+     * @return Parsed Date or null if invalid
+     */
     public static Date parseDate(String dateValue) {
         try {
             if (String.isBlank(dateValue)) {

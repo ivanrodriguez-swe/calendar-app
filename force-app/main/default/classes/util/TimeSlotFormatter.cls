@@ -1,5 +1,13 @@
+/**
+ * @description Utility class for formatting and parsing time values
+ */
 public class TimeSlotFormatter {
     
+    /**
+     * @description Parses a time string in HH:MM format
+     * @param timeStr The time string to parse
+     * @return Parsed Time or null if invalid
+     */
     public static Time parseTime(String timeStr) {
         if (String.isBlank(timeStr)) return null;
         List<String> parts = timeStr.split(':');
@@ -15,6 +23,11 @@ public class TimeSlotFormatter {
         }
     }
     
+    /**
+     * @description Formats a Time value to a readable string (e.g., "9:00 AM")
+     * @param t The Time value to format
+     * @return Formatted time string
+     */
     public static String formatTime(Time t) {
         if (t == null) return '';
         Integer hours = t.hour();
@@ -29,6 +42,12 @@ public class TimeSlotFormatter {
         return String.valueOf(hours) + ':' + minutesStr + ' ' + ampm;
     }
     
+    /**
+     * @description Validates if a time range is within business hours
+     * @param startTime The start time to validate
+     * @param endTime The end time to validate
+     * @return Boolean indicating if the range is valid
+     */
     public static Boolean isValidTimeRange(Time startTime, Time endTime) {
         Time minStartTime = Time.newInstance(9, 0, 0, 0);
         Time maxStartTime = Time.newInstance(15, 45, 0, 0);

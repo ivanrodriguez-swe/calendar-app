@@ -1,5 +1,13 @@
+/**
+ * @description Service class for managing volunteer availability and time slot booking
+ */
 public without sharing class VolunteerAvailabilityService {
     
+    /**
+     * @description Books a time slot with a randomly selected volunteer
+     * @param bookingParams Map containing slotDate, startTime, endTime, appointmentRequestId, referencePhone
+     * @return Map with success status, message, and appointmentId
+     */
     public static Map<String, Object> bookSlotWithRandomVolunteer(Map<String, Object> bookingParams) {
         Date slotDate = (Date) bookingParams.get('slotDate');
         Time startTime = (Time) bookingParams.get('startTime');
@@ -48,6 +56,12 @@ public without sharing class VolunteerAvailabilityService {
         return buildResult(true, 'Time slot booked successfully!', appointment.Id);
     }
     
+    /**
+     * @description Creates time slots from availability ranges for a volunteer
+     * @param ranges List of maps containing dateValue, startTime, endTime
+     * @param volunteerId The volunteer's User Id
+     * @return Map with success status, message, and slotsCreated count
+     */
     public static Map<String, Object> createTimeSlotsFromRanges(List<Map<String, String>> ranges, Id volunteerId) {
         if (ranges == null || ranges.isEmpty()) {
             return buildResult(false, 'No availability ranges provided', 0);
@@ -64,6 +78,11 @@ public without sharing class VolunteerAvailabilityService {
         return buildResult(false, 'Availability for this time range was already set.', 0);
     }
     
+    /**
+     * @description Creates time slots from CSV content for multiple volunteers
+     * @param csvContent The CSV file content as a string
+     * @return Map with success status, message, slotsCreated count, and warnings
+     */
     public static Map<String, Object> createTimeSlotsFromCSV(String csvContent) {
         if (String.isBlank(csvContent)) {
             return buildResult(false, 'CSV content is empty', 0);
@@ -98,6 +117,14 @@ public without sharing class VolunteerAvailabilityService {
         return result;
     }
     
+    /**
+     * @description Retrieves volunteer availability data with pagination
+     * @param startDate Start of date range filter
+     * @param endDate End of date range filter
+     * @param offset Pagination offset
+     * @param pageSize Number of records per page
+     * @return Map with rows, totalCount, and hasMore flag
+     */
     public static Map<String, Object> getVolunteerAvailabilityData(Date startDate, Date endDate, Integer offset, Integer pageSize) {
         List<Time_Slot__c> slots = TimeSlotSelector.getAllTimeSlotsForRange(startDate, endDate);
         
@@ -148,6 +175,42 @@ public without sharing class VolunteerAvailabilityService {
         result.put('hasMore', endIndex < totalCount);
         
         return result;
+    }
+    
+    /**
+     * @description Retrieves volunteer information by Id
+     * @param volunteerId The volunteer's User Id
+     * @return Map with success status and volunteer data
+     */
+    public static Map<String, Object> getVolunteerInfo(Id volunteerId) {
+        if (volunteerId == null) {
+            Map<String, Object> result = new Map<String, Object>();
+            result.put('success', false);
+            result.put('message', 'volunteerId is required');
+            return result;
+        }
+        
+        Map<String, Object> volunteerData = VolunteerDisplayService.getVolunteerById(volunteerId);
+        
+        if (volunteerData == null) {
+            Map<String, Object> result = new Map<String, Object>();
+            result.put('success', false);
+            result.put('message', 'Volunteer not found');
+            return result;
+        }
+        
+        Map<String, Object> result = new Map<String, Object>();
+        result.put('success', true);
+        result.put('volunteer', volunteerData);
+        return result;
+    }
+    
+    /**
+     * @description Retrieves all volunteers for display
+     * @return Map with volunteer data
+     */
+    public static Map<String, Object> getAllVolunteersForDisplay() {
+        return VolunteerDisplayService.getAllVolunteers();
     }
     
     private class VolunteerDateComparator implements Comparator<Map<String, Object>> {
@@ -256,32 +319,5 @@ public without sharing class VolunteerAvailabilityService {
         result.put('message', message);
         result.put('appointmentId', appointmentId);
         return result;
-    }
-    
-    public static Map<String, Object> getVolunteerInfo(Id volunteerId) {
-        if (volunteerId == null) {
-            Map<String, Object> result = new Map<String, Object>();
-            result.put('success', false);
-            result.put('message', 'volunteerId is required');
-            return result;
-        }
-        
-        Map<String, Object> volunteerData = VolunteerDisplayService.getVolunteerById(volunteerId);
-        
-        if (volunteerData == null) {
-            Map<String, Object> result = new Map<String, Object>();
-            result.put('success', false);
-            result.put('message', 'Volunteer not found');
-            return result;
-        }
-        
-        Map<String, Object> result = new Map<String, Object>();
-        result.put('success', true);
-        result.put('volunteer', volunteerData);
-        return result;
-    }
-    
-    public static Map<String, Object> getAllVolunteersForDisplay() {
-        return VolunteerDisplayService.getAllVolunteers();
     }
 }

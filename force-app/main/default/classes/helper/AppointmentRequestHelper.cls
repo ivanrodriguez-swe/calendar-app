@@ -1,5 +1,13 @@
+/**
+ * @description Helper class for parsing appointment request files and sending emails
+ */
 public without sharing class AppointmentRequestHelper {
     
+    /**
+     * @description Parses file content to extract selectee and reference data
+     * @param fileContent The file content as a string
+     * @return List of parsed data maps with selectee and references info
+     */
     public static List<Map<String, Object>> parseFile(String fileContent) {
         List<Map<String, Object>> dataList = new List<Map<String, Object>>();
         
@@ -79,6 +87,11 @@ public without sharing class AppointmentRequestHelper {
         return dataList;
     }
     
+    /**
+     * @description Parses CSV content to extract appointment request data
+     * @param csvContent The CSV file content as a string
+     * @return List of parsed data maps
+     */
     public static List<Map<String, String>> parseCSV(String csvContent) {
         List<Map<String, String>> dataList = new List<Map<String, String>>();
         
@@ -155,6 +168,11 @@ public without sharing class AppointmentRequestHelper {
         return values;
     }
     
+    /**
+     * @description Maps volunteer emails to User Ids
+     * @param dataList List of data maps containing volunteerEmail
+     * @return Map of email to User Id
+     */
     public static Map<String, Id> getVolunteerEmailToIdMap(List<Map<String, String>> dataList) {
         Set<String> volunteerEmails = new Set<String>();
         
@@ -181,6 +199,11 @@ public without sharing class AppointmentRequestHelper {
         return emailToIdMap;
     }
     
+    /**
+     * @description Sends referral emails to appointment request references
+     * @param appointmentRequests List of appointment requests to send emails for
+     * @return Number of emails sent successfully
+     */
     public static Integer sendReferralEmails(List<Appointment_Request__c> appointmentRequests) {
         Integer emailsSent = 0;
         
@@ -247,6 +270,10 @@ public without sharing class AppointmentRequestHelper {
         return emailsSent;
     }
     
+    /**
+     * @description Gets the public site URL for calendar access
+     * @return The public site URL string
+     */
     public static String getPublicSiteUrl() {
         try {
             Organization org = [SELECT InstanceName FROM Organization LIMIT 1];

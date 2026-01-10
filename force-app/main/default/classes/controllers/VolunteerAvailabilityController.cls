@@ -1,5 +1,13 @@
+/**
+ * @description Controller for volunteer availability and booking operations exposed to LWC
+ */
 public without sharing class VolunteerAvailabilityController {
     
+    /**
+     * @description Books a time slot with a randomly selected volunteer
+     * @param request BookingRequest containing slot details and appointment request info
+     * @return BookingResult with success status and appointment Id
+     */
     @AuraEnabled
     public static BookingResult bookSlotWithRandomVolunteer(BookingRequest request) {
         try {
@@ -25,6 +33,11 @@ public without sharing class VolunteerAvailabilityController {
         }
     }
     
+    /**
+     * @description Converts milliseconds to Apex Time
+     * @param millis Time in milliseconds since midnight
+     * @return Apex Time value
+     */
     private static Time convertMillisToTime(Long millis) {
         Integer totalSeconds = (Integer) (millis / 1000);
         Integer hours = totalSeconds / 3600;
@@ -33,6 +46,11 @@ public without sharing class VolunteerAvailabilityController {
         return Time.newInstance(hours, minutes, seconds, 0);
     }
     
+    /**
+     * @description Retrieves appointment request info for the scheduler component
+     * @param requestId The Appointment Request record Id
+     * @return AppointmentRequestInfo with reference name and status
+     */
     @AuraEnabled(cacheable=true)
     public static AppointmentRequestInfo getAppointmentRequestInfo(Id requestId) {
         if (requestId == null) {
@@ -50,6 +68,10 @@ public without sharing class VolunteerAvailabilityController {
         return new AppointmentRequestInfo(requests[0]);
     }
     
+    /**
+     * @description Retrieves all available time slots for the scheduler
+     * @return List of AvailableSlotWrapper with slot details
+     */
     @AuraEnabled(cacheable=true)
     public static List<AvailableSlotWrapper> getAllAvailableSlots() {
         Map<Id, List<Time_Slot__c>> slotsByVolunteer = TimeSlotSelector.getAvailableTimeSlotsForRange(null, null, null);
@@ -64,6 +86,11 @@ public without sharing class VolunteerAvailabilityController {
         return results;
     }
 
+    /**
+     * @description Creates time slots from availability ranges for the current user
+     * @param ranges List of AvailabilityRange with date and time values
+     * @return CreateSlotsResult with success status and slots created count
+     */
     @AuraEnabled
     public static CreateSlotsResult createTimeSlotsFromRanges(List<AvailabilityRange> ranges) {
         try {
@@ -83,6 +110,11 @@ public without sharing class VolunteerAvailabilityController {
         }
     }
 
+    /**
+     * @description Creates time slots from CSV content for multiple volunteers
+     * @param csvContent The CSV file content as a string
+     * @return CreateSlotsResult with success status, slots created, and warnings
+     */
     @AuraEnabled
     public static CreateSlotsResult createTimeSlotsFromCSV(String csvContent) {
         try {

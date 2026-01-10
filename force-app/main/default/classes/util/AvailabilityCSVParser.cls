@@ -1,5 +1,11 @@
+/**
+ * @description Utility class for parsing availability CSV files
+ */
 public class AvailabilityCSVParser {
     
+    /**
+     * @description Wrapper class for parsed CSV row data
+     */
     public class AvailabilityCSVRow {
         public String volunteerEmail;
         public String dayValue;
@@ -7,6 +13,11 @@ public class AvailabilityCSVParser {
         public String endTime;
     }
     
+    /**
+     * @description Parses CSV content into availability rows
+     * @param csvContent The CSV file content as a string
+     * @return List of parsed AvailabilityCSVRow objects
+     */
     public static List<AvailabilityCSVRow> parseAvailabilityCSV(String csvContent) {
         List<AvailabilityCSVRow> rows = new List<AvailabilityCSVRow>();
         
@@ -60,6 +71,11 @@ public class AvailabilityCSVParser {
         return rows;
     }
     
+    /**
+     * @description Parses a single CSV line handling quoted values
+     * @param line The CSV line to parse
+     * @return List of parsed values
+     */
     public static List<String> parseCSVLine(String line) {
         List<String> values = new List<String>();
         Boolean inQuotes = false;
