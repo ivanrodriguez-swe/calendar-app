@@ -80,6 +80,7 @@ public without sharing class AppointmentRequestService {
                         try {
                             selectee.Expected_EOD__c = Date.valueOf(eodString);
                         } catch (Exception e) {
+                            // Invalid date format - leave field null and continue processing
                         }
                     }
                     

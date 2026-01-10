@@ -262,9 +262,11 @@ public without sharing class AppointmentRequestHelper {
                     Messaging.sendEmail(emails);
                     emailsSent = emails.size();
                 } catch (Exception e) {
+                    // Email send failed - return 0 emails sent
                 }
             }
         } catch (Exception e) {
+            // Outer error - return 0 emails sent gracefully
         }
         
         return emailsSent;

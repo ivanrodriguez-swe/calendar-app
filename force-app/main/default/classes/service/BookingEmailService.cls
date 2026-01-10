@@ -80,6 +80,7 @@ public without sharing class BookingEmailService {
             try {
                 Messaging.sendEmail(emails, false);
             } catch (Exception e) {
+                // Silently fail - email errors should not break the booking transaction
             }
         }
     }
