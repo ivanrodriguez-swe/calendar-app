@@ -35,48 +35,17 @@ public with sharing class AppointmentRequestController {
     }
     
     /**
-     * @description Uploads CSV content to create appointment requests
-     * @param csvContent The CSV file content as a string
-     * @return UploadResult with counts of created records and emails sent
-     */
-    @AuraEnabled
-    public static UploadResult uploadCSV(String csvContent) {
-        Map<String, Object> serviceResult = AppointmentRequestService.uploadCSV(csvContent);
-        
-        UploadResult result = new UploadResult();
-        result.success = (Boolean) serviceResult.get('success');
-        result.message = (String) serviceResult.get('message');
-        result.recordsCreated = (Integer) serviceResult.get('recordsCreated');
-        result.emailsSent = (Integer) serviceResult.get('emailsSent');
-        
-        return result;
-    }
-    
-    public class UploadResult {
-        @AuraEnabled public Boolean success;
-        @AuraEnabled public String message;
-        @AuraEnabled public Integer recordsCreated;
-        @AuraEnabled public Integer emailsSent;
-        
-        public UploadResult() {
-            this.success = false;
-            this.recordsCreated = 0;
-            this.emailsSent = 0;
-        }
-    }
-    
-    /**
-     * @description Sends invite emails to selected appointment requests
+     * @description Updates appointment requests status to Sent for sending invites via Flow
      * @param requestIds List of Appointment Request record Ids
-     * @return SendInvitesResult with success status and email counts
+     * @return SendInvitesResult with success status and records updated count
      */
     @AuraEnabled
     public static SendInvitesResult sendInviteEmails(List<Id> requestIds) {
-        Map<String, Object> serviceResult = BookingEmailService.sendInviteEmails(requestIds);
+        Map<String, Object> serviceResult = AppointmentRequestStatusService.updateStatusToSent(requestIds);
         
         SendInvitesResult result = new SendInvitesResult();
         result.success = (Boolean) serviceResult.get('success');
-        result.emailsSent = (Integer) serviceResult.get('emailsSent');
+        result.recordsUpdated = (Integer) serviceResult.get('recordsUpdated');
         result.errors = (List<String>) serviceResult.get('errors');
         
         return result;
@@ -84,12 +53,12 @@ public with sharing class AppointmentRequestController {
     
     public class SendInvitesResult {
         @AuraEnabled public Boolean success;
-        @AuraEnabled public Integer emailsSent;
+        @AuraEnabled public Integer recordsUpdated;
         @AuraEnabled public List<String> errors;
         
         public SendInvitesResult() {
             this.success = false;
-            this.emailsSent = 0;
+            this.recordsUpdated = 0;
             this.errors = new List<String>();
         }
     }
@@ -100,12 +69,6 @@ public with sharing class AppointmentRequestController {
      */
     @AuraEnabled(cacheable=true)
     public static List<Appointment_Request__c> getNewAppointmentRequests() {
-        return [
-            SELECT Id, Reference_First_Name__c, Reference_Email__c, 
-                   Selectee__r.Name, Status__c, CreatedDate
-            FROM Appointment_Request__c
-            WHERE Status__c = 'New'
-            ORDER BY CreatedDate DESC
-        ];
+        return AppointmentRequestSelector.getAllNewAppointmentRequests();
     }
 }

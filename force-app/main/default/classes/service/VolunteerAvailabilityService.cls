@@ -47,12 +47,6 @@ public without sharing class VolunteerAvailabilityService {
         selectedSlot.Status__c = 'Booked';
         update selectedSlot;
         
-        List<Time_Slot__c> refreshedSlots = TimeSlotSelector.getTimeSlotById(selectedSlot.Id);
-        Time_Slot__c slotForEmail = refreshedSlots.isEmpty() ? selectedSlot : refreshedSlots[0];
-        
-        Map<String, String> customerInfo = getCustomerInfo(appointmentRequest);
-        BookingEmailService.sendBookingEmails(slotForEmail, customerInfo.get('name'), customerInfo.get('email'));
-        
         return buildResult(true, 'Time slot booked successfully!', appointment.Id);
     }
     
@@ -177,42 +171,6 @@ public without sharing class VolunteerAvailabilityService {
         return result;
     }
     
-    /**
-     * @description Retrieves volunteer information by Id
-     * @param volunteerId The volunteer's User Id
-     * @return Map with success status and volunteer data
-     */
-    public static Map<String, Object> getVolunteerInfo(Id volunteerId) {
-        if (volunteerId == null) {
-            Map<String, Object> result = new Map<String, Object>();
-            result.put('success', false);
-            result.put('message', 'volunteerId is required');
-            return result;
-        }
-        
-        Map<String, Object> volunteerData = VolunteerDisplayService.getVolunteerById(volunteerId);
-        
-        if (volunteerData == null) {
-            Map<String, Object> result = new Map<String, Object>();
-            result.put('success', false);
-            result.put('message', 'Volunteer not found');
-            return result;
-        }
-        
-        Map<String, Object> result = new Map<String, Object>();
-        result.put('success', true);
-        result.put('volunteer', volunteerData);
-        return result;
-    }
-    
-    /**
-     * @description Retrieves all volunteers for display
-     * @return Map with volunteer data
-     */
-    public static Map<String, Object> getAllVolunteersForDisplay() {
-        return VolunteerDisplayService.getAllVolunteers();
-    }
-    
     private class VolunteerDateComparator implements Comparator<Map<String, Object>> {
         public Integer compare(Map<String, Object> m1, Map<String, Object> m2) {
             String name1 = (String) m1.get('volunteerName');
@@ -232,15 +190,6 @@ public without sharing class VolunteerAvailabilityService {
             if (date1 > date2) return 1;
             return 0;
         }
-    }
-    
-    private static Map<String, String> getCustomerInfo(Appointment_Request__c appointmentRequest) {
-        Map<String, String> customerInfo = new Map<String, String>();
-        String firstName = appointmentRequest.Reference_First_Name__c != null ? appointmentRequest.Reference_First_Name__c : '';
-        String lastName = appointmentRequest.Reference_Last_Name__c != null ? appointmentRequest.Reference_Last_Name__c : '';
-        customerInfo.put('name', (firstName + ' ' + lastName).trim());
-        customerInfo.put('email', appointmentRequest.Reference_Email__c);
-        return customerInfo;
     }
     
     private static List<Time_Slot__c> buildSlotsFromRanges(List<Map<String, String>> ranges, Id volunteerId) {
@@ -270,7 +219,7 @@ public without sharing class VolunteerAvailabilityService {
     private static Map<String, Id> buildEmailToUserIdMap(List<AvailabilityCSVParser.AvailabilityCSVRow> csvRows) {
         Set<String> emails = new Set<String>();
         for (AvailabilityCSVParser.AvailabilityCSVRow row : csvRows) {
-            if (String.isNotBlank(row.volunteerEmail) && BookingEmailService.isValidEmail(row.volunteerEmail)) {
+            if (String.isNotBlank(row.volunteerEmail) && AppointmentRequestStatusService.isValidEmail(row.volunteerEmail)) {
                 emails.add(row.volunteerEmail.toLowerCase());
             }
         }

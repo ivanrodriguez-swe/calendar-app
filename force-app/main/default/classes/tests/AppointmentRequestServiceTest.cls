@@ -5,224 +5,148 @@ private class AppointmentRequestServiceTest {
         return [SELECT Id FROM User WHERE FirstName = 'OHR' AND LastName = 'Admin' LIMIT 1];
     }
     
-    private static User getVolunteer() {
-        return [SELECT Id, Email FROM User WHERE FirstName = 'Volunteer' AND LastName LIKE 'Test%' LIMIT 1];
-    }
-    
     @TestSetup
     static void setupTestData() {
-        // Create OHR Admin user with permissions already assigned
         OHRTestDataFactory.createOHRAdminUser();
-        
-        // Create test volunteer users
-        List<User> volunteers = OHRTestDataFactory.createVolunteerUsers(2);
     }
     
     @isTest
-    static void testUploadCSV_Success() {
+    static void testProcessFile_Success() {
         User admin = getAdminUser();
-        User volunteer = getVolunteer();
         
-        String csvContent = volunteer.Email + ',John,Doe,ref0@example.com\n' +
-                           volunteer.Email + ',Jane,Smith,ref1@example.com';
+        String fileContent = 'Doe,John,john@example.com,2026-06-01,Engineering,Jane Smith,jane@example.com,Manager';
         
         Test.startTest();
         System.runAs(admin) {
-            Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
+            Map<String, Object> result = AppointmentRequestService.processFile(fileContent);
             
-            Assert.isTrue((Boolean) result.get('success'), 'Upload should succeed');
-            Assert.areEqual(2, result.get('recordsCreated'), 'Should create 2 records');
-            Assert.isNotNull(result.get('message'), 'Message should be set');
-        }
-        Test.stopTest();
-        
-        // Verify records were created
-        List<Appointment_Request__c> requests = [
-            SELECT Id, Volunteer__c, Reference_First_Name__c, Reference_Last_Name__c, Reference_Email__c, Status__c
-            FROM Appointment_Request__c
-        ];
-        Assert.areEqual(2, requests.size(), 'Should have 2 appointment requests');
-        Assert.areEqual('New', requests[0].Status__c, 'Status should be New');
-    }
-    
-    @isTest
-    static void testUploadCSV_WithHeader() {
-        User admin = getAdminUser();
-        User volunteer = getVolunteer();
-        
-        String csvContent = 'Volunteer Email,First Name,Last Name,Email\n' +
-                           volunteer.Email + ',John,Doe,ref0@example.com';
-        
-        Test.startTest();
-        System.runAs(admin) {
-            Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
-            
-            Assert.isTrue((Boolean) result.get('success'), 'Upload should succeed');
-            Assert.areEqual(1, result.get('recordsCreated'), 'Should create 1 record');
+            Assert.isTrue((Boolean) result.get('success'), 'Process should succeed');
+            Assert.areEqual(1, result.get('selecteesCreated'), 'Should create 1 selectee');
+            Assert.areEqual(1, result.get('requestsCreated'), 'Should create 1 request');
         }
         Test.stopTest();
     }
     
     @isTest
-    static void testUploadCSV_WithQuotedValues() {
+    static void testProcessFile_WithHeader() {
         User admin = getAdminUser();
-        User volunteer = getVolunteer();
         
-        String csvContent = '"' + volunteer.Email + '","John","Doe","ref0@example.com"';
+        String fileContent = 'Selectee Last,First Name,Email,EOD,Discipline,Ref Name,Ref Email,Relationship\n' +
+                            'Doe,John,john@example.com,2026-06-01,Engineering,Jane Smith,jane@example.com,Manager';
         
         Test.startTest();
         System.runAs(admin) {
-            Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
+            Map<String, Object> result = AppointmentRequestService.processFile(fileContent);
             
-            Assert.isTrue((Boolean) result.get('success'), 'Upload should succeed');
-            Assert.areEqual(1, result.get('recordsCreated'), 'Should create 1 record');
+            Assert.isTrue((Boolean) result.get('success'), 'Process should succeed');
+            Assert.areEqual(1, result.get('selecteesCreated'), 'Should create 1 selectee');
         }
         Test.stopTest();
     }
     
     @isTest
-    static void testUploadCSV_EmptyCSV() {
+    static void testProcessFile_MultipleReferences() {
         User admin = getAdminUser();
+        
+        String fileContent = 'Doe,John,john@example.com,2026-06-01,Engineering,Jane Smith,jane@example.com,Manager,Bob Jones,bob@example.com,Peer';
         
         Test.startTest();
         System.runAs(admin) {
-            Map<String, Object> result = AppointmentRequestService.uploadCSV('');
+            Map<String, Object> result = AppointmentRequestService.processFile(fileContent);
             
-            Assert.isFalse((Boolean) result.get('success'), 'Upload should fail');
-            Assert.areEqual('CSV content is empty', result.get('message'), 'Should have correct error message');
-            Assert.areEqual(0, result.get('recordsCreated'), 'Should not create any records');
+            Assert.isTrue((Boolean) result.get('success'), 'Process should succeed');
+            Assert.areEqual(1, result.get('selecteesCreated'), 'Should create 1 selectee');
+            Assert.areEqual(2, result.get('requestsCreated'), 'Should create 2 requests');
         }
         Test.stopTest();
     }
     
     @isTest
-    static void testUploadCSV_NullCSV() {
+    static void testProcessFile_EmptyContent() {
         User admin = getAdminUser();
         
         Test.startTest();
         System.runAs(admin) {
-            Map<String, Object> result = AppointmentRequestService.uploadCSV(null);
+            Map<String, Object> result = AppointmentRequestService.processFile('');
             
-            Assert.areEqual(false, result.get('success'), 'Upload should fail');
-            Assert.areEqual('CSV content is empty', result.get('message'), 'Should have correct error message');
+            Assert.isFalse((Boolean) result.get('success'), 'Process should fail');
+            Assert.areEqual('File content is empty', result.get('message'), 'Should have correct error message');
         }
         Test.stopTest();
     }
     
     @isTest
-    static void testUploadCSV_NoValidRecords() {
+    static void testProcessFile_NullContent() {
         User admin = getAdminUser();
-        
-        // CSV with invalid volunteer identifier - will be parsed but skipped during volunteer matching
-        String csvContent = 'invalid@example.com,John,Doe,ref0@example.com';
         
         Test.startTest();
         System.runAs(admin) {
-            Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
+            Map<String, Object> result = AppointmentRequestService.processFile(null);
             
-            Assert.isFalse((Boolean) result.get('success'), 'Upload should fail');
-            Assert.isTrue(String.valueOf(result.get('message')).contains('No valid appointment requests'), 'Should indicate no valid records');
-            Assert.areEqual(0, result.get('recordsCreated'), 'Should not create any records');
+            Assert.isFalse((Boolean) result.get('success'), 'Process should fail');
+            Assert.areEqual('File content is empty', result.get('message'), 'Should have correct error message');
         }
         Test.stopTest();
     }
     
     @isTest
-    static void testUploadCSV_VolunteerEmailNotFound() {
+    static void testProcessFile_NoReferences() {
         User admin = getAdminUser();
         
-        String csvContent = 'nonexistent@example.com,John,Doe,ref0@example.com';
+        String fileContent = 'Doe,John,john@example.com,2026-06-01,Engineering';
         
         Test.startTest();
         System.runAs(admin) {
-            Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
+            Map<String, Object> result = AppointmentRequestService.processFile(fileContent);
             
-            Assert.isFalse((Boolean) result.get('success'), 'Upload should fail');
-            Assert.isTrue(String.valueOf(result.get('message')).contains('No valid appointment requests'), 'Should indicate no valid records');
-            Assert.areEqual(0, result.get('recordsCreated'), 'Should not create any records');
-            
-            List<String> skippedRecords = (List<String>) result.get('skippedRecords');
-            Assert.isTrue(skippedRecords.size() > 0, 'Should have skipped records');
+            Assert.isFalse((Boolean) result.get('success'), 'Process should fail');
+            Assert.isTrue(String.valueOf(result.get('message')).contains('reference'), 'Should mention reference requirement');
         }
         Test.stopTest();
     }
     
     @isTest
-    static void testUploadCSV_VolunteerIdAsEmail() {
+    static void testProcessFile_ExistingSelectee() {
         User admin = getAdminUser();
-        User volunteer = getVolunteer();
         
-        // Test that User ID format (starts with 005) is handled as email lookup
-        String csvContent = volunteer.Email + ',John,Doe,ref0@example.com';
+        Selectee__c existingSelectee = new Selectee__c(
+            Name = 'John Doe',
+            Email__c = 'john@example.com'
+        );
+        insert existingSelectee;
+        
+        String fileContent = 'Doe,John,john@example.com,2026-06-01,Engineering,Jane Smith,jane@example.com,Manager';
         
         Test.startTest();
         System.runAs(admin) {
-            Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
+            Map<String, Object> result = AppointmentRequestService.processFile(fileContent);
             
-            Assert.isTrue((Boolean) result.get('success'), 'Upload should succeed');
-            Assert.areEqual(1, result.get('recordsCreated'), 'Should create 1 record');
+            Assert.isTrue((Boolean) result.get('success'), 'Process should succeed');
+            Assert.areEqual(0, result.get('selecteesCreated'), 'Should not create new selectee');
+            Assert.areEqual(1, result.get('requestsCreated'), 'Should create 1 request');
         }
         Test.stopTest();
+        
+        List<Selectee__c> selectees = [SELECT Id FROM Selectee__c];
+        Assert.areEqual(1, selectees.size(), 'Should still have only 1 selectee');
     }
     
     @isTest
-    static void testUploadCSV_MissingRequiredFields() {
+    static void testProcessFile_InvalidDateFormat() {
         User admin = getAdminUser();
-        User volunteer = getVolunteer();
         
-        // Missing last name
-        String csvContent = volunteer.Email + ',John,,ref0@example.com';
+        String fileContent = 'Doe,John,john@example.com,invalid-date,Engineering,Jane Smith,jane@example.com,Manager';
         
         Test.startTest();
         System.runAs(admin) {
-            Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
+            Map<String, Object> result = AppointmentRequestService.processFile(fileContent);
             
-            Assert.areEqual(false, result.get('success'), 'Upload should fail');
-            Assert.areEqual('No valid records found in CSV', result.get('message'), 'Should have correct error message');
+            Assert.isTrue((Boolean) result.get('success'), 'Process should succeed even with invalid date');
+            Assert.areEqual(1, result.get('selecteesCreated'), 'Should create 1 selectee');
         }
         Test.stopTest();
-    }
-    
-    @isTest
-    static void testUploadCSV_MixedValidAndInvalid() {
-        User admin = getAdminUser();
-        User volunteer = getVolunteer();
         
-        String csvContent = volunteer.Email + ',John,Doe,ref0@example.com\n' +
-                           'nonexistent@example.com,Jane,Smith,ref1@example.com\n' +
-                           volunteer.Email + ',Bob,Johnson,ref2@example.com';
-        
-        Test.startTest();
-        System.runAs(admin) {
-            Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
-            
-            Assert.areEqual(true, result.get('success'), 'Upload should succeed');
-            Assert.areEqual(2, result.get('recordsCreated'), 'Should create 2 valid records');
-            
-            List<String> skippedRecords = (List<String>) result.get('skippedRecords');
-            Assert.isTrue(skippedRecords.size() > 0, 'Should have skipped records');
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testUploadCSV_BlankLines() {
-        User admin = getAdminUser();
-        User volunteer = getVolunteer();
-        
-        String csvContent = volunteer.Email + ',John,Doe,ref0@example.com\n' +
-                           '\n' +
-                           volunteer.Email + ',Jane,Smith,ref1@example.com';
-        
-        Test.startTest();
-        System.runAs(admin) {
-            Map<String, Object> result = AppointmentRequestService.uploadCSV(csvContent);
-            
-            Assert.areEqual(true, result.get('success'), 'Upload should succeed');
-            Assert.areEqual(2, result.get('recordsCreated'), 'Should create 2 records (blank line skipped)');
-        }
-        Test.stopTest();
+        Selectee__c selectee = [SELECT Expected_EOD__c FROM Selectee__c LIMIT 1];
+        Assert.isNull(selectee.Expected_EOD__c, 'EOD should be null for invalid date');
     }
 }
-
-

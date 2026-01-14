@@ -83,19 +83,18 @@ export default class SendInvitesDatatable extends LightningElement {
             const result = await sendInviteEmails({ requestIds: this.selectedIds });
 
             if (result.success) {
-                this.showToast('Success', `${result.emailsSent} invite(s) sent`, 'success');
+                this.showToast('Success', `${result.recordsUpdated} invite(s) queued for sending`, 'success');
                 
                 if (result.errors && result.errors.length > 0) {
                     this.showToast('Note', result.errors.join('; '), 'warning');
                 }
 
-                // Clear selection and refresh data
                 this.selectedIds = [];
                 await refreshApex(this.wiredResult);
             } else {
                 const errorMsg = result.errors && result.errors.length > 0 
                     ? result.errors.join('; ') 
-                    : 'Failed to send emails';
+                    : 'Failed to process records';
                 this.showToast('Error', errorMsg, 'error');
             }
         } catch (error) {

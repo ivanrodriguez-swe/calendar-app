@@ -56,12 +56,7 @@ public without sharing class VolunteerAvailabilityController {
         if (requestId == null) {
             return null;
         }
-        List<Appointment_Request__c> requests = [
-            SELECT Id, Reference_First_Name__c, Status__c 
-            FROM Appointment_Request__c 
-            WHERE Id = :requestId
-            LIMIT 1
-        ];
+        List<Appointment_Request__c> requests = AppointmentRequestSelector.getAppointmentRequestInfoById(requestId);
         if (requests.isEmpty()) {
             return null;
         }

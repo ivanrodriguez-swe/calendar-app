@@ -69,69 +69,6 @@ public without sharing class VolunteerAvailabilityDisplayController {
         }
     }
     
-    /**
-     * @description Retrieves volunteer info by Id
-     * @param volunteerId The volunteer's User Id
-     * @return VolunteerInfoResult with volunteer data
-     */
-    @AuraEnabled(cacheable=true)
-    public static VolunteerInfoResult getVolunteerInfo(Id volunteerId) {
-        if (volunteerId == null) {
-            throw new AuraHandledException('volunteerId is required.');
-        }
-        
-        Map<String, Object> serviceResult = VolunteerAvailabilityService.getVolunteerInfo(volunteerId);
-        
-        if (serviceResult == null || !(Boolean) serviceResult.get('success')) {
-            VolunteerInfoResult result = new VolunteerInfoResult();
-            result.success = false;
-            result.message = (String) serviceResult?.get('message') ?? 'Volunteer not found';
-            return result;
-        }
-        
-        Map<String, Object> serviceVolunteer = (Map<String, Object>) serviceResult.get('volunteer');
-        VolunteerInfo volunteerInfo = new VolunteerInfo();
-        volunteerInfo.id = (Id) serviceVolunteer.get('id');
-        volunteerInfo.name = (String) serviceVolunteer.get('name');
-        volunteerInfo.email = (String) serviceVolunteer.get('email');
-        volunteerInfo.isActive = (Boolean) serviceVolunteer.get('isActive');
-        volunteerInfo.createdDate = (DateTime) serviceVolunteer.get('createdDate');
-        
-        VolunteerInfoResult result = new VolunteerInfoResult();
-        result.success = true;
-        result.volunteer = volunteerInfo;
-        
-        return result;
-    }
-    
-    /**
-     * @description Retrieves all volunteers for display
-     * @return VolunteerListResult with all volunteers
-     */
-    @AuraEnabled(cacheable=true)
-    public static VolunteerListResult getAllVolunteersForDisplay() {
-        Map<String, Object> serviceResult = VolunteerAvailabilityService.getAllVolunteersForDisplay();
-        
-        List<Map<String, Object>> serviceVolunteers = (List<Map<String, Object>>) serviceResult.get('volunteers');
-        List<VolunteerInfo> volunteers = new List<VolunteerInfo>();
-        
-        for (Map<String, Object> volunteerData : serviceVolunteers) {
-            VolunteerInfo volunteer = new VolunteerInfo();
-            volunteer.id = (Id) volunteerData.get('id');
-            volunteer.name = (String) volunteerData.get('name');
-            volunteer.email = (String) volunteerData.get('email');
-            volunteer.isActive = (Boolean) volunteerData.get('isActive');
-            volunteer.createdDate = (DateTime) volunteerData.get('createdDate');
-            volunteers.add(volunteer);
-        }
-        
-        VolunteerListResult result = new VolunteerListResult();
-        result.volunteers = volunteers;
-        result.totalCount = (Integer) serviceResult.get('totalCount');
-        
-        return result;
-    }
-    
     private static List<VolunteerAvailabilityRow> convertToVolunteerAvailabilityRows(List<Map<String, Object>> serviceData) {
         List<VolunteerAvailabilityRow> rows = new List<VolunteerAvailabilityRow>();
         
@@ -180,24 +117,5 @@ public without sharing class VolunteerAvailabilityDisplayController {
         @AuraEnabled public List<VolunteerAvailabilityRow> rows;
         @AuraEnabled public Integer totalCount;
         @AuraEnabled public Boolean hasMore;
-    }
-    
-    public class VolunteerInfoResult {
-        @AuraEnabled public Boolean success;
-        @AuraEnabled public String message;
-        @AuraEnabled public VolunteerInfo volunteer;
-    }
-    
-    public class VolunteerListResult {
-        @AuraEnabled public List<VolunteerInfo> volunteers;
-        @AuraEnabled public Integer totalCount;
-    }
-    
-    public class VolunteerInfo {
-        @AuraEnabled public Id id;
-        @AuraEnabled public String name;
-        @AuraEnabled public String email;
-        @AuraEnabled public Boolean isActive;
-        @AuraEnabled public DateTime createdDate;
     }
 }

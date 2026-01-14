@@ -30,32 +30,4 @@ public inherited sharing class OHRUserSelector {
             LIMIT 1
         ];
     }
-    
-    /**
-     * @description Retrieves an active user by Id with additional details
-     * @param userId The User Id
-     * @return List containing the active user or empty if not found
-     */
-    public static List<User> getUserByIdWithDetails(Id userId) {
-        return [
-            SELECT Id, Name, Email, IsActive, CreatedDate
-            FROM User 
-            WHERE Id = :userId 
-            AND IsActive = true
-            LIMIT 1
-        ];
-    }
-    
-    /**
-     * @description Retrieves all active users ordered by name
-     * @return List of all active users
-     */
-    public static List<User> getAllActiveUsers() {
-        return [
-            SELECT Id, Name, Email, IsActive, CreatedDate
-            FROM User
-            WHERE IsActive = true
-            ORDER BY Name
-        ];
-    }
 }

@@ -335,40 +335,4 @@ private class VolunteerAvailabilityServiceTest {
         }
         Test.stopTest();
     }
-    
-    @isTest
-    static void testGetVolunteerInfo_Success() {
-        User volunteer = getVolunteer(0);
-        
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            Map<String, Object> result = VolunteerAvailabilityService.getVolunteerInfo(volunteer.Id);
-            
-            Assert.areEqual(true, result.get('success'), 'Should succeed');
-            Assert.isNotNull(result.get('volunteer'), 'Should have volunteer data');
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testGetVolunteerInfo_NullId() {
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            Map<String, Object> result = VolunteerAvailabilityService.getVolunteerInfo(null);
-            
-            Assert.areEqual(false, result.get('success'), 'Should fail');
-        }
-        Test.stopTest();
-    }
-    
-    @isTest
-    static void testGetAllVolunteersForDisplay() {
-        Test.startTest();
-        System.runAs(getAdminUser()) {
-            Map<String, Object> result = VolunteerAvailabilityService.getAllVolunteersForDisplay();
-            
-            Assert.isNotNull(result, 'Result should not be null');
-        }
-        Test.stopTest();
-    }
 }
