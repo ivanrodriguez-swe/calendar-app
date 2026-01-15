@@ -58,9 +58,7 @@ export default class AppointmentRequestUploader extends LightningElement {
             });
 
             if (result.success) {
-                this.showToast('Success', 
-                    `${result.selecteesCreated} Selectee(s) and ${result.requestsCreated} Appointment Request(s) created successfully.`, 
-                    'success');
+                this.showToast('Success', result.message, 'success');
                 this.handleCloseModal();
                 
                 this.dispatchEvent(new CustomEvent('uploadsuccess'));
