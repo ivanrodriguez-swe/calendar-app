@@ -1,0 +1,20 @@
+<html>
+<head>
+	<title></title>
+</head>
+<body style="height: auto; min-height: auto;">
+<p>Dear&nbsp;{{{Appointment_Request__c.Reference_First_Name__c}}},<br />
+<br />
+I am reaching out in my role as a human resources specialist with the United States Patent and Trademark Office.&nbsp;{{{Appointment_Request__c.Selectee_Name__c}}} has applied. for the Patent Examiner position and listed you as a reference.<br />
+<br />
+I would like to schedule a quick 10-minute call to discuss your experience working with or teaching/mentoring&nbsp;{{{Appointment_Request__c.Selectee_Name__c}}}.<br />
+<br />
+Please go to the link below to reserve a slot to speak with a USPTO employee regarding your reference.</p>
+
+<p>{{{Appointment_Request__c.URL_Invite__c}}}</p>
+
+<p>Your insights will help us make an informed hiring decision, and we truly appreciate your time and input.<br />
+<br />
+Thank you,</p>
+</body>
+</html>

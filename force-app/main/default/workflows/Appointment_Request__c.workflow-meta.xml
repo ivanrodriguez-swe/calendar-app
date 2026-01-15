@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Workflow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <alerts>
+        <fullName>OHRS_Email_Invite</fullName>
+        <description>OHRS Email Invite</description>
+        <protected>false</protected>
+        <recipients>
+            <field>Reference_Email__c</field>
+            <type>email</type>
+        </recipients>
+        <senderType>CurrentUser</senderType>
+        <template>OHRSTemplates/OHRS_Email_Invite_1768409713497</template>
+    </alerts>
+</Workflow>

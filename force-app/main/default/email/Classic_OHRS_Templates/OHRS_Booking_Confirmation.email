@@ -1,0 +1,11 @@
+Below you will find details of the appointment:
+
+  Volunteer Name : {!Appointment__c.Volunteer_Name__c}
+
+  Reference Name: {!Appointment__c.Reference_Name__c}
+
+  Date: {!Appointment__c.Appointment_Date__c}
+
+  Time: {!Appointment__c.Start_Time__c}
+
+  Duration: 15 minutes
