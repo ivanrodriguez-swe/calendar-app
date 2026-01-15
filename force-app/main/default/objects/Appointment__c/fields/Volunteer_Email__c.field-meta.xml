@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CustomField xmlns="http://soap.sforce.com/2006/04/metadata">
+    <fullName>Volunteer_Email__c</fullName>
+    <description>It gets populated when the appointment is created. Used by email alerts</description>
+    <externalId>false</externalId>
+    <label>Volunteer Email</label>
+    <required>false</required>
+    <trackTrending>false</trackTrending>
+    <type>Email</type>
+    <unique>false</unique>
+</CustomField>
