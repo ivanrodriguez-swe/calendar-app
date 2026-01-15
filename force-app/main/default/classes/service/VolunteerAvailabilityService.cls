@@ -33,7 +33,9 @@ public without sharing class VolunteerAvailabilityService {
         Appointment__c appointment = new Appointment__c(
             Appointment_Request__c = appointmentRequest.Id,
             Time_Slot__c = selectedSlot.Id,
-            Status__c = 'Confirmed'
+            Status__c = 'Confirmed',
+            Reference_Email__c = appointmentRequest.Reference_Email__c,
+            Volunteer_Email__c = selectedSlot.Volunteer__r.Email
         );
         insert appointment;
         
