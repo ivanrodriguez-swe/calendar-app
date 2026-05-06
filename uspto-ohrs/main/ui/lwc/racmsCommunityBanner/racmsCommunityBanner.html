@@ -1,0 +1,68 @@
+<template>
+  <div class="usa-banner__header">
+    <div class="usa-banner__inner slds-grid slds-wrap limitWidth">
+      <div class="slds-col slds-grow-none">
+        <img class="usa-banner__flag" alt="USA Flag Icon" src={flagIcon} title="USA Flag Icon" />
+      </div>
+      <div class="slds-col slds-grow-none">
+        <span>An official website of the United States government</span>
+      </div>
+      <div class="slds-col slds-grow-none">
+        <span class="usa-banner__expand">
+          <a onclick={handleToggleClick}>Here's how you know</a>
+          <lightning-button-icon
+            alternative-text="Expand details"
+            icon-name={chevronIcon}
+            size="small"
+            variant="bare"
+            onclick={handleToggleClick}
+          ></lightning-button-icon>
+        </span>
+      </div>
+    </div>
+    <template if:true={showGuidance}>
+      <div class="usa-banner__content slds-grid slds-wrap slds-p-around_large">
+        <div
+          class="slds-col slds-p-around_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2"
+        >
+          <div class="slds-grid">
+            <img
+              class="usa-banner__icon slds-col"
+              alt="Building Icon"
+              src={buildingIcon}
+              title="Building Icon"
+            />
+            <div class="usa-banner__guidance">
+              <p>
+                <strong>Official websites use .gov</strong>
+                <br />
+                A <strong>.gov</strong> website belongs to an official government organization in
+                the United States.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div
+          class="slds-col slds-p-around_small slds-size_1-of-1 slds-medium-size_1-of-2 slds-large-size_1-of-2"
+        >
+          <div class="slds-grid">
+            <img
+              class="usa-banner__icon slds-col"
+              alt="Lock Icon"
+              src={lockIcon}
+              title="Lock Icon"
+            />
+            <div class="usa-banner__guidance">
+              <p>
+                <strong>The site is secure.</strong>
+                <br />
+                The <strong>https://</strong> ensures that you are connecting to the official
+                website and that any information you provide is encrypted and transmitted securely.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+</template>

@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <description>This email alerts send emails to references</description>
+        <name>OHRS_Email_Invite</name>
+        <label>OHRS Email Invite</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>Appointment_Request__c.OHRS_Email_Invite</actionName>
+        <actionType>emailAlert</actionType>
+        <faultConnector>
+            <targetReference>Reset_Email_Invite_Set_Date</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>Appointment_Request__c.OHRS_Email_Invite</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>65.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <customErrors>
+        <name>Error_Sending_the_Email</name>
+        <label>Error Sending the Email</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <customErrorMessages>
+            <errorMessage>{!$Flow.FaultMessage}</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+    <customErrors>
+        <name>Error_Setting_Date_of_Email_Invite_Sent</name>
+        <label>Error Setting Date of Email Invite Sent</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <customErrorMessages>
+            <errorMessage>{!$Flow.FaultMessage}</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+    <description>This flow send email invites to References that  ill need to book appointments to speak with volunteers</description>
+    <environments>Default</environments>
+    <interviewLabel>OHRS Send Email Invites {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>RCS - Send Email Invites</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <recordUpdates>
+        <description>Since there was an error when sending an email, references will not receive invite. The date needs to be reset and the status too .</description>
+        <name>Reset_Email_Invite_Set_Date</name>
+        <label>Reset Email Invite Set Date</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Error_Sending_the_Email</targetReference>
+        </connector>
+        <inputAssignments>
+            <field>Original_Email_Sent_Date__c</field>
+        </inputAssignments>
+        <inputAssignments>
+            <field>Status__c</field>
+            <value>
+                <stringValue>New</stringValue>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <recordUpdates>
+        <description>This</description>
+        <name>Set_Email_Invite_Sent_Date</name>
+        <label>Set Email Invite Sent Date</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>OHRS_Email_Invite</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Error_Setting_Date_of_Email_Invite_Sent</targetReference>
+        </faultConnector>
+        <inputAssignments>
+            <field>Original_Email_Sent_Date__c</field>
+            <value>
+                <elementReference>$Flow.CurrentDate</elementReference>
+            </value>
+        </inputAssignments>
+        <inputReference>$Record</inputReference>
+    </recordUpdates>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Set_Email_Invite_Sent_Date</targetReference>
+        </connector>
+        <doesRequireRecordChangedToMeetCriteria>true</doesRequireRecordChangedToMeetCriteria>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Status__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Sent</stringValue>
+            </value>
+        </filters>
+        <object>Appointment_Request__c</object>
+        <recordTriggerType>Update</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

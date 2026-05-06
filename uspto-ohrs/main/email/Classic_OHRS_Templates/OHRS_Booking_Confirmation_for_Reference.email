@@ -1,0 +1,19 @@
+Hello  {!Appointment__c.Reference_Name__c},
+
+Thank you for scheduling a time to speak with a representative from the U.S. Patent and Trademark Office regarding:  {!Appointment__c.Selectee_Name__c}.
+
+This email confirms your appointment:
+
+ Date: {!Appointment__c.Appointment_Date__c}.
+ Time: {!Appointment__c.Start_Time__c}.
+ Telehone Number: {!Appointment__c.Reference_Phone_Number__c}.
+ Volunteer Name : {!Appointment__c.Volunteer_Name__c}.
+ Reference Name: {!Appointment__c.Reference_Name__c}.
+
+An HR representative will contact you at your scheduled time.
+
+We appreciate your willingness to share your professional insights. Your input is a valuable part of our hiring process.
+
+Best regards,  
+
+U.S. Patent and Trademark Office

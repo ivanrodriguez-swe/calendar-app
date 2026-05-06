@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
+    <apiVersion>66.0</apiVersion>
+    <isExposed>false</isExposed>
+    <description>
+   Validates user access using URL token and record ID. Compares URL token with URL_Token__c field. Redirects to defaultPageName if invalid. Use disableRedirect=true to prevent redirects during development/configuration.
+    </description>
+</LightningComponentBundle>

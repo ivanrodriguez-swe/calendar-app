@@ -1,0 +1,70 @@
+<template>
+    <lightning-card title="Volunteer Availability Upload">
+        <div class="slds-p-around_medium">
+            <lightning-button 
+                label="Upload CSV" 
+                variant="brand" 
+                onclick={handleOpenModal}
+                icon-name="utility:upload">
+            </lightning-button>
+        </div>
+    </lightning-card>
+
+    <!-- Modal -->
+    <template if:true={showModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium" 
+                 aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" 
+                            title="Close" onclick={handleCloseModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Upload CSV File</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <div class="slds-grid slds-grid_vertical slds-gutters">
+                        <div class="slds-col">
+                            <lightning-input 
+                                type="file"
+                                label="Select CSV File"
+                                accept=".csv"
+                                onchange={handleFileChange}
+                                disabled={uploading}>
+                            </lightning-input>
+                            <template if:true={fileName}>
+                                <div class="slds-m-top_small">
+                                    <span class="slds-text-color_weak">Selected: {fileName}</span>
+                                </div>
+                            </template>
+                        </div>
+                        <div class="slds-col">
+                            <div class="slds-box slds-theme_info">
+                                <p class="slds-text-heading_small">CSV Format:</p>
+                                <p class="slds-text-body_small">Expected columns: Volunteer Email, Day (YYYY-MM-DD), Start Time (HH:mm), End Time (HH:mm)</p>
+                                <p class="slds-text-body_small slds-m-top_x-small">Note: The system will create 15-minute time slots for each row. Times must be between 9:00 AM and 4:00 PM.</p>
+                                <p class="slds-text-body_small slds-m-top_x-small">Example:</p>
+                                <pre class="slds-text-body_small">volunteer@example.com,2025-12-25,09:00,12:00</pre>
+                                <p class="slds-text-body_small slds-m-top_x-small slds-text-color_error">Important:</p>
+                                <ul class="slds-text-body_small slds-m-left_medium">
+                                    <li>Volunteer Email must match an active User email in Salesforce</li>
+                                    <li>Day must be in YYYY-MM-DD format (e.g., 2025-12-25)</li>
+                                    <li>Start Time must be between 09:00 and 15:45</li>
+                                    <li>End Time must be between 09:15 and 16:00</li>
+                                    <li>End Time must be after Start Time</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Cancel" onclick={handleCloseModal} disabled={uploading}></lightning-button>
+                    <lightning-button variant="brand" label="Upload and Process" onclick={handleUpload} disabled={uploading}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>
+

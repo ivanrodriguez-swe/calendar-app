@@ -1,0 +1,56 @@
+<template>
+    <c-token-validator 
+        default-page-name ="Default__c"
+        onvalidated={handleValidated}>
+    </c-token-validator>
+    <!-- Appointment Booked Confirmation -->
+    <template if:true={showNoActionCanBeTaken}>
+        <div class="slds-box slds-theme_success slds-m-bottom_medium">
+            <div class="slds-text-align_center">
+                <lightning-icon icon-name="utility:success" variant="inverse" size="large" class="slds-m-bottom_small"></lightning-icon>
+                <h2 class="slds-text-heading_medium slds-m-bottom_x-small">No other action needed for this request</h2>
+                <p class="slds-text-body_regular">An appointment/Questionnarie has been booked/submmited for this request.</p>
+            </div>
+        </div>
+    </template>          
+    <template lwc:if={showChoiceSection}>        
+        <div class="slds-box slds-theme_default slds-p-around_large slds-m-top_medium">
+            <h2 class="slds-text-heading_medium slds-text-align_center slds-m-bottom_xx-large">Hi, {referenceName}!</h2>
+            <p class="slds-text-heading_small slds-text-align_center slds-m-bottom_large">
+                Please select one of the following options to continue:
+            </p>
+            <div class="slds-grid slds-gutters slds-grid_align-center">
+                <div class="slds-col">
+                    <lightning-button
+                        label="Fill out a Form"
+                        variant="brand"
+                        onclick={handleLeftButton}>
+                    </lightning-button>
+                </div>
+                <div class="slds-col">
+                    <lightning-button
+                        label="Book an Appointment"
+                        variant="brand"
+                        onclick={handleRightButton}>
+                    </lightning-button>
+                </div>
+            </div>
+        </div>
+    </template>
+    <template lwc:if={showAppointmentScheduler}>
+        <c-appointment-scheduler appointment-request-id={recordId}></c-appointment-scheduler>
+    </template>
+    <template lwc:if={showReferenceForm}>
+        <lightning-flow
+            flow-api-name="RCS_References_Questionnaire_Forms"
+            flow-input-variables={flowInputVariables}
+            onstatuschange={handleFlowStatusChange}>
+        </lightning-flow>
+    </template>
+    <template lwc:if={showFlowConfirmation}>
+        <div class="slds-box slds-theme_success slds-p-around_large slds-m-top_medium slds-text-align_center">
+            <lightning-icon icon-name="utility:success" variant="inverse" class="slds-m-right_small"></lightning-icon>
+            <span class="slds-text-heading_small">Your questionnaire has been successfully completed</span>
+        </div>
+    </template>
+</template>

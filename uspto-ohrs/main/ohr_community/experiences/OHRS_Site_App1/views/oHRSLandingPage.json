@@ -1,0 +1,46 @@
+{
+  "appPageId" : "928448d3-74b3-4d6e-9210-3ad103a40ec4",
+  "componentName" : "siteforce:sldsOneColLayout",
+  "dataProviders" : [ ],
+  "id" : "be2c5d84-2cb4-4e39-96cc-784d79e0d2b5",
+  "label" : "OHRS Landing Page",
+  "regions" : [ {
+    "id" : "2c1f6fdb-5bfc-48b4-a2c4-db634d019167",
+    "regionName" : "header",
+    "type" : "region"
+  }, {
+    "components" : [ {
+      "componentAttributes" : { },
+      "componentName" : "c:referenceRequest",
+      "id" : "d2a332e6-d33c-4b80-83cf-9ab03533f3b1",
+      "renderPriority" : "NEUTRAL",
+      "renditionMap" : { },
+      "type" : "component"
+    } ],
+    "id" : "a04f326d-a9d0-40ba-a45c-87f88864b0d1",
+    "regionName" : "content",
+    "type" : "region"
+  }, {
+    "id" : "bc9e9860-8a93-4e91-bf88-3f8e55b0aed3",
+    "regionName" : "footer",
+    "type" : "region"
+  }, {
+    "components" : [ {
+      "componentAttributes" : {
+        "customHeadTags" : "",
+        "description" : "",
+        "title" : "OHRS Landing Page"
+      },
+      "componentName" : "forceCommunity:seoAssistant",
+      "id" : "bc21ee2e-501f-456a-948f-bb1c7e5309ff",
+      "renditionMap" : { },
+      "type" : "component"
+    } ],
+    "id" : "1aeabc94-fab6-44d1-9d72-073ae8876f6f",
+    "regionName" : "sfdcHiddenRegion",
+    "type" : "region"
+  } ],
+  "themeLayoutType" : "Inner",
+  "type" : "view",
+  "viewType" : "custom-ohrs-landing-page"
+}

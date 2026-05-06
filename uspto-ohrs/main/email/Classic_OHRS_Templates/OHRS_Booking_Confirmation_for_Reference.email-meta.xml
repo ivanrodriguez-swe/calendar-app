@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <description>This email is sent to both reference and volunteer.</description>
+    <encodingKey>UTF-8</encodingKey>
+    <name>OHRS Booking Confirmation for Reference</name>
+    <style>none</style>
+    <subject>Confirmation of Your Scheduled Reference Call – USPTO</subject>
+    <type>text</type>
+    <uiType>Aloha</uiType>
+</EmailTemplate>

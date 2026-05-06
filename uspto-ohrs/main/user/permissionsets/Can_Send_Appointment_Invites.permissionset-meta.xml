@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Allows users to send appointment invite emails to references</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Can Send Appointment Invites</label>
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>View_Send_Invites_Action</name>
+    </customPermissions>
+</PermissionSet>

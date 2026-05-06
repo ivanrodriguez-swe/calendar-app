@@ -1,0 +1,12 @@
+{
+  "activeViewId" : "fba5048e-e0c1-4a15-ad21-a05c93348e62",
+  "appPageId" : "928448d3-74b3-4d6e-9210-3ad103a40ec4",
+  "configurationTags" : [ ],
+  "devName" : "Default__c",
+  "id" : "a7f63609-fdc6-4df1-85e8-c5b43f14b05e",
+  "label" : "Default",
+  "pageAccess" : "UseParent",
+  "routeType" : "custom-default",
+  "type" : "route",
+  "urlPrefix" : "default"
+}

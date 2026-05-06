@@ -1,0 +1,34 @@
+<template>
+    <template if:true={canSubmitForm}>
+    <template if:false={showForm}>
+        <template if:false={showConfirmation}>
+            <lightning-card title="References Questionnaire">
+                <div class="slds-p-around_medium">
+                    <p class="slds-m-bottom_small">A short questionnaire for references is required to complete this appointment request. Click below to start.</p>
+                    <lightning-button variant="brand" label="Fill Out Questionnaire" onclick={handleStartForm}></lightning-button>
+                </div>
+            </lightning-card>
+        </template>
+    </template>
+
+    <template if:true={showForm}>
+        <lightning-flow
+            flow-api-name="RCS_References_Questionnaire_Forms"
+            flow-input-variables={flowInputVariables}
+            onstatuschange={handleFlowStatusChange}>
+        </lightning-flow>
+    </template>
+
+    <template if:true={showConfirmation}>
+        <div class="slds-box slds-theme_success slds-m-around_medium slds-align_absolute-center">
+            <div class="slds-m-top_small">
+                <span class="slds-icon_container slds-icon-utility-success slds-m-right_small slds-align_absolute-center" title="success">
+                    <lightning-icon icon-name="utility:success" alternative-text="Success" size="small"></lightning-icon>
+                </span>
+                <strong class="slds-align_absolute-center">Questionnaire submitted.</strong>
+                <div>The questionnaire has been submitted and the appointment request status was updated.</div>
+            </div>
+        </div>
+    </template>
+    </template>
+</template>

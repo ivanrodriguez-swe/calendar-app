@@ -1,0 +1,16 @@
+Hello {!Appointment__c.Volunteer_Name__c},
+
+This is to notify you that {!Appointment__c.Reference_Name__c} has scheduled a reference check for {!Appointment__c.Selectee_Name__c}.
+
+Scheduled Details:
+
+Date: {!Appointment__c.Appointment_Date__c}.
+Time: {!Appointment__c.Start_Time__c} (Eastern Time)
+Duration: Approximately 10 minutes
+Telephone Number: {!Appointment__c.Reference_Phone_Number__c}
+
+Please ensure you put a reminder on your calendar and follow up with a confirmation email to the reference. Please prepare any necessary materials for the call.
+
+
+Thank you,
+U.S. Patent and Trademark Office

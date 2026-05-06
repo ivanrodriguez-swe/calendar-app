@@ -1,0 +1,37 @@
+.usa-banner__header {
+  background-color: #ebf3fa;
+}
+
+.usa-banner__header .usa-banner__inner {
+  align-items: center;
+  padding-left: 2rem;
+}
+
+.usa-banner__header .usa-banner__inner .usa-banner__flag {
+  margin-right: 0.5rem;
+  width: 1rem;
+}
+
+.usa-banner__header .usa-banner__inner .usa-banner__expand {
+  margin-left: 0.5rem;
+}
+
+@media only screen and (min-device-width: 320px) and (max-device-width: 480px) and (orientation: portrait) {
+  .usa-banner__header .usa-banner__inner .usa-banner__expand {
+    margin-left: 0;
+  }
+}
+
+.usa-banner__content {
+  background-color: #ebf3fa;
+  font-size: 0.94rem;
+}
+
+.usa-banner__content .usa-banner__guidance {
+  padding-left: 0.5em;
+}
+
+.usa-banner__content .usa-banner__icon {
+  width: 2.5rem;
+  max-width: 2.5rem;
+}

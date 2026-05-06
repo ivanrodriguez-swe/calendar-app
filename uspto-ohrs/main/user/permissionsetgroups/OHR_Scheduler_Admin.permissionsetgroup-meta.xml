@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSetGroup xmlns="http://soap.sforce.com/2006/04/metadata">
+    <description>Users with this permission set group have admin rights on the PHR Scheduler app</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>OHR Scheduler Admin</label>
+    <permissionSets>Access_to_OHR_Scheduler_App</permissionSets>
+    <permissionSets>Can_Send_Appointment_Invites</permissionSets>
+    <permissionSets>Create_and_Edit_List_Views</permissionSets>
+    <permissionSets>OHRS_Access_to_ALL_controllers_selectors_helpers_and_util_classes</permissionSets>
+    <permissionSets>Read_Write_Access_to_Main_Objects_of_OHR_Scheduler_App</permissionSets>
+    <permissionSets>Submit_RCS_Questionnare</permissionSets>
+    <status>Updated</status>
+</PermissionSetGroup>

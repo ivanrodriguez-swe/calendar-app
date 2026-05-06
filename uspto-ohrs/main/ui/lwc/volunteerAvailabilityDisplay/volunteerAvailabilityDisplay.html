@@ -1,0 +1,116 @@
+<template>
+    <lightning-card title="Volunteer Availability Display">
+        <!-- Date Range Filter Section -->
+        <div class="slds-p-around_medium">
+            <div class="slds-grid slds-gutters slds-grid_align-center slds-grid_vertical-align-end">
+                <div class="slds-col slds-size_1-of-4">
+                    <lightning-input
+                        type="date"
+                        label="From (Optional)"
+                        value={fromDate}
+                        onchange={handleFromDateChange}>
+                    </lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-4">
+                    <lightning-input
+                        type="date"
+                        label="To"
+                        value={toDate}
+                        onchange={handleToDateChange}>
+                    </lightning-input>
+                </div>
+                <div class="slds-col slds-size_1-of-6">
+                    <lightning-button
+                        label="Search"
+                        variant="brand"
+                        onclick={handleSearch}>
+                    </lightning-button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Loading Spinner -->
+        <template if:true={isLoading}>
+            <div class="slds-align_absolute-center slds-p-around_large">
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </div>
+        </template>
+        
+        <!-- Table Section -->
+        <template if:false={isLoading}>
+            <div class="table-container">
+                <table class="slds-table slds-table_cell-buffer slds-table_bordered">
+                    <thead>
+                        <tr class="slds-line-height_reset">
+                            <th scope="col" class="volunteer-column">
+                                <div class="slds-truncate" title="Volunteer">Volunteer</div>
+                            </th>
+                            <th scope="col" class="date-column">
+                                <div class="slds-truncate" title="Date">Date</div>
+                            </th>
+                            <th scope="col" class="time-ranges-column">
+                                <div class="slds-truncate" title="Time Ranges">Time Ranges</div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template if:true={hasData}>
+                            <template for:each={displayRows} for:item="row">
+                                <tr key={row.rowKey}>
+                                    <td class="volunteer-column" data-label="Volunteer">
+                                        <template if:true={row.showVolunteerName}>
+                                            <div class="slds-truncate" title={row.volunteerName}>
+                                                {row.volunteerName}
+                                            </div>
+                                        </template>
+                                    </td>
+                                    <td class="date-column" data-label="Date">
+                                        <div class="slds-truncate" title={row.formattedDate}>
+                                            {row.formattedDate}
+                                        </div>
+                                    </td>
+                                    <td class="time-ranges-column" data-label="Time Ranges">
+                                        <div class="time-slots-container">
+                                            <template if:true={row.timeSlots}>
+                                                <template for:each={row.timeSlots} for:item="slot">
+                                                    <span key={slot.id} class={slot.bubbleClass} title={slot.timeLabel}>
+                                                        {slot.timeLabel}
+                                                    </span>
+                                                </template>
+                                            </template>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </template>
+                        </template>
+                        <template if:false={hasData}>
+                            <tr>
+                                <td colspan="3" class="slds-text-align_center slds-p-around_medium">
+                                    <template if:true={isLoading}>
+                                        Loading...
+                                    </template>
+                                    <template if:false={isLoading}>
+                                        No availability data found for the selected date range.
+                                    </template>
+                                </td>
+                            </tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Load More Button -->
+            <template if:true={hasMore}>
+                <div class="slds-align_absolute-center slds-p-around_medium">
+                    <lightning-button
+                        label="Load More"
+                        variant="neutral"
+                        onclick={handleLoadMore}
+                        disabled={isLoading}>
+                    </lightning-button>
+                </div>
+            </template>
+        </template>
+    </lightning-card>
+</template>
+
