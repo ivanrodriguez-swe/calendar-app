@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Flow xmlns="http://soap.sforce.com/2006/04/metadata">
+    <actionCalls>
+        <description>This email alert is sent to the Reference when an appointment has been booked</description>
+        <name>Appointment_Booked_References</name>
+        <label>Appointment Booked References</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>Appointment__c.OHRS_Appointment_Booked_References</actionName>
+        <actionType>emailAlert</actionType>
+        <connector>
+            <targetReference>Appointment_Booked_Volunteers</targetReference>
+        </connector>
+        <faultConnector>
+            <targetReference>Email_sent_Error_References</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>Appointment__c.OHRS_Appointment_Booked_References</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <actionCalls>
+        <description>This email alert is sent to the Volunteers when an appointment has been booked</description>
+        <name>Appointment_Booked_Volunteers</name>
+        <label>Appointment Booked Volunteers</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <actionName>Appointment__c.OHRS_Appointment_Booked_Volunteers</actionName>
+        <actionType>emailAlert</actionType>
+        <faultConnector>
+            <targetReference>Email_Sent_Error_Volunteers</targetReference>
+        </faultConnector>
+        <flowTransactionModel>CurrentTransaction</flowTransactionModel>
+        <inputParameters>
+            <name>SObjectRowId</name>
+            <value>
+                <elementReference>$Record.Id</elementReference>
+            </value>
+        </inputParameters>
+        <nameSegment>Appointment__c.OHRS_Appointment_Booked_Volunteers</nameSegment>
+        <offset>0</offset>
+    </actionCalls>
+    <apiVersion>65.0</apiVersion>
+    <areMetricsLoggedToDataCloud>false</areMetricsLoggedToDataCloud>
+    <customErrors>
+        <description>This is an error when sending emails to References</description>
+        <name>Email_sent_Error_References</name>
+        <label>Email sent Error References</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <customErrorMessages>
+            <errorMessage>{!$Flow.FaultMessage}{!$Flow.FaultMessage}</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+    <customErrors>
+        <description>Error when sending emails to volunteers</description>
+        <name>Email_Sent_Error_Volunteers</name>
+        <label>Email Sent Error Volunteers</label>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <customErrorMessages>
+            <errorMessage>{!$Flow.FaultMessage}</errorMessage>
+            <isFieldError>false</isFieldError>
+        </customErrorMessages>
+    </customErrors>
+    <description>This flow send an email to the volunteer and to the reference related to the appointment that was booked</description>
+    <environments>Default</environments>
+    <interviewLabel>OHRS Send Emails of Booked Appointments {!$Flow.CurrentDateTime}</interviewLabel>
+    <label>RCS - Send Emails of Booked Appointments</label>
+    <processMetadataValues>
+        <name>BuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>CanvasMode</name>
+        <value>
+            <stringValue>AUTO_LAYOUT_CANVAS</stringValue>
+        </value>
+    </processMetadataValues>
+    <processMetadataValues>
+        <name>OriginBuilderType</name>
+        <value>
+            <stringValue>LightningFlowBuilder</stringValue>
+        </value>
+    </processMetadataValues>
+    <processType>AutoLaunchedFlow</processType>
+    <start>
+        <locationX>0</locationX>
+        <locationY>0</locationY>
+        <connector>
+            <targetReference>Appointment_Booked_References</targetReference>
+        </connector>
+        <filterLogic>and</filterLogic>
+        <filters>
+            <field>Status__c</field>
+            <operator>EqualTo</operator>
+            <value>
+                <stringValue>Confirmed</stringValue>
+            </value>
+        </filters>
+        <object>Appointment__c</object>
+        <recordTriggerType>Create</recordTriggerType>
+        <triggerType>RecordAfterSave</triggerType>
+    </start>
+    <status>Active</status>
+</Flow>

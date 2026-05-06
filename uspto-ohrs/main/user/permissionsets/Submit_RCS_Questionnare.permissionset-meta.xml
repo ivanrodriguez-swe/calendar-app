@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <customPermissions>
+        <enabled>true</enabled>
+        <name>Access_RCS_Questionnaires_Forms</name>
+    </customPermissions>
+    <description>This permission set enables any RCS users to access the RCS References Questionnaire Forms flow from a Reference Request record, regardless of whether they are the volunteer assigned to the case.</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Submit RCS Questionnare</label>
+</PermissionSet>

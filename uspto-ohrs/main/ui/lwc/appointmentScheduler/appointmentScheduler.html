@@ -1,0 +1,141 @@
+<template>
+    <lightning-card title="Available Time Slots">
+        <div class="slds-p-around_medium">
+            <!-- Time zone notice -->
+            <div class="slds-box slds-theme_shade slds-m-bottom_small">
+                <div class="slds-grid slds-grid_align-center">
+                    <lightning-icon icon-name="utility:clock" size="small" class="slds-m-right_x-small"></lightning-icon>
+                    <span class="slds-text-body_regular">All times shown are in Eastern Time (ET)</span>
+                </div>
+            </div>
+
+            <template if:true={loading}>
+                <lightning-spinner alternative-text="Loading" size="medium"></lightning-spinner>
+            </template>
+
+            <template if:false={loading}>
+                <!-- Appointment Booked Confirmation -->
+                <template if:true={appointmentBooked}>
+                    <div class="slds-box slds-theme_success slds-m-bottom_medium">
+                        <div class="slds-text-align_center">
+                            <lightning-icon icon-name="utility:success" variant="inverse" size="large" class="slds-m-bottom_small"></lightning-icon>
+                            <h2 class="slds-text-heading_medium slds-m-bottom_x-small">Appointment Booked!</h2>
+                            <p class="slds-text-body_regular">Your appointment has been successfully scheduled for this request.</p>
+                        </div>
+                    </div>
+                </template>
+                
+                <template if:false={appointmentBooked}>
+                    <template if:true={hasAvailableSlots}>
+                        <div class="slots-container">
+                            <template for:each={groupedSlots} for:item="dateGroup">
+                                <div key={dateGroup.date} class="date-row slds-box slds-m-bottom_small">
+                                    <div class="slds-text-heading_small slds-m-bottom_x-small">
+                                        <lightning-icon icon-name="utility:event" size="x-small" class="slds-m-right_x-small"></lightning-icon>
+                                        {dateGroup.dateFormatted}
+                                    </div>
+                                    <div class="time-slots slds-wrap slds-gutters">
+                                        <template for:each={dateGroup.slots} for:item="slot">
+                                            <lightning-button
+                                                key={slot.key}
+                                                label={slot.timeFormatted}
+                                                variant="neutral"
+                                                data-date={slot.dateFormatted}
+                                                data-time={slot.timeFormatted}
+                                                data-slot-date={slot.date}
+                                                data-start-time={slot.startTime}
+                                                data-end-time={slot.endTime}
+                                                onclick={handleSlotClick}
+                                                class="slds-m-right_x-small slds-m-bottom_x-small">
+                                            </lightning-button>
+                                        </template>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </template>
+                    <template if:false={hasAvailableSlots}>
+                        <div class="slds-illustration slds-illustration_small slds-p-around_medium slds-align_absolute-center">
+                            <div class="slds-text-longform slds-text-align_center">
+                                <h3 class="slds-text-heading_medium">No Available Time Slots</h3>
+                                <p class="slds-text-body_regular slds-text-color_weak">
+                                    There are no available time slots at this time.
+                                </p>
+                            </div>
+                        </div>
+                    </template>
+                </template>
+            </template>
+        </div>
+    </lightning-card>
+
+    <!-- Booking Modal -->
+    <template if:true={showBookingModal}>
+        <section role="dialog" tabindex="-1" class="slds-modal slds-fade-in-open slds-modal_medium" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1">
+            <div class="slds-modal__container">
+                <header class="slds-modal__header">
+                    <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={handleCloseModal}>
+                        <lightning-icon icon-name="utility:close" alternative-text="close" size="small"></lightning-icon>
+                        <span class="slds-assistive-text">Close</span>
+                    </button>
+                    <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Confirm Booking</h2>
+                </header>
+                <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                    <template if:true={selectedSlot}>
+                        <div class="slds-grid slds-gutters">
+                            <div class="slds-col slds-size_1-of-2">
+                                <div class="slds-grid slds-grid_vertical slds-gutters">
+                                    <div class="slds-col">
+                                        <dl class="slds-list_horizontal slds-wrap">
+                                            <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Date">Date:</dt>
+                                            <dd class="slds-item_detail slds-truncate"><strong>{selectedSlot.dayLabel}</strong></dd>
+                                        </dl>
+                                    </div>
+                                    <div class="slds-col">
+                                        <dl class="slds-list_horizontal slds-wrap">
+                                            <dt class="slds-item_label slds-text-color_weak slds-truncate" title="Time">Time:</dt>
+                                            <dd class="slds-item_detail slds-truncate"><strong>{selectedSlot.time}</strong></dd>
+                                        </dl>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="slds-col slds-size_1-of-2">
+                                <lightning-input 
+                                    type="tel" 
+                                    label="Phone Number" 
+                                    placeholder="Enter your phone number"
+                                    value={referencePhone}
+                                    onchange={handlePhoneChange}
+                                    required
+                                    message-when-value-missing="Please enter a phone number"
+                                    pattern="[0-9]{10,}"
+                                    message-when-pattern-mismatch="Phone number must be at least 10 digits"
+                                    data-id="phoneInput"
+                                    disabled={bookingInProgress}>
+                                </lightning-input>
+                                <p class="slds-text-body_small slds-text-color_weak slds-m-top_xx-small">Please provide a phone number where we can contact you.</p>
+                            </div>
+                        </div>
+                        <template if:true={bookingError}>
+                            <div class="slds-notify slds-notify_alert slds-alert_error slds-m-top_medium" role="alert">
+                                <span class="slds-assistive-text">error</span>
+                                <lightning-icon icon-name="utility:error" size="x-small" variant="inverse" class="slds-m-right_x-small"></lightning-icon>
+                                <h2>{bookingError}</h2>
+                            </div>
+                        </template>
+                        <template if:false={bookingError}>
+                            <div class="slds-m-top_medium">
+                                <p class="slds-text-color_weak">By confirming, you will book this time slot.</p>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+                <footer class="slds-modal__footer">
+                    <lightning-button variant="neutral" label="Cancel" onclick={handleCloseModal} disabled={bookingInProgress} class="slds-m-right_small"></lightning-button>
+                    <lightning-button variant="brand" label="Confirm Booking" onclick={handleConfirmBooking} disabled={bookingInProgress}></lightning-button>
+                </footer>
+            </div>
+        </section>
+        <div class="slds-backdrop slds-backdrop_open"></div>
+    </template>
+</template>

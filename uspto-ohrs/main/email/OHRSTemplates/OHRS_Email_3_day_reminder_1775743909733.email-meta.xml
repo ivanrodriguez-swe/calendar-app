@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<EmailTemplate xmlns="http://soap.sforce.com/2006/04/metadata">
+    <available>true</available>
+    <description>This email is sent as a 3 day reminder to fill out the form</description>
+    <encodingKey>UTF-8</encodingKey>
+    <name>OHRS Email 3 day reminder</name>
+    <relatedEntityType>Appointment_Request__c</relatedEntityType>
+    <style>none</style>
+    <subject>Invite To Schedule an Appointment</subject>
+    <type>custom</type>
+    <uiType>SFX</uiType>
+</EmailTemplate>

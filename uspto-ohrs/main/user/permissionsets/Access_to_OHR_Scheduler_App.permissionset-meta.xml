@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PermissionSet xmlns="http://soap.sforce.com/2006/04/metadata">
+    <applicationVisibilities>
+        <application>OHR_Scheduler</application>
+        <visible>true</visible>
+    </applicationVisibilities>
+    <description>Enables users to see the app</description>
+    <hasActivationRequired>false</hasActivationRequired>
+    <label>Access to OHR Scheduler App</label>
+</PermissionSet>
